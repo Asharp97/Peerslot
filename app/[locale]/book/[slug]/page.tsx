@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { and, eq } from "drizzle-orm";
 import { Clock3, Globe2 } from "lucide-react";
 import { hasLocale } from "next-intl";
@@ -13,10 +14,26 @@ import { bookingPages, providerProfiles } from "@/db/schema";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { getAvailableTimesForPublishedBookingPage } from "@/lib/available-times";
+import { createLocalizedAlternates } from "@/lib/seo";
 
 type BookingPageProps = {
   params: Promise<{ locale: string; slug: string }>;
 };
+
+export async function generateMetadata({
+  params,
+}: BookingPageProps): Promise<Metadata> {
+  const { locale, slug } = await params;
+
+  if (!hasLocale(routing.locales, locale)) notFound();
+
+  return {
+    alternates: createLocalizedAlternates(
+      locale,
+      `/book/${encodeURIComponent(slug)}`,
+    ),
+  };
+}
 
 export default async function BookingPage({ params }: BookingPageProps) {
   const { locale, slug } = await params;

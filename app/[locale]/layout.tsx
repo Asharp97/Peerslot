@@ -5,6 +5,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 
 import { routing } from "@/i18n/routing";
+import { resolveSiteUrl } from "@/lib/seo";
 
 import "../globals.css";
 
@@ -45,18 +46,12 @@ export async function generateMetadata({
   const t = await getTranslations({ locale, namespace: "Metadata" });
 
   return {
+    metadataBase: resolveSiteUrl(),
     title: {
       default: t("title"),
       template: t("titleTemplate"),
     },
     description: t("description"),
-    alternates: {
-      canonical: `/${locale}`,
-      languages: {
-        en: "/en",
-        tr: "/tr",
-      },
-    },
     icons: {
       icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
       shortcut: "/favicon.svg",

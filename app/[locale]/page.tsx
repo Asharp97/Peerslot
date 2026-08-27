@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { clsx } from "clsx";
 import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
@@ -16,6 +17,7 @@ import {
 import { PublicSiteLayout } from "@/components/public-site-layout";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
+import { createLocalizedAlternates } from "@/lib/seo";
 
 const stepToneClasses = {
   cream: "bg-lumen-cream text-vast-ink",
@@ -227,6 +229,20 @@ function AvailabilityBoard({ content }: { content: AvailabilityBoardContent }) {
 type HomeProps = {
   params: Promise<{ locale: string }>;
 };
+
+export async function generateMetadata({
+  params,
+}: HomeProps): Promise<Metadata> {
+  const { locale } = await params;
+
+  if (!hasLocale(routing.locales, locale)) {
+    notFound();
+  }
+
+  return {
+    alternates: createLocalizedAlternates(locale),
+  };
+}
 
 export default async function Home({ params }: HomeProps) {
   const { locale } = await params;
