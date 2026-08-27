@@ -1,0 +1,32 @@
+meta {
+  name: Reject unconfirmed account deletion
+  type: http
+  seq: 2
+}
+
+delete {
+  url: {{baseUrl}}/api/account
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+headers {
+  content-type: application/json
+  origin: {{baseUrl}}
+}
+
+body:json {
+  {
+    "confirmation": "delete"
+  }
+}
+
+tests {
+  test("requires the exact permanent-deletion phrase", function () {
+    expect(res.getStatus()).to.equal(400);
+  });
+}

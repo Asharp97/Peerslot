@@ -24,6 +24,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { legalConsentAdditionalFields } from "@/lib/legal-consent";
 
 type BookingSlot = {
   startsAt: string;
@@ -50,6 +51,10 @@ export type BookingRequestCopy = {
   password: string;
   signInAction: string;
   registerAction: string;
+  consentPrefix: string;
+  termsLink: string;
+  privacyLink: string;
+  consentJoin: string;
   verifyTitle: string;
   verifyBody: string;
   verifyAction: string;
@@ -65,6 +70,7 @@ export type BookingRequestCopy = {
   authError: string;
   socialError: string;
   intentError: string;
+  consentError: string;
 };
 
 type AuthenticatedUser = { name: string; email: string };
@@ -104,6 +110,7 @@ export function BookingRequestPicker({
   const [studentName, setStudentName] = useState("");
   const [studentEmail, setStudentEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [comment, setComment] = useState("");
   const [saving, setSaving] = useState(false);
   const [requested, setRequested] = useState(false);
@@ -237,6 +244,7 @@ export function BookingRequestPicker({
           email: studentEmail,
           password,
           callbackURL: returnPath,
+          ...legalConsentAdditionalFields,
         }),
       });
       if (!registration.ok) {
@@ -271,6 +279,10 @@ export function BookingRequestPicker({
 
   async function handleSocialAuth(provider: SocialProvider) {
     if (!selected) return;
+    if (authMode === "register" && !termsAccepted) {
+      setError(copy.consentError);
+      return;
+    }
     setSaving(true);
     setError("");
 
@@ -291,6 +303,9 @@ export function BookingRequestPicker({
         callbackURL,
         errorCallbackURL: callbackURL,
         disableRedirect: true,
+        requestSignUp: authMode === "register",
+        additionalData:
+          authMode === "register" ? legalConsentAdditionalFields : undefined,
       }),
     });
     const body = (await response.json().catch(() => null)) as {
@@ -617,6 +632,37 @@ export function BookingRequestPicker({
                         value={password}
                       />
                     </div>
+                    {authMode === "register" ? (
+                      <label className="flex items-start gap-3 text-sm leading-6 text-black/55">
+                        <input
+                          checked={termsAccepted}
+                          className="mt-1 size-4 accent-vast-ink"
+                          onChange={(event) =>
+                            setTermsAccepted(event.target.checked)
+                          }
+                          required
+                          type="checkbox"
+                        />
+                        <span>
+                          {copy.consentPrefix}{" "}
+                          <a
+                            className="font-semibold text-vast-ink underline underline-offset-3"
+                            href={`/${locale}/policy/terms-agreements`}
+                            target="_blank"
+                          >
+                            {copy.termsLink}
+                          </a>{" "}
+                          {copy.consentJoin}{" "}
+                          <a
+                            className="font-semibold text-vast-ink underline underline-offset-3"
+                            href={`/${locale}/policy/privacy`}
+                            target="_blank"
+                          >
+                            {copy.privacyLink}
+                          </a>
+                        </span>
+                      </label>
+                    ) : null}
                     <ErrorMessage message={error} />
                   </div>
                   <DialogFooter className="mt-5">

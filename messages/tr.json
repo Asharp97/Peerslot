@@ -146,9 +146,43 @@
         { "label": "Kurallar", "href": "/#guardrails" },
         { "label": "Gizlilik", "href": "/policy/privacy" },
         { "label": "Koşullar", "href": "/policy/terms-agreements" },
-        { "label": "Çerezler", "href": "/policy/cookies" }
+        { "label": "Çerezler", "href": "/policy/cookies" },
+        { "label": "Hesabı yönet", "href": "/account" }
       ],
       "copyright": "© {year} PeerSlot"
+    }
+  },
+  "Account": {
+    "controls": {
+      "eyebrow": "Hesap",
+      "title": "PeerSlot verileriniz.",
+      "intro": "Veri seçeneklerinizi tek bir yerden yönetin. İndirmeler doğrudan giriş yaptığınız hesap için oluşturulur.",
+      "loading": "Hesabınız kontrol ediliyor…",
+      "signedOutTitle": "Verilerinizi yönetmek için giriş yapın.",
+      "signedOutBody": "Güvenlik nedeniyle PeerSlot, hesap verilerini yalnızca kimliği doğrulanmış hesap sahibinin dışa aktarmasına veya silmesine izin verir.",
+      "signInAction": "Giriş yap",
+      "emailLabel": "E-posta",
+      "passwordLabel": "Parola",
+      "googleAction": "Google ile devam et",
+      "orContinue": "veya e-posta kullan",
+      "authError": "Giriş yapılamadı. Bilgilerinizi kontrol edip tekrar deneyin.",
+      "dataPrivacy": "Verileriniz ve hesabınız",
+      "dataPrivacyDescription": "PeerSlot verilerinizin taşınabilir bir kopyasını indirin veya hesabınızı kalıcı olarak kapatın.",
+      "exportTitle": "Hesap verilerini dışa aktar",
+      "exportDescription": "Profilinizi, rezervasyon sayfalarınızı, uygunluklarınızı, öğrencilerinizi ve randevu kayıtlarınızı JSON olarak indirin. Parolalar ve kimlik doğrulama belirteçleri hiçbir zaman dahil edilmez.",
+      "exportAction": "Verilerimi indir",
+      "exporting": "İndirme hazırlanıyor…",
+      "exportError": "Veri dışa aktarımınız hazırlanamadı. Lütfen tekrar deneyin.",
+      "deleteTitle": "Hesabı sil",
+      "deleteDescription": "PeerSlot hesabınızı ve ona bağlı planlama verilerini kalıcı olarak kaldırın.",
+      "deleteAction": "Hesabımı sil",
+      "deleteDialogTitle": "Bu hesap kalıcı olarak silinsin mi?",
+      "deleteWarning": "Bu işlem geri alınamaz. Profiliniz, rezervasyon sayfanız, uygunluklarınız, kayıtlı öğrencileriniz ve sizin düzenlediğiniz tüm randevular silinir. Öğrenci olarak talep ettiğiniz randevular da silinir.",
+      "deleteConfirmation": "Onaylamak için aşağıya DELETE yazın.",
+      "deleteConfirmationLabel": "Onay",
+      "cancel": "İptal",
+      "deleting": "Siliniyor…",
+      "deleteError": "Hesabınız silinemedi. Hiçbir değişiklik yapılmadı; lütfen tekrar deneyin."
     }
   },
   "Legal": {
@@ -224,7 +258,7 @@
         {
           "heading": "8. Tercihleriniz ve haklarınız",
           "paragraphs": [
-            "Yaşadığınız yere bağlı olarak erişim, düzeltme, silme, işlemeyi kısıtlama veya işlemeye itiraz etme; taşınabilir bir kopya alma; rızayı geri çekme ya da veri koruma makamına şikâyette bulunma haklarınız olabilir. Bazı sağlayıcı ve öğrenci bilgilerini PeerSlot içinden güncelleyebilirsiniz. Diğer talepler için privacy@peerslot.com adresine yazın. Yanıt vermeden önce kimliğinizi doğrulamamız gerekebilir."
+            "Yaşadığınız yere bağlı olarak erişim, düzeltme, silme, işlemeyi kısıtlama veya işlemeye itiraz etme; taşınabilir bir kopya alma; rızayı geri çekme ya da veri koruma makamına şikâyette bulunma haklarınız olabilir. Giriş yapan kullanıcılar PeerSlot hesap sayfasından verilerini dışa aktarabilir veya hesaplarını kalıcı olarak silebilir; sağlayıcılar bu işlemleri Ayarlar'dan da yapabilir. Diğer talepler için privacy@peerslot.com adresine yazın. Yanıt vermeden önce kimliğinizi doğrulamamız gerekebilir."
           ]
         },
         {
@@ -391,6 +425,10 @@
       "orContinue": "veya şununla devam et",
       "googleAction": "Google",
       "facebookAction": "Facebook",
+      "consentPrefix": "Şunları kabul ediyorum:",
+      "termsLink": "Kullanım Koşulları",
+      "privacyLink": "Gizlilik Politikası",
+      "consentJoin": "ve şunu onaylıyorum:",
       "onboardingEyebrow": "Sağlayıcı kurulumu",
       "onboardingTitle": "Rezervasyon sayfanızı oluşturun.",
       "onboardingBody": "Bu varsayılanlar öğrencilerin gördüğü saatleri belirler. Daha sonra panelinizden değiştirebilirsiniz.",
@@ -416,7 +454,8 @@
         "auth": "Kimlik doğrulama tamamlanamadı. Bilgilerinizi kontrol edip tekrar deneyin.",
         "social": "Bu sosyal sağlayıcı kullanılamıyor veya yapılandırılmamış.",
         "session": "Erişim belirteci oluşturulamadı. Lütfen tekrar giriş yapın.",
-        "onboarding": "Sağlayıcı profiliniz oluşturulamadı. Alanları kontrol edip tekrar deneyin."
+        "onboarding": "Sağlayıcı profiliniz oluşturulamadı. Alanları kontrol edip tekrar deneyin.",
+        "consent": "Hesap oluşturmak için Kullanım Koşulları'nı ve Gizlilik Politikası'nı kabul edin."
       }
     }
   },
@@ -596,7 +635,24 @@
       "linkDescription": "Mevcut bağlantı olmaması gereken bir yerde paylaşıldıysa sekiz karakterli yeni bir bağlantı oluşturun.",
       "regenerate": "Yeni bağlantı oluştur",
       "minutes": "dk",
-      "hours": "saat"
+      "hours": "saat",
+      "dataPrivacy": "Verileriniz ve hesabınız",
+      "dataPrivacyDescription": "PeerSlot verilerinizin taşınabilir bir kopyasını indirin veya hesabınızı kalıcı olarak kapatın.",
+      "exportTitle": "Hesap verilerini dışa aktar",
+      "exportDescription": "Profilinizi, rezervasyon sayfalarınızı, uygunluklarınızı, öğrencilerinizi ve randevu kayıtlarınızı JSON olarak indirin. Parolalar ve kimlik doğrulama belirteçleri hiçbir zaman dahil edilmez.",
+      "exportAction": "Verilerimi indir",
+      "exporting": "İndirme hazırlanıyor…",
+      "exportError": "Veri dışa aktarımınız hazırlanamadı. Lütfen tekrar deneyin.",
+      "deleteTitle": "Hesabı sil",
+      "deleteDescription": "PeerSlot hesabınızı ve ona bağlı planlama verilerini kalıcı olarak kaldırın.",
+      "deleteAction": "Hesabımı sil",
+      "deleteDialogTitle": "Bu hesap kalıcı olarak silinsin mi?",
+      "deleteWarning": "Bu işlem geri alınamaz. Profiliniz, rezervasyon sayfanız, uygunluklarınız, kayıtlı öğrencileriniz ve sizin düzenlediğiniz tüm randevular silinir. Öğrenci olarak talep ettiğiniz randevular da silinir.",
+      "deleteConfirmation": "Onaylamak için aşağıya DELETE yazın.",
+      "deleteConfirmationLabel": "Onay",
+      "cancel": "İptal",
+      "deleting": "Siliniyor…",
+      "deleteError": "Hesabınız silinemedi. Hiçbir değişiklik yapılmadı; lütfen tekrar deneyin."
     }
   },
   "BookingPage": {
@@ -627,6 +683,10 @@
     "password": "Parola",
     "signInAction": "Giriş yap ve devam et",
     "registerAction": "Hesap oluştur ve devam et",
+    "consentPrefix": "Şunları kabul ediyorum:",
+    "termsLink": "Kullanım Koşulları",
+    "privacyLink": "Gizlilik Politikası",
+    "consentJoin": "ve şunu onaylıyorum:",
     "verifyTitle": "Gelen kutunuzu kontrol edin",
     "verifyBody": "{email} adresine bir doğrulama bağlantısı gönderdik. Adresinizi doğrulamak ve seçtiğiniz randevuya dönmek için bağlantıyı açın.",
     "verifyAction": "Girişe dön",
@@ -641,6 +701,7 @@
     "requestError": "Bu talep gönderilemedi. Saat artık uygun olmayabilir.",
     "authError": "Giriş yapılamadı. Bilgilerinizi kontrol edip tekrar deneyin.",
     "socialError": "Bu giriş seçeneği kullanılamıyor veya başlatılamadı.",
-    "intentError": "Bu saat giriş için saklanamadı. Lütfen tekrar deneyin."
+    "intentError": "Bu saat giriş için saklanamadı. Lütfen tekrar deneyin.",
+    "consentError": "Hesap oluşturmak için Kullanım Koşulları'nı ve Gizlilik Politikası'nı kabul edin."
   }
 }

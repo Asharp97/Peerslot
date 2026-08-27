@@ -120,6 +120,13 @@
       "when": 1786627734361,
       "tag": "0016_unique_availability_slot_ranges",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1787301296735,
+      "tag": "0017_windy_serpent_society",
+      "breakpoints": true
     }
   ]
 }

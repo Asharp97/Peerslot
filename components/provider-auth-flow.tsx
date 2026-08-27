@@ -15,7 +15,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useRouter } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
+import { legalConsentAdditionalFields } from "@/lib/legal-consent";
 import {
   appointmentDurationOptions,
   restTimeOptions,
@@ -41,6 +42,10 @@ type ProviderAuthCopy = {
   orContinue: string;
   googleAction: string;
   facebookAction: string;
+  consentPrefix: string;
+  termsLink: string;
+  privacyLink: string;
+  consentJoin: string;
   onboardingEyebrow: string;
   onboardingTitle: string;
   onboardingBody: string;
@@ -60,6 +65,7 @@ type ProviderAuthCopy = {
     social: string;
     session: string;
     onboarding: string;
+    consent: string;
   };
 };
 
@@ -90,6 +96,7 @@ export function ProviderAuthFlow({
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [settings, setSettings] = useState({
     displayName: "",
     professionalTitle: "",
@@ -159,6 +166,7 @@ export function ProviderAuthFlow({
           email,
           password,
           callbackURL: `/${locale}/auth/provider`,
+          ...legalConsentAdditionalFields,
         }),
       });
 
@@ -190,6 +198,11 @@ export function ProviderAuthFlow({
   }
 
   async function handleSocialAuth(provider: SocialProvider) {
+    if (mode === "register" && !termsAccepted) {
+      setError(copy.errors.consent);
+      return;
+    }
+
     setSubmitting(true);
     setError("");
 
@@ -198,7 +211,14 @@ export function ProviderAuthFlow({
       method: "POST",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ provider, callbackURL, disableRedirect: true }),
+      body: JSON.stringify({
+        provider,
+        callbackURL,
+        disableRedirect: true,
+        requestSignUp: mode === "register",
+        additionalData:
+          mode === "register" ? legalConsentAdditionalFields : undefined,
+      }),
     });
     const body = (await response.json().catch(() => null)) as {
       url?: string;
@@ -324,6 +344,7 @@ export function ProviderAuthFlow({
           onChange={setEmail}
           autoComplete="email"
         />
+
         <Field
           label={copy.passwordLabel}
           name="password"
@@ -337,7 +358,35 @@ export function ProviderAuthFlow({
         />
 
         {error ? <ErrorMessage message={error} /> : null}
-
+        {mode === "register" ? (
+          <label className="flex items-start gap-3 text-sm leading-6 text-[#62625a]">
+            <input
+              checked={termsAccepted}
+              className="mt-1 size-4 accent-vast-ink"
+              onChange={(event) => setTermsAccepted(event.target.checked)}
+              required
+              type="checkbox"
+            />
+            <span>
+              {copy.consentPrefix}{" "}
+              <Link
+                className="font-semibold text-vast-ink underline underline-offset-3"
+                href="/policy/terms-agreements"
+                target="_blank"
+              >
+                {copy.termsLink}
+              </Link>{" "}
+              {copy.consentJoin}{" "}
+              <Link
+                className="font-semibold text-vast-ink underline underline-offset-3"
+                href="/policy/privacy"
+                target="_blank"
+              >
+                {copy.privacyLink}
+              </Link>
+            </span>
+          </label>
+        ) : null}
         <button
           className="inline-flex min-h-13 w-full items-center justify-center gap-2 rounded-xl border-2 border-vast-ink bg-vast-ink px-5 text-sm font-semibold text-lumen-cream disabled:cursor-wait disabled:opacity-60"
           disabled={submitting}

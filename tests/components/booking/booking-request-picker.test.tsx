@@ -186,6 +186,7 @@ describe("booking authentication", () => {
     fireEvent.change(screen.getByLabelText(copy.password), {
       target: { value: "correct-horse-battery" },
     });
+    fireEvent.click(screen.getByRole("checkbox"));
     fireEvent.click(screen.getByRole("button", { name: copy.registerAction }));
 
     expect(
@@ -197,6 +198,7 @@ describe("booking authentication", () => {
     expect(JSON.parse(String(registration?.[1]?.body))).toMatchObject({
       callbackURL: "/en/book/ABCDEFGH?booking=1",
       email: "ada@example.com",
+      termsAccepted: true,
     });
     expect(
       fetchMock.mock.calls.some(

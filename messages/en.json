@@ -146,9 +146,43 @@
         { "label": "Guardrails", "href": "/#guardrails" },
         { "label": "Privacy", "href": "/policy/privacy" },
         { "label": "Terms", "href": "/policy/terms-agreements" },
-        { "label": "Cookies", "href": "/policy/cookies" }
+        { "label": "Cookies", "href": "/policy/cookies" },
+        { "label": "Manage account", "href": "/account" }
       ],
       "copyright": "© {year} PeerSlot"
+    }
+  },
+  "Account": {
+    "controls": {
+      "eyebrow": "Account",
+      "title": "Your PeerSlot data.",
+      "intro": "Review your data choices in one place. Downloads are generated directly for your signed-in account.",
+      "loading": "Checking your account…",
+      "signedOutTitle": "Sign in to manage your data.",
+      "signedOutBody": "For security, PeerSlot only allows an authenticated account owner to export or delete account data.",
+      "signInAction": "Sign in",
+      "emailLabel": "Email",
+      "passwordLabel": "Password",
+      "googleAction": "Continue with Google",
+      "orContinue": "or use email",
+      "authError": "We could not sign you in. Check your details and try again.",
+      "dataPrivacy": "Your data and account",
+      "dataPrivacyDescription": "Download a portable copy of your PeerSlot data or permanently close your account.",
+      "exportTitle": "Export account data",
+      "exportDescription": "Download your profile, booking pages, availability, students, and appointment records as JSON. Passwords and authentication tokens are never included.",
+      "exportAction": "Download my data",
+      "exporting": "Preparing download…",
+      "exportError": "Your data export could not be prepared. Please try again.",
+      "deleteTitle": "Delete account",
+      "deleteDescription": "Permanently remove your PeerSlot account and the scheduling data attached to it.",
+      "deleteAction": "Delete my account",
+      "deleteDialogTitle": "Permanently delete this account?",
+      "deleteWarning": "This cannot be undone. Your profile, booking page, availability, saved students, and every appointment hosted by you will be deleted. Appointments you requested as a student will also be deleted.",
+      "deleteConfirmation": "Type DELETE below to confirm.",
+      "deleteConfirmationLabel": "Confirmation",
+      "cancel": "Cancel",
+      "deleting": "Deleting…",
+      "deleteError": "Your account could not be deleted. Nothing was changed; please try again."
     }
   },
   "Legal": {
@@ -224,7 +258,7 @@
         {
           "heading": "8. Your choices and rights",
           "paragraphs": [
-            "Depending on where you live, you may have rights to access, correct, delete, restrict, or object to processing; receive a portable copy; withdraw consent; or complain to a data-protection authority. You can update certain provider and student information inside PeerSlot. Email privacy@peerslot.com for other requests. We may need to verify your identity before responding."
+            "Depending on where you live, you may have rights to access, correct, delete, restrict, or object to processing; receive a portable copy; withdraw consent; or complain to a data-protection authority. Signed-in users can export their account data or permanently delete their account from PeerSlot's account page; providers can also use Settings. Email privacy@peerslot.com for other requests. We may need to verify your identity before responding."
           ]
         },
         {
@@ -391,6 +425,10 @@
       "orContinue": "or continue with",
       "googleAction": "Google",
       "facebookAction": "Facebook",
+      "consentPrefix": "I agree to the",
+      "termsLink": "Terms",
+      "privacyLink": "Privacy Policy",
+      "consentJoin": "and acknowledge the",
       "onboardingEyebrow": "Provider setup",
       "onboardingTitle": "Create your booking page.",
       "onboardingBody": "These defaults shape the times students see. You can refine them later from your dashboard.",
@@ -416,7 +454,8 @@
         "auth": "We could not complete authentication. Check your details and try again.",
         "social": "This social provider is unavailable or not configured.",
         "session": "We could not create an access token. Please sign in again.",
-        "onboarding": "Your provider profile could not be created. Review the fields and try again."
+        "onboarding": "Your provider profile could not be created. Review the fields and try again.",
+        "consent": "Accept the Terms and Privacy Policy to create an account."
       }
     }
   },
@@ -596,7 +635,24 @@
       "linkDescription": "Generate a new eight-character link if the current one was shared somewhere it should not be.",
       "regenerate": "Generate a new link",
       "minutes": "min",
-      "hours": "hours"
+      "hours": "hours",
+      "dataPrivacy": "Your data and account",
+      "dataPrivacyDescription": "Download a portable copy of your PeerSlot data or permanently close your account.",
+      "exportTitle": "Export account data",
+      "exportDescription": "Download your profile, booking pages, availability, students, and appointment records as JSON. Passwords and authentication tokens are never included.",
+      "exportAction": "Download my data",
+      "exporting": "Preparing download…",
+      "exportError": "Your data export could not be prepared. Please try again.",
+      "deleteTitle": "Delete account",
+      "deleteDescription": "Permanently remove your PeerSlot account and the scheduling data attached to it.",
+      "deleteAction": "Delete my account",
+      "deleteDialogTitle": "Permanently delete this account?",
+      "deleteWarning": "This cannot be undone. Your profile, booking page, availability, saved students, and every appointment hosted by you will be deleted. Appointments you requested as a student will also be deleted.",
+      "deleteConfirmation": "Type DELETE below to confirm.",
+      "deleteConfirmationLabel": "Confirmation",
+      "cancel": "Cancel",
+      "deleting": "Deleting…",
+      "deleteError": "Your account could not be deleted. Nothing was changed; please try again."
     }
   },
   "BookingPage": {
@@ -627,6 +683,10 @@
     "password": "Password",
     "signInAction": "Sign in and continue",
     "registerAction": "Create account and continue",
+    "consentPrefix": "I agree to the",
+    "termsLink": "Terms",
+    "privacyLink": "Privacy Policy",
+    "consentJoin": "and acknowledge the",
     "verifyTitle": "Check your inbox",
     "verifyBody": "We sent a verification link to {email}. Open it to verify your address and return to your selected appointment.",
     "verifyAction": "Back to sign in",
@@ -641,6 +701,7 @@
     "requestError": "This request could not be sent. The time may no longer be available.",
     "authError": "We could not sign you in. Check your details and try again.",
     "socialError": "This sign-in option is unavailable or could not be started.",
-    "intentError": "We could not save this time for sign-in. Please try again."
+    "intentError": "We could not save this time for sign-in. Please try again.",
+    "consentError": "Accept the Terms and Privacy Policy to create an account."
   }
 }

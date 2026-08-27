@@ -1,7 +1,9 @@
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { betterAuth } from "better-auth";
+import { getOAuthState } from "better-auth/api";
 import { bearer, jwt } from "better-auth/plugins";
 import { after } from "next/server";
+import { z } from "zod";
 
 import { db } from "@/db";
 import * as authSchema from "@/db/auth-schema";
@@ -10,6 +12,11 @@ import {
   emailLocaleFromRequest,
   sendVerificationEmail,
 } from "@/lib/email-notifications";
+import {
+  createLegalAcceptance,
+  PRIVACY_VERSION,
+  TERMS_VERSION,
+} from "@/lib/legal-consent";
 
 const baseURL = process.env.BETTER_AUTH_URL ?? "http://localhost:3000";
 
@@ -20,6 +27,7 @@ const google =
     ? {
         clientId: process.env.GOOGLE_CLIENT_ID,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+        disableImplicitSignUp: true,
         prompt: "select_account" as const,
       }
     : undefined;
@@ -41,9 +49,46 @@ export const auth = betterAuth({
     provider: "pg",
     schema: authSchema,
   }),
+  user: {
+    additionalFields: {
+      termsAccepted: {
+        type: "boolean",
+        required: true,
+        returned: false,
+        validator: { input: z.literal(true) },
+      },
+      termsAcceptedAt: {
+        type: "date",
+        required: false,
+        input: false,
+        returned: false,
+        defaultValue: () => new Date(),
+      },
+      termsVersion: {
+        type: "string",
+        required: false,
+        input: false,
+        returned: false,
+        defaultValue: TERMS_VERSION,
+      },
+      privacyVersion: {
+        type: "string",
+        required: false,
+        input: false,
+        returned: false,
+        defaultValue: PRIVACY_VERSION,
+      },
+    },
+  },
   databaseHooks: {
     user: {
       create: {
+        before: async (newUser) => {
+          const acceptance = createLegalAcceptance(newUser, getOAuthState());
+          if (!acceptance) return false;
+
+          return { data: { ...newUser, ...acceptance } };
+        },
         after: async (createdUser) => {
           await db
             .insert(profiles)

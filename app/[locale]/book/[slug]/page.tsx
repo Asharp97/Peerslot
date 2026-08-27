@@ -130,6 +130,10 @@ export default async function BookingPage({ params }: BookingPageProps) {
                     password: t("password"),
                     signInAction: t("signInAction"),
                     registerAction: t("registerAction"),
+                    consentPrefix: t("consentPrefix"),
+                    termsLink: t("termsLink"),
+                    privacyLink: t("privacyLink"),
+                    consentJoin: t("consentJoin"),
                     verifyTitle: t("verifyTitle"),
                     verifyBody: t("verifyBody"),
                     verifyAction: t("verifyAction"),
@@ -145,6 +149,7 @@ export default async function BookingPage({ params }: BookingPageProps) {
                     authError: t("authError"),
                     socialError: t("socialError"),
                     intentError: t("intentError"),
+                    consentError: t("consentError"),
                   } satisfies BookingRequestCopy
                 }
                 locale={locale}

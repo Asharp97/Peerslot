@@ -11,6 +11,10 @@ import {
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import {
+  AccountDataControls,
+  type AccountDataCopy,
+} from "@/components/account-data-controls";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -29,7 +33,7 @@ import {
 import { TimeZoneCombobox } from "./time-zone-combobox";
 import { useProviderWorkspace } from "./provider-shell";
 
-export type ProviderSettingsCopy = {
+export type ProviderSettingsCopy = AccountDataCopy & {
   eyebrow: string;
   title: string;
   intro: string;
@@ -245,6 +249,13 @@ export function ProviderSettings({
           </Button>
         </article>
       </section>
+
+      <AccountDataControls
+        accessToken={accessToken}
+        className="mt-5"
+        copy={copy}
+        redirectAfterDelete="/auth/provider"
+      />
     </div>
   );
 }

@@ -1,0 +1,25 @@
+meta {
+  name: Export account data
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/account
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+tests {
+  test("exports the authenticated account without caching", function () {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getHeader("cache-control")).to.equal("no-store");
+    expect(res.getHeader("content-disposition")).to.contain("attachment");
+    expect(res.getBody().account.email).to.equal(bru.getEnvVar("testEmail"));
+    expect(res.getBody().account).not.to.have.property("password");
+  });
+}
