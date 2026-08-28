@@ -1,13 +1,11 @@
 import { NextResponse } from "next/server";
 
-import { getCurrentUser } from "@/lib/current-user";
+import { authorizeApiUser } from "@/lib/api-authorization";
 
 export async function GET(request: Request) {
-  const currentUser = await getCurrentUser(request);
-
-  if (!currentUser) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const authorization = await authorizeApiUser(request);
+  if (!authorization.authorized) return authorization.response;
+  const { currentUser } = authorization;
 
   return NextResponse.json({
     user: currentUser.user,

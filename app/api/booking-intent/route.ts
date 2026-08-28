@@ -12,6 +12,7 @@ import {
   readBookingIntent,
   signBookingIntent,
 } from "@/lib/booking-intent";
+import { clearBookingIntentCookie } from "@/lib/booking-intent-cookie";
 import { enforceRateLimit, requireSameOriginJson } from "@/lib/request-security";
 
 const inputSchema = z
@@ -33,7 +34,7 @@ export async function GET(request: Request) {
       { error: "Booking intent not found or expired" },
       { status: 404 },
     );
-    clearIntentCookie(response);
+    clearBookingIntentCookie(response);
     return response;
   }
 
@@ -102,20 +103,8 @@ export async function POST(request: Request) {
 
 export async function DELETE() {
   const response = new NextResponse(null, { status: 204 });
-  clearIntentCookie(response);
+  clearBookingIntentCookie(response);
   return response;
-}
-
-export function clearIntentCookie(response: NextResponse) {
-  response.cookies.set({
-    name: bookingIntentCookieName,
-    value: "",
-    httpOnly: true,
-    maxAge: 0,
-    path: "/",
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-  });
 }
 
 function readCookie(header: string | null, name: string) {

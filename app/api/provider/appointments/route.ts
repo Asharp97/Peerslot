@@ -10,21 +10,12 @@ import {
   createProviderAppointment,
   listProviderAppointments,
 } from "@/lib/provider-appointments";
-import { getCurrentUser } from "@/lib/current-user";
+import { authorizeApiProvider } from "@/lib/api-authorization";
 
 export async function GET(request: Request) {
-  const currentUser = await getCurrentUser(request);
-
-  if (!currentUser) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  if (!currentUser.capabilities.canProvide) {
-    return NextResponse.json(
-      { error: "Provider setup required" },
-      { status: 403 },
-    );
-  }
+  const authorization = await authorizeApiProvider(request);
+  if (!authorization.authorized) return authorization.response;
+  const { currentUser } = authorization;
 
   const url = new URL(request.url);
   const range = providerAppointmentRangeSchema.safeParse({
@@ -51,18 +42,9 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const currentUser = await getCurrentUser(request);
-
-  if (!currentUser) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  if (!currentUser.capabilities.canProvide) {
-    return NextResponse.json(
-      { error: "Provider setup required" },
-      { status: 403 },
-    );
-  }
+  const authorization = await authorizeApiProvider(request);
+  if (!authorization.authorized) return authorization.response;
+  const { currentUser } = authorization;
 
   const input = providerAppointmentCreateSchema.safeParse(
     await request.json().catch(() => null),

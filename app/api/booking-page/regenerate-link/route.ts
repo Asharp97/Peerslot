@@ -5,21 +5,15 @@ import {
   BookingSlugGenerationError,
   regenerateBookingPageSlug,
 } from "@/lib/booking-pages";
-import { getCurrentUser } from "@/lib/current-user";
+import { authorizeApiProvider } from "@/lib/api-authorization";
 
 export async function POST(request: Request) {
-  const currentUser = await getCurrentUser(request);
-
-  if (!currentUser) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  if (!currentUser.capabilities.canProvide) {
-    return NextResponse.json(
-      { error: "Only providers can regenerate booking links" },
-      { status: 403 },
-    );
-  }
+  const authorization = await authorizeApiProvider(
+    request,
+    "Only providers can regenerate booking links",
+  );
+  if (!authorization.authorized) return authorization.response;
+  const { currentUser } = authorization;
 
   try {
     const bookingPage = await regenerateBookingPageSlug(currentUser.user.id);

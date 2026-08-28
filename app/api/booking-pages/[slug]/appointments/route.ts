@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { auth } from "@/lib/auth";
-import { bookingIntentCookieName } from "@/lib/booking-intent";
+import { clearBookingIntentCookie } from "@/lib/booking-intent-cookie";
 import {
   createPublicAppointmentRequest,
   PublicAppointmentRequestPageNotFoundError,
@@ -97,15 +97,7 @@ export async function POST(
       },
       { status: 201 },
     );
-    response.cookies.set({
-      name: bookingIntentCookieName,
-      value: "",
-      httpOnly: true,
-      maxAge: 0,
-      path: "/",
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-    });
+    clearBookingIntentCookie(response);
     return response;
   } catch (error) {
     if (error instanceof PublicAppointmentRequestPageNotFoundError) {

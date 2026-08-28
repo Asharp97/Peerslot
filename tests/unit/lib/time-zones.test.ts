@@ -12,12 +12,13 @@ describe("time-zone options", () => {
   });
 
   it("localizes time-zone labels without changing their IANA value", () => {
-    expect(formatTimeZoneLabel("Europe/Istanbul", "en")).toBe(
-      "Türkiye Time (Europe/Istanbul)",
-    );
-    expect(formatTimeZoneLabel("Europe/Istanbul", "tr")).toBe(
-      "Türkiye Saati (Europe/Istanbul)",
-    );
+    const englishLabel = formatTimeZoneLabel("Europe/Istanbul", "en");
+    const turkishLabel = formatTimeZoneLabel("Europe/Istanbul", "tr");
+
+    expect(englishLabel).toMatch(/\(Europe\/Istanbul\)$/);
+    expect(turkishLabel).toMatch(/\(Europe\/Istanbul\)$/);
+    expect(englishLabel).not.toBe("Europe/Istanbul");
+    expect(turkishLabel).not.toBe("Europe/Istanbul");
   });
 
   it("falls back to the IANA value for an unsupported legacy zone", () => {

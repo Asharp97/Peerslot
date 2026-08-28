@@ -5,22 +5,16 @@ import {
   createAvailabilityWindow,
   listAvailabilityWindows,
 } from "@/lib/availability-windows";
-import { getCurrentUser } from "@/lib/current-user";
+import { authorizeApiProvider } from "@/lib/api-authorization";
 import { availabilityWindowErrorResponse } from "@/app/api/availability-windows/error-response";
 
 export async function GET(request: Request) {
-  const currentUser = await getCurrentUser(request);
-
-  if (!currentUser) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  if (!currentUser.capabilities.canProvide) {
-    return NextResponse.json(
-      { error: "Only providers have availability windows" },
-      { status: 403 },
-    );
-  }
+  const authorization = await authorizeApiProvider(
+    request,
+    "Only providers have availability windows",
+  );
+  if (!authorization.authorized) return authorization.response;
+  const { currentUser } = authorization;
 
   try {
     const windows = await listAvailabilityWindows(currentUser.user.id);
@@ -35,18 +29,12 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const currentUser = await getCurrentUser(request);
-
-  if (!currentUser) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  if (!currentUser.capabilities.canProvide) {
-    return NextResponse.json(
-      { error: "Only providers can create availability windows" },
-      { status: 403 },
-    );
-  }
+  const authorization = await authorizeApiProvider(
+    request,
+    "Only providers can create availability windows",
+  );
+  if (!authorization.authorized) return authorization.response;
+  const { currentUser } = authorization;
 
   const input = availabilityWindowCreateSchema.safeParse(
     await request.json().catch(() => null),

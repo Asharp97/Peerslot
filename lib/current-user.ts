@@ -4,7 +4,6 @@ import { db } from "@/db";
 import { user } from "@/db/auth-schema";
 import { providerProfiles } from "@/db/schema";
 import { auth } from "@/lib/auth";
-import { resolveUserCapabilities } from "@/lib/user-capabilities";
 
 export async function getCurrentUser(request: Request) {
   const token = getBearerToken(request.headers.get("authorization"));
@@ -34,7 +33,10 @@ export async function getCurrentUser(request: Request) {
     user: current.user,
     provider: current.provider,
     authentication: "jwt" as const,
-    capabilities: resolveUserCapabilities(current.provider !== null),
+    capabilities: {
+      canBook: true as const,
+      canProvide: current.provider !== null,
+    },
   };
 }
 

@@ -102,7 +102,7 @@ export function emailText(input: EmailLayoutInput) {
   ].join("\n");
 }
 
-export function escapeHtml(value: string) {
+function escapeHtml(value: string) {
   return value.replace(
     /[&<>'"]/g,
     (character) =>

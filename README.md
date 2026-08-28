@@ -85,17 +85,16 @@ The repository currently uses:
 | Package manager | [pnpm](https://pnpm.io/)                                                         |
 
 Better Auth provides email/password sessions, short-lived JWT access tokens,
-and optional Google OAuth. The Facebook OAuth implementation is preserved but
-disabled until PeerSlot can complete Meta Business Verification. PeerSlot application APIs accept
-15-minute JWTs; the revocable Better Auth session is used to issue and refresh
-them. Public verification keys are exposed through JWKS. Authentication
+and Google OAuth. PeerSlot application APIs accept 15-minute JWTs; the
+revocable Better Auth session is used to issue and refresh them. Public
+verification keys are exposed through JWKS. Authentication
 establishes who the user is. Provider onboarding creates a profile and one
 public booking page with an eight-character slug. The profile grants the
 capability to publish availability, while every authenticated user can book
 appointments.
 
-FullCalendar and Resend are installed for the later calendar and notification
-work, but are not integrated into the current UI yet.
+FullCalendar powers the provider timetable. Resend sends booking-request and
+booking-decision notifications when email delivery is configured.
 
 ## Architecture
 
@@ -216,8 +215,8 @@ loads its active windows, and returns ordered appointment times that fit fully
 inside those windows and the requested range. It applies minimum notice,
 scheduled-appointment, and disabled-window rules server-side. Each result
 includes English and Turkish labels formatted in the provider's time zone. For
-the MVP, appointment duration and booking interval must be equal so generated
-times cannot overlap.
+the MVP, the booking interval equals appointment duration plus the provider's
+configured rest time, so generated times cannot overlap.
 
 An audit table for reschedule history can be introduced after the basic
 workflow is working.
@@ -299,8 +298,8 @@ For endpoint examples and the included Bruno collection, see
   not security.
 - **Let PostgreSQL protect shared state.** Constraints are the final defense
   against scheduling races.
-- **Derive slots from explicit windows.** Recurring availability can be added
-  after the fundamental workflow is reliable.
+- **Derive slots from explicit windows.** Weekly rules expand into concrete
+  bookable times while one-time windows cover exceptions.
 - **Use color accessibly.** Calendar states also need text labels or icons.
 - **Avoid speculative infrastructure.** The application remains a monolith
   until real requirements justify another service.
@@ -327,7 +326,9 @@ For endpoint examples and the included Bruno collection, see
 - [ ] Build the student appointment view
 - [ ] Implement atomic one-time rescheduling
 - [x] Add the provider dashboard and appointments overview
-- [ ] Add scheduling-rule unit tests
+- [x] Add scheduling-rule unit tests
+- [x] Add weekly recurring availability
+- [x] Send booking-request and booking-decision emails
 - [ ] Add end-to-end tests for the primary workflows
 - [ ] Deploy the application
 
@@ -335,8 +336,7 @@ For endpoint examples and the included Bruno collection, see
 
 - [ ] Reschedule history and audit events
 - [ ] Teacher overrides
-- [ ] Recurring availability
-- [ ] Email confirmations and reminders
+- [ ] Email reminders
 - [ ] Calendar synchronization
 - [ ] Organization-specific policies
 - [ ] Multiple teachers per organization

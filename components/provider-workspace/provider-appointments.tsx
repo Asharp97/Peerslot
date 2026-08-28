@@ -126,8 +126,6 @@ type SessionDraft = {
 export type ProviderAppointmentsCopy = {
   eyebrow: string;
   title: string;
-  intro: string;
-  addSession: string;
   addToTimetable: string;
   addType: string;
   studentSession: string;
@@ -149,7 +147,6 @@ export type ProviderAppointmentsCopy = {
   addSessionDescription: string;
   editSessionDescription: string;
   student: string;
-  existingStudent: string;
   newStudent: string;
   studentName: string;
   studentEmail: string;

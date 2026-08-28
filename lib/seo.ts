@@ -10,6 +10,7 @@ export function resolveSiteUrl(
   environment: SiteUrlEnvironment = process.env,
 ): URL {
   const configuredUrl =
+    environment.NEXT_PUBLIC_SITE_URL?.trim() ||
     environment.BETTER_AUTH_URL?.trim() ||
     (environment.VERCEL_PROJECT_PRODUCTION_URL
       ? `https://${environment.VERCEL_PROJECT_PRODUCTION_URL}`

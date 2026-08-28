@@ -6,9 +6,9 @@ import { bookingPages, providerProfiles } from "@/db/schema";
 import { withBookingSlugRetries } from "@/lib/booking-page";
 import { type ProviderOnboardingInput } from "@/lib/provider-onboarding";
 
-export type ProviderProfile = typeof providerProfiles.$inferSelect;
+type ProviderProfile = typeof providerProfiles.$inferSelect;
 
-export async function findProviderProfile(
+async function findProviderProfile(
   userId: string,
 ): Promise<ProviderProfile | null> {
   const [providerProfile] = await db

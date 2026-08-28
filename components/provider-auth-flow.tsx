@@ -8,6 +8,7 @@ import {
   MailCheck,
 } from "lucide-react";
 
+import { GoogleAuthButton } from "@/components/google-auth-button";
 import {
   Select,
   SelectContent,
@@ -16,6 +17,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Link, useRouter } from "@/i18n/navigation";
+import {
+  createGoogleSignInUrl,
+  fetchAccessToken,
+  readAuthError,
+  requestEmailSignIn,
+} from "@/lib/auth-browser";
 import { legalConsentAdditionalFields } from "@/lib/legal-consent";
 import {
   appointmentDurationOptions,
@@ -24,7 +31,6 @@ import {
 
 type ProviderAuthCopy = {
   checking: string;
-  brandTagline: string;
   signInTab: string;
   registerTab: string;
   signInTitle: string;
@@ -41,7 +47,6 @@ type ProviderAuthCopy = {
   registerAction: string;
   orContinue: string;
   googleAction: string;
-  facebookAction: string;
   consentPrefix: string;
   termsLink: string;
   privacyLink: string;
@@ -71,7 +76,6 @@ type ProviderAuthCopy = {
 
 type AuthMode = "sign-in" | "register";
 type Phase = "checking" | "auth" | "verify-email" | "onboarding";
-type SocialProvider = "facebook" | "google";
 
 type ProviderSetupResponse = {
   status: "active" | "setup_required";
@@ -110,7 +114,7 @@ export function ProviderAuthFlow({
     let cancelled = false;
 
     async function initialize() {
-      const jwt = await mintAccessToken();
+      const jwt = await fetchAccessToken();
 
       if (cancelled) return;
 
@@ -181,12 +185,7 @@ export function ProviderAuthFlow({
       return;
     }
 
-    const signIn = await fetch("/api/auth/sign-in/email", {
-      method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password, rememberMe: true }),
-    });
+    const signIn = await requestEmailSignIn(email, password);
 
     if (!signIn.ok) {
       setError(await readAuthError(signIn, copy.errors.auth));
@@ -197,7 +196,7 @@ export function ProviderAuthFlow({
     await continueAfterAuthentication();
   }
 
-  async function handleSocialAuth(provider: SocialProvider) {
+  async function handleSocialAuth() {
     if (mode === "register" && !termsAccepted) {
       setError(copy.errors.consent);
       return;
@@ -207,34 +206,24 @@ export function ProviderAuthFlow({
     setError("");
 
     const callbackURL = `${window.location.origin}/${locale}/auth/provider`;
-    const response = await fetch("/api/auth/sign-in/social", {
-      method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        provider,
-        callbackURL,
-        disableRedirect: true,
-        requestSignUp: mode === "register",
-        additionalData:
-          mode === "register" ? legalConsentAdditionalFields : undefined,
-      }),
+    const url = await createGoogleSignInUrl({
+      callbackURL,
+      requestSignUp: mode === "register",
+      additionalData:
+        mode === "register" ? legalConsentAdditionalFields : undefined,
     });
-    const body = (await response.json().catch(() => null)) as {
-      url?: string;
-    } | null;
 
-    if (!response.ok || !body?.url) {
+    if (!url) {
       setError(copy.errors.social);
       setSubmitting(false);
       return;
     }
 
-    window.location.assign(body.url);
+    window.location.assign(url);
   }
 
   async function continueAfterAuthentication() {
-    const jwt = await mintAccessToken();
+    const jwt = await fetchAccessToken();
 
     if (!jwt) {
       setError(copy.errors.session);
@@ -275,7 +264,7 @@ export function ProviderAuthFlow({
     let response = await submitProviderSettings(jwt, settings);
 
     if (response.status === 401) {
-      jwt = (await mintAccessToken()) ?? "";
+      jwt = (await fetchAccessToken()) ?? "";
       response = jwt ? await submitProviderSettings(jwt, settings) : response;
     }
 
@@ -406,21 +395,13 @@ export function ProviderAuthFlow({
         </div>
 
         <div className="grid gap-3">
-          <SocialButton
-            label={copy.googleAction}
-            provider="google"
+          <GoogleAuthButton
+            className="font-semibold"
             disabled={submitting}
             onClick={handleSocialAuth}
-          />
-          {/* Facebook OAuth is hidden until PeerSlot can complete Meta
-              Business Verification through its future parent company.
-          <SocialButton
-            label={copy.facebookAction}
-            provider="facebook"
-            disabled={submitting}
-            onClick={handleSocialAuth}
-          />
-          */}
+          >
+            {copy.googleAction}
+          </GoogleAuthButton>
         </div>
       </form>
     );
@@ -651,65 +632,6 @@ function NumberSelect({
   );
 }
 
-function SocialButton({
-  label,
-  provider,
-  disabled,
-  onClick,
-}: {
-  label: string;
-  provider: SocialProvider;
-  disabled: boolean;
-  onClick: (provider: SocialProvider) => void;
-}) {
-  return (
-    <button
-      className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border-2 border-vast-ink bg-white px-3 text-sm font-semibold transition hover:bg-lumen-cream disabled:opacity-60"
-      disabled={disabled}
-      onClick={() => onClick(provider)}
-      type="button"
-    >
-      {provider === "google" ? <GoogleMark /> : <FacebookMark />}
-      {label}
-    </button>
-  );
-}
-
-function GoogleMark() {
-  return (
-    <svg aria-hidden="true" viewBox="0 0 24 24" className="size-4">
-      <path
-        fill="#4285F4"
-        d="M21.6 12.2c0-.7-.1-1.4-.2-2H12v3.8h5.4a4.6 4.6 0 0 1-2 3v2.5h3.2c1.9-1.8 3-4.3 3-7.3Z"
-      />
-      <path
-        fill="#34A853"
-        d="M12 22c2.7 0 5-.9 6.6-2.4L15.4 17c-.9.6-2 1-3.4 1a5.8 5.8 0 0 1-5.5-4H3.2v2.6A10 10 0 0 0 12 22Z"
-      />
-      <path
-        fill="#FBBC05"
-        d="M6.5 14a6 6 0 0 1 0-4V7.4H3.2a10 10 0 0 0 0 9.2L6.5 14Z"
-      />
-      <path
-        fill="#EA4335"
-        d="M12 6c1.5 0 2.8.5 3.8 1.5l2.9-2.8A9.7 9.7 0 0 0 3.2 7.4L6.5 10A5.8 5.8 0 0 1 12 6Z"
-      />
-    </svg>
-  );
-}
-
-function FacebookMark() {
-  return (
-    <svg aria-hidden="true" viewBox="0 0 24 24" className="size-4">
-      <circle cx="12" cy="12" r="11" fill="#1877F2" />
-      <path
-        fill="#fff"
-        d="M13.6 21v-8h2.7l.4-3h-3.1V8.1c0-.9.3-1.5 1.6-1.5h1.7V3.9c-.3 0-1.3-.1-2.4-.1-2.4 0-4 1.4-4 4.1V10H7.8v3h2.7v8h3.1Z"
-      />
-    </svg>
-  );
-}
-
 function ErrorMessage({ message }: { message: string }) {
   return (
     <p
@@ -719,18 +641,6 @@ function ErrorMessage({ message }: { message: string }) {
       {message}
     </p>
   );
-}
-
-async function mintAccessToken() {
-  const response = await fetch("/api/auth/token", {
-    credentials: "include",
-    cache: "no-store",
-  });
-
-  if (!response.ok) return null;
-
-  const body = (await response.json()) as { token?: string };
-  return body.token ?? null;
 }
 
 async function fetchProviderSetup(jwt: string) {
@@ -762,11 +672,4 @@ async function submitProviderSettings(
     },
     body: JSON.stringify(settings),
   });
-}
-
-async function readAuthError(response: Response, fallback: string) {
-  const body = (await response.json().catch(() => null)) as {
-    message?: string;
-  } | null;
-  return body?.message ?? fallback;
 }

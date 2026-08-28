@@ -1,4 +1,4 @@
-export type ProviderWorkspaceAppointment = {
+type ProviderWorkspaceAppointment = {
   id: string;
   windowId: string | null;
   studentName: string;

@@ -1,21 +1,12 @@
 import { NextResponse } from "next/server";
 
-import { getCurrentUser } from "@/lib/current-user";
+import { authorizeApiProvider } from "@/lib/api-authorization";
 import { listPendingProviderAppointments } from "@/lib/provider-appointments";
 
 export async function GET(request: Request) {
-  const currentUser = await getCurrentUser(request);
-
-  if (!currentUser) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  if (!currentUser.capabilities.canProvide) {
-    return NextResponse.json(
-      { error: "Provider setup required" },
-      { status: 403 },
-    );
-  }
+  const authorization = await authorizeApiProvider(request);
+  if (!authorization.authorized) return authorization.response;
+  const { currentUser } = authorization;
 
   const appointments = await listPendingProviderAppointments(
     currentUser.user.id,

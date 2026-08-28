@@ -3,7 +3,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 export const bookingIntentCookieName = "peerslot-booking-intent";
 export const bookingIntentLifetimeSeconds = 10 * 60;
 
-export type BookingIntent = {
+type BookingIntent = {
   bookingPageId: string;
   selectedStartTime: string;
   selectedEndTime: string;

@@ -25,6 +25,25 @@ type ProviderWorkspaceAppointmentRow = {
   createdAt: Date;
 };
 
+const providerWorkspaceAppointmentSelection = {
+  id: appointments.id,
+  windowId: availabilitySlots.availabilityWindowId,
+  accountStudentName: user.name,
+  accountStudentEmail: user.email,
+  providerStudentId: providerStudents.id,
+  providerStudentName: providerStudents.displayName,
+  providerStudentEmail: providerStudents.email,
+  startsAt: availabilitySlots.startsAt,
+  endsAt: availabilitySlots.endsAt,
+  status: appointments.status,
+  comment: appointments.comment,
+  examName: appointments.examName,
+  schoolYear: appointments.schoolYear,
+  createdByProvider: appointments.createdByProvider,
+  rescheduleCount: appointments.rescheduleCount,
+  createdAt: appointments.createdAt,
+};
+
 export async function loadProviderWorkspace(providerId: string) {
   const setup = await findProviderSetup(providerId);
 
@@ -32,39 +51,9 @@ export async function loadProviderWorkspace(providerId: string) {
 
   const now = new Date();
   const weekEndsAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-  const appointmentSelection = {
-    id: appointments.id,
-    windowId: availabilitySlots.availabilityWindowId,
-    accountStudentName: user.name,
-    accountStudentEmail: user.email,
-    providerStudentId: providerStudents.id,
-    providerStudentName: providerStudents.displayName,
-    providerStudentEmail: providerStudents.email,
-    startsAt: availabilitySlots.startsAt,
-    endsAt: availabilitySlots.endsAt,
-    status: appointments.status,
-    comment: appointments.comment,
-    examName: appointments.examName,
-    schoolYear: appointments.schoolYear,
-    createdByProvider: appointments.createdByProvider,
-    rescheduleCount: appointments.rescheduleCount,
-    createdAt: appointments.createdAt,
-  };
-
   const [upcomingAppointments, recentBookings, openTimesThisWeek] =
     await Promise.all([
-      db
-        .select(appointmentSelection)
-        .from(appointments)
-        .innerJoin(
-          availabilitySlots,
-          eq(availabilitySlots.id, appointments.slotId),
-        )
-        .leftJoin(user, eq(user.id, appointments.studentId))
-        .leftJoin(
-          providerStudents,
-          eq(providerStudents.id, appointments.providerStudentId),
-        )
+      selectProviderAppointments()
         .where(
           and(
             eq(availabilitySlots.teacherId, providerId),
@@ -74,18 +63,7 @@ export async function loadProviderWorkspace(providerId: string) {
         )
         .orderBy(asc(availabilitySlots.startsAt))
         .limit(12),
-      db
-        .select(appointmentSelection)
-        .from(appointments)
-        .innerJoin(
-          availabilitySlots,
-          eq(availabilitySlots.id, appointments.slotId),
-        )
-        .leftJoin(user, eq(user.id, appointments.studentId))
-        .leftJoin(
-          providerStudents,
-          eq(providerStudents.id, appointments.providerStudentId),
-        )
+      selectProviderAppointments()
         .where(eq(availabilitySlots.teacherId, providerId))
         .orderBy(desc(appointments.createdAt))
         .limit(8),
@@ -108,6 +86,21 @@ export async function loadProviderWorkspace(providerId: string) {
     recentBookings: recentBookings.map(presentAppointment),
     openTimesThisWeek,
   };
+}
+
+function selectProviderAppointments() {
+  return db
+    .select(providerWorkspaceAppointmentSelection)
+    .from(appointments)
+    .innerJoin(
+      availabilitySlots,
+      eq(availabilitySlots.id, appointments.slotId),
+    )
+    .leftJoin(user, eq(user.id, appointments.studentId))
+    .leftJoin(
+      providerStudents,
+      eq(providerStudents.id, appointments.providerStudentId),
+    );
 }
 
 function presentAppointment(appointment: ProviderWorkspaceAppointmentRow) {

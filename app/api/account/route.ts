@@ -4,14 +4,13 @@ import {
   buildAccountExport,
   permanentlyDeleteAccount,
 } from "@/lib/account-data";
-import { getCurrentUser } from "@/lib/current-user";
+import { authorizeApiUser } from "@/lib/api-authorization";
 import { requireSameOriginJson } from "@/lib/request-security";
 
 export async function GET(request: Request) {
-  const currentUser = await getCurrentUser(request);
-  if (!currentUser) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const authorization = await authorizeApiUser(request);
+  if (!authorization.authorized) return authorization.response;
+  const { currentUser } = authorization;
 
   const accountExport = await buildAccountExport(currentUser.user.id);
   if (!accountExport) {
@@ -32,10 +31,9 @@ export async function DELETE(request: Request) {
   const invalidRequest = requireSameOriginJson(request);
   if (invalidRequest) return invalidRequest;
 
-  const currentUser = await getCurrentUser(request);
-  if (!currentUser) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const authorization = await authorizeApiUser(request);
+  if (!authorization.authorized) return authorization.response;
+  const { currentUser } = authorization;
 
   const input = (await request.json().catch(() => null)) as {
     confirmation?: unknown;

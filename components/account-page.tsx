@@ -11,6 +11,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  createGoogleSignInUrl,
+  fetchAccessToken,
+  requestEmailSignIn,
+} from "@/lib/auth-browser";
 
 export type AccountPageCopy = AccountDataCopy & {
   eyebrow: string;
@@ -44,13 +49,7 @@ export function AccountPage({
     let cancelled = false;
 
     async function loadToken() {
-      const response = await fetch("/api/auth/token", {
-        credentials: "include",
-        cache: "no-store",
-      });
-      const token = response.ok
-        ? (((await response.json()) as { token?: string }).token ?? null)
-        : null;
+      const token = await fetchAccessToken();
       if (!cancelled) setAccessToken(token);
     }
 
@@ -65,19 +64,14 @@ export function AccountPage({
     setSubmitting(true);
     setAuthError("");
 
-    const response = await fetch("/api/auth/sign-in/email", {
-      method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password, rememberMe: true }),
-    });
+    const response = await requestEmailSignIn(email, password);
     if (!response.ok) {
       setAuthError(copy.authError);
       setSubmitting(false);
       return;
     }
 
-    const token = await mintAccessToken();
+    const token = await fetchAccessToken();
     setAccessToken(token);
     if (!token) setAuthError(copy.authError);
     setSubmitting(false);
@@ -87,27 +81,17 @@ export function AccountPage({
     setSubmitting(true);
     setAuthError("");
     const callbackURL = `${window.location.origin}/${locale}/account`;
-    const response = await fetch("/api/auth/sign-in/social", {
-      method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        provider: "google",
-        callbackURL,
-        errorCallbackURL: callbackURL,
-        disableRedirect: true,
-        requestSignUp: false,
-      }),
+    const url = await createGoogleSignInUrl({
+      callbackURL,
+      errorCallbackURL: callbackURL,
+      requestSignUp: false,
     });
-    const body = (await response.json().catch(() => null)) as {
-      url?: string;
-    } | null;
-    if (!response.ok || !body?.url) {
+    if (!url) {
       setAuthError(copy.authError);
       setSubmitting(false);
       return;
     }
-    window.location.assign(body.url);
+    window.location.assign(url);
   }
 
   return (
@@ -198,13 +182,4 @@ export function AccountPage({
       </div>
     </main>
   );
-}
-
-async function mintAccessToken() {
-  const response = await fetch("/api/auth/token", {
-    credentials: "include",
-    cache: "no-store",
-  });
-  if (!response.ok) return null;
-  return ((await response.json()) as { token?: string }).token ?? null;
 }

@@ -1,6 +1,10 @@
 import { z } from "zod";
 
-const timestampWithOffsetSchema = z.string().datetime({ offset: true });
+import {
+  createDateRangeSchema,
+  timestampWithOffsetSchema,
+} from "@/lib/date-schema";
+
 const sessionColorSchema = z.string().regex(/^#[0-9a-fA-F]{6}$/);
 const optionalText = (maximum: number) =>
   z
@@ -153,25 +157,10 @@ export const providerAppointmentReviewSchema = z
   .object({ decision: z.enum(["accept", "decline"]) })
   .strict();
 
-export const providerAppointmentRangeSchema = z
-  .object({
-    startsAt: timestampWithOffsetSchema,
-    endsAt: timestampWithOffsetSchema,
-  })
-  .refine(({ startsAt, endsAt }) => new Date(endsAt) > new Date(startsAt), {
-    message: "endsAt must be after startsAt",
-    path: ["endsAt"],
-  })
-  .refine(
-    ({ startsAt, endsAt }) =>
-      new Date(endsAt).getTime() - new Date(startsAt).getTime() <=
-      45 * 24 * 60 * 60 * 1000,
-    { message: "Appointment range cannot exceed 45 days", path: ["endsAt"] },
-  )
-  .transform(({ startsAt, endsAt }) => ({
-    startsAt: new Date(startsAt),
-    endsAt: new Date(endsAt),
-  }));
+export const providerAppointmentRangeSchema = createDateRangeSchema(
+  45,
+  "Appointment range cannot exceed 45 days",
+);
 
 export type ProviderAppointmentCreateInput = z.infer<
   typeof providerAppointmentCreateSchema
@@ -181,9 +170,6 @@ export type ProviderAppointmentUpdateInput = z.infer<
 >;
 export type ProviderAppointmentDeleteInput = z.infer<
   typeof providerAppointmentDeleteSchema
->;
-export type ProviderAppointmentReviewInput = z.infer<
-  typeof providerAppointmentReviewSchema
 >;
 export type ProviderStudentCreateInput = z.infer<
   typeof providerStudentCreateSchema

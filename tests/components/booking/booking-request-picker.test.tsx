@@ -126,9 +126,6 @@ describe("booking authentication", () => {
       screen.getByRole("button", { name: copy.googleAction }),
     ).toBeTruthy();
     expect(
-      screen.queryByRole("button", { name: copy.facebookAction }),
-    ).toBeNull();
-    expect(
       fetchMock.mock.calls.some(([url]) =>
         String(url).includes("/appointments"),
       ),

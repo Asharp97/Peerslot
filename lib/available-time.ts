@@ -1,6 +1,4 @@
-export const availabilityLocales = ["en", "tr"] as const;
-
-export type AvailabilityLocale = (typeof availabilityLocales)[number];
+type AvailabilityLocale = "en" | "tr";
 
 export type AvailabilityBookingPage = {
   id: string;
@@ -16,7 +14,7 @@ export type AvailableTimeRange = {
   endsAt: Date;
 };
 
-export type AvailabilityWindowForCalculation = AvailableTimeRange & {
+type AvailabilityWindowForCalculation = AvailableTimeRange & {
   id: string;
   isActive: boolean;
 };
@@ -25,7 +23,7 @@ export type AppointmentForCalculation = AvailableTimeRange & {
   status: "pending" | "scheduled" | "declined" | "cancelled";
 };
 
-export type AvailableTime = AvailableTimeRange & {
+type AvailableTime = AvailableTimeRange & {
   localized: Record<AvailabilityLocale, string>;
 };
 

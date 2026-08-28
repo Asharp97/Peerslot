@@ -1,7 +1,6 @@
 allowBuilds:
   '@parcel/watcher': true
   '@swc/core': true
-  core-js: true
   esbuild: true
   sharp: true
   unrs-resolver: true
@@ -21,11 +20,6 @@ peerDependencyRules:
   allowedVersions:
     "@emnapi/core": ">=1.10.0"
     "@emnapi/runtime": ">=1.10.0"
-minimumReleaseAgeExclude:
-  - resend@6.18.1
-  - esbuild@0.25.12
-  - sharp@0.35.0
-  - postcss@8.5.18
 overrides:
   esbuild@<=0.24.2: ^0.25.0
   postcss@<=8.5.17: ^8.5.18

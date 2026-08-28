@@ -2,21 +2,21 @@ import type { ComponentPropsWithoutRef } from "react";
 
 import { cn } from "@/lib/utils";
 
+export type LegalSection = {
+  heading: string;
+  paragraphs?: string[];
+  items?: string[];
+};
+
 type LegalDocumentProps = ComponentPropsWithoutRef<"article"> & {
   title?: string;
   eyebrow?: string;
   updatedAt?: string;
   introduction?: string;
-  sections?: Array<{
-    heading: string;
-    paragraphs?: string[];
-    items?: string[];
-  }>;
-  text?: string;
+  sections?: LegalSection[];
 };
 
 export function LegalDocument({
-  text,
   title,
   eyebrow,
   updatedAt,
@@ -25,11 +25,6 @@ export function LegalDocument({
   className,
   ...props
 }: LegalDocumentProps) {
-  const paragraphs = (text ?? "")
-    .trim()
-    .split(/\n\s*\n/)
-    .filter(Boolean);
-
   return (
     <article
       className={cn(
@@ -87,15 +82,7 @@ export function LegalDocument({
             </section>
           ))}
         </div>
-      ) : (
-        <div className="space-y-5 text-[15px] leading-7 text-[#4f4f49] sm:text-base sm:leading-8">
-          {paragraphs.map((paragraph, index) => (
-            <p className="whitespace-pre-wrap" key={index}>
-              {paragraph}
-            </p>
-          ))}
-        </div>
-      )}
+      ) : null}
     </article>
   );
 }

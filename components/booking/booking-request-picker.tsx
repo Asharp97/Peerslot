@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 
+import { GoogleAuthButton } from "@/components/google-auth-button";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -24,6 +25,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  createGoogleSignInUrl,
+  readAuthError,
+  requestEmailSignIn,
+} from "@/lib/auth-browser";
 import { legalConsentAdditionalFields } from "@/lib/legal-consent";
 
 type BookingSlot = {
@@ -44,7 +50,6 @@ export type BookingRequestCopy = {
   authTitle: string;
   authBody: string;
   googleAction: string;
-  facebookAction: string;
   orEmail: string;
   signInTab: string;
   registerTab: string;
@@ -62,7 +67,6 @@ export type BookingRequestCopy = {
   confirmBody: string;
   bookingAs: string;
   confirmRequest: string;
-  sendRequest: string;
   sending: string;
   requestedTitle: string;
   requestedBody: string;
@@ -77,7 +81,6 @@ type AuthenticatedUser = { name: string; email: string };
 type BookingPhase =
   "checking" | "details" | "auth" | "verify-email" | "confirm";
 type AuthMode = "sign-in" | "register";
-type SocialProvider = "facebook" | "google";
 
 export function BookingRequestPicker({
   bookingPageId,
@@ -258,16 +261,7 @@ export function BookingRequestPicker({
       return;
     }
 
-    const signIn = await fetch("/api/auth/sign-in/email", {
-      method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        email: studentEmail,
-        password,
-        rememberMe: true,
-      }),
-    });
+    const signIn = await requestEmailSignIn(studentEmail, password);
     if (!signIn.ok) {
       setError(await readAuthError(signIn, copy.authError));
       setSaving(false);
@@ -277,7 +271,7 @@ export function BookingRequestPicker({
     await continueAfterAuthentication();
   }
 
-  async function handleSocialAuth(provider: SocialProvider) {
+  async function handleSocialAuth() {
     if (!selected) return;
     if (authMode === "register" && !termsAccepted) {
       setError(copy.consentError);
@@ -294,31 +288,21 @@ export function BookingRequestPicker({
     }
 
     const callbackURL = new URL(returnPath, window.location.origin).toString();
-    const response = await fetch("/api/auth/sign-in/social", {
-      method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        provider,
-        callbackURL,
-        errorCallbackURL: callbackURL,
-        disableRedirect: true,
-        requestSignUp: authMode === "register",
-        additionalData:
-          authMode === "register" ? legalConsentAdditionalFields : undefined,
-      }),
+    const url = await createGoogleSignInUrl({
+      callbackURL,
+      errorCallbackURL: callbackURL,
+      requestSignUp: authMode === "register",
+      additionalData:
+        authMode === "register" ? legalConsentAdditionalFields : undefined,
     });
-    const body = (await response.json().catch(() => null)) as {
-      url?: string;
-    } | null;
 
-    if (!response.ok || !body?.url) {
+    if (!url) {
       setError(copy.socialError);
       setSaving(false);
       return;
     }
 
-    window.location.assign(body.url);
+    window.location.assign(url);
   }
 
   async function createBookingAuthIntent() {
@@ -538,21 +522,13 @@ export function BookingRequestPicker({
                   />
 
                   <div className="mt-5 grid gap-3">
-                    <SocialButton
+                    <GoogleAuthButton
+                      className="w-full font-bold"
                       disabled={saving}
-                      label={copy.googleAction}
                       onClick={handleSocialAuth}
-                      provider="google"
-                    />
-                    {/* Facebook OAuth is hidden until PeerSlot can complete
-                        Meta Business Verification through its future parent company.
-                    <SocialButton
-                      disabled={saving}
-                      label={copy.facebookAction}
-                      onClick={handleSocialAuth}
-                      provider="facebook"
-                    />
-                    */}
+                    >
+                      {copy.googleAction}
+                    </GoogleAuthButton>
                   </div>
 
                   <div className="my-5 flex items-center gap-3 text-[11px] font-bold tracking-[0.08em] text-black/45 uppercase">
@@ -845,65 +821,6 @@ function BookingSummary({
   );
 }
 
-function SocialButton({
-  label,
-  provider,
-  disabled,
-  onClick,
-}: {
-  label: string;
-  provider: SocialProvider;
-  disabled: boolean;
-  onClick: (provider: SocialProvider) => void;
-}) {
-  return (
-    <button
-      className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border-2 border-vast-ink bg-white px-3 text-sm font-bold transition hover:bg-lumen-cream disabled:opacity-60"
-      disabled={disabled}
-      onClick={() => onClick(provider)}
-      type="button"
-    >
-      {provider === "google" ? <GoogleMark /> : <FacebookMark />}
-      {label}
-    </button>
-  );
-}
-
-function GoogleMark() {
-  return (
-    <svg aria-hidden="true" className="size-4" viewBox="0 0 24 24">
-      <path
-        fill="#4285F4"
-        d="M21.6 12.2c0-.7-.1-1.4-.2-2H12v3.8h5.4a4.6 4.6 0 0 1-2 3v2.5h3.2c1.9-1.8 3-4.3 3-7.3Z"
-      />
-      <path
-        fill="#34A853"
-        d="M12 22c2.7 0 5-.9 6.6-2.4L15.4 17c-.9.6-2 1-3.4 1a5.8 5.8 0 0 1-5.5-4H3.2v2.6A10 10 0 0 0 12 22Z"
-      />
-      <path
-        fill="#FBBC05"
-        d="M6.5 14a6 6 0 0 1 0-4V7.4H3.2a10 10 0 0 0 0 9.2L6.5 14Z"
-      />
-      <path
-        fill="#EA4335"
-        d="M12 6c1.5 0 2.8.5 3.8 1.5l2.9-2.8A9.7 9.7 0 0 0 3.2 7.4L6.5 10A5.8 5.8 0 0 1 12 6Z"
-      />
-    </svg>
-  );
-}
-
-function FacebookMark() {
-  return (
-    <svg aria-hidden="true" className="size-4" viewBox="0 0 24 24">
-      <circle cx="12" cy="12" r="11" fill="#1877F2" />
-      <path
-        fill="#fff"
-        d="M13.6 21v-8h2.7l.4-3h-3.1V8.1c0-.9.3-1.5 1.6-1.5h1.7V3.9c-.3 0-1.3-.1-2.4-.1-2.4 0-4 1.4-4 4.1V10H7.8v3h2.7v8h3.1Z"
-      />
-    </svg>
-  );
-}
-
 function ErrorMessage({ message }: { message: string }) {
   return message ? (
     <p className="mt-3 text-sm font-semibold text-red-700" role="alert">
@@ -944,13 +861,6 @@ async function clearBookingIntent() {
     method: "DELETE",
     credentials: "include",
   }).catch(() => null);
-}
-
-async function readAuthError(response: Response, fallback: string) {
-  const body = (await response.json().catch(() => null)) as {
-    message?: string;
-  } | null;
-  return body?.message || fallback;
 }
 
 function draftKey(bookingPageId: string) {

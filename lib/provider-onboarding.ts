@@ -6,8 +6,7 @@ import {
   restTimeOptions,
 } from "./scheduling-options";
 
-export { appointmentDurationOptions, restTimeOptions };
-export const bookingNoticeOptions = [0, 60, 240, 720, 1440, 2880] as const;
+const bookingNoticeOptions = [0, 60, 240, 720, 1440, 2880] as const;
 
 export const providerOnboardingSchema = z.object({
   displayName: z.string().trim().min(2).max(80),

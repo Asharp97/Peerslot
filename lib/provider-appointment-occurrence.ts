@@ -17,7 +17,7 @@ export type ProviderAppointmentScheduleRow = {
   [key: string]: unknown;
 };
 
-export type ProviderAppointmentOccurrence<
+type ProviderAppointmentOccurrence<
   Row extends ProviderAppointmentScheduleRow = ProviderAppointmentScheduleRow,
 > = Row & {
   id: string;

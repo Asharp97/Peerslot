@@ -7,7 +7,7 @@ import {
   removeAvailabilityWindow,
   updateAvailabilityWindow,
 } from "@/lib/availability-windows";
-import { getCurrentUser } from "@/lib/current-user";
+import { authorizeApiProvider } from "@/lib/api-authorization";
 import { availabilityWindowErrorResponse } from "@/app/api/availability-windows/error-response";
 
 const idSchema = z.string().uuid();
@@ -17,18 +17,12 @@ type RouteContext = {
 };
 
 export async function PATCH(request: Request, context: RouteContext) {
-  const currentUser = await getCurrentUser(request);
-
-  if (!currentUser) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  if (!currentUser.capabilities.canProvide) {
-    return NextResponse.json(
-      { error: "Only providers can update availability windows" },
-      { status: 403 },
-    );
-  }
+  const authorization = await authorizeApiProvider(
+    request,
+    "Only providers can update availability windows",
+  );
+  if (!authorization.authorized) return authorization.response;
+  const { currentUser } = authorization;
 
   const id = idSchema.safeParse((await context.params).id);
   const input = availabilityWindowUpdateSchema.safeParse(
@@ -75,18 +69,12 @@ export async function PATCH(request: Request, context: RouteContext) {
 }
 
 export async function DELETE(request: Request, context: RouteContext) {
-  const currentUser = await getCurrentUser(request);
-
-  if (!currentUser) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  if (!currentUser.capabilities.canProvide) {
-    return NextResponse.json(
-      { error: "Only providers can remove availability windows" },
-      { status: 403 },
-    );
-  }
+  const authorization = await authorizeApiProvider(
+    request,
+    "Only providers can remove availability windows",
+  );
+  if (!authorization.authorized) return authorization.response;
+  const { currentUser } = authorization;
 
   const id = idSchema.safeParse((await context.params).id);
 

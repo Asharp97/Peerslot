@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { z } from "zod";
 
 import {
   AvailableTimeConfigurationError,
@@ -7,27 +6,13 @@ import {
 } from "@/lib/available-time";
 import { bookingSlugSchema } from "@/lib/booking-page";
 import { getAvailableTimesForPublishedBookingPage } from "@/lib/available-times";
+import { createDateRangeSchema } from "@/lib/date-schema";
 import { enforceRateLimit } from "@/lib/request-security";
 
-const timestampWithOffsetSchema = z.string().datetime({ offset: true });
-const rangeSchema = z
-  .object({
-    startsAt: timestampWithOffsetSchema,
-    endsAt: timestampWithOffsetSchema,
-  })
-  .transform(({ startsAt, endsAt }) => ({
-    startsAt: new Date(startsAt),
-    endsAt: new Date(endsAt),
-  }))
-  .refine(({ startsAt, endsAt }) => endsAt > startsAt, {
-    message: "endsAt must be after startsAt",
-    path: ["endsAt"],
-  })
-  .refine(
-    ({ startsAt, endsAt }) =>
-      endsAt.getTime() - startsAt.getTime() <= 45 * 24 * 60 * 60 * 1000,
-    { message: "Availability range cannot exceed 45 days", path: ["endsAt"] },
-  );
+const rangeSchema = createDateRangeSchema(
+  45,
+  "Availability range cannot exceed 45 days",
+);
 
 type RouteContext = {
   params: Promise<{ slug: string }>;

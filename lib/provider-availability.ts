@@ -1,3 +1,5 @@
+import { deriveAvailabilityRanges } from "@/lib/availability-window";
+
 export type ProviderWindowStatus =
   "available" | "booked" | "past" | "unpublished";
 
@@ -69,20 +71,11 @@ export function previewAvailabilityWindow(input: {
     );
   }
 
-  const durationMilliseconds = input.durationMinutes * 60 * 1000;
-  const intervalMilliseconds = input.intervalMinutes * 60 * 1000;
-  const slots = [];
-
-  for (
-    let slotStartsAt = startsAt.getTime();
-    slotStartsAt + durationMilliseconds <= endsAt.getTime();
-    slotStartsAt += intervalMilliseconds
-  ) {
-    slots.push({
-      startsAt: new Date(slotStartsAt),
-      endsAt: new Date(slotStartsAt + durationMilliseconds),
-    });
-  }
+  const slots = deriveAvailabilityRanges(
+    { startsAt, endsAt },
+    input.durationMinutes,
+    input.intervalMinutes,
+  );
 
   return { startsAt, endsAt, slots };
 }

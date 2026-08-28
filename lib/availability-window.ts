@@ -1,7 +1,8 @@
 import { z } from "zod";
 
-const timestampWithOffsetSchema = z.string().datetime({ offset: true });
-export const availabilityRecurrenceSchema = z.enum(["none", "weekly"]);
+import { timestampWithOffsetSchema } from "@/lib/date-schema";
+
+const availabilityRecurrenceSchema = z.enum(["none", "weekly"]);
 
 export const availabilityWindowCreateSchema = z
   .object({
@@ -64,15 +65,23 @@ export type AvailabilityWindowRule = AvailabilityWindowRange & {
   recurrence: AvailabilityRecurrence;
 };
 
-export type DerivedAvailabilitySlot = AvailabilityWindowRange & {
-  id: string;
-};
-
 export function deriveAvailabilitySlots(
   range: AvailabilityWindowRange,
   appointmentDurationMinutes: number,
   bookingIntervalMinutes: number,
   generateId: () => string,
+) {
+  return deriveAvailabilityRanges(
+    range,
+    appointmentDurationMinutes,
+    bookingIntervalMinutes,
+  ).map((slot) => ({ ...slot, id: generateId() }));
+}
+
+export function deriveAvailabilityRanges(
+  range: AvailabilityWindowRange,
+  appointmentDurationMinutes: number,
+  bookingIntervalMinutes: number,
 ) {
   if (
     !Number.isFinite(appointmentDurationMinutes) ||
@@ -85,7 +94,7 @@ export function deriveAvailabilitySlots(
 
   const durationMilliseconds = appointmentDurationMinutes * 60 * 1000;
   const intervalMilliseconds = bookingIntervalMinutes * 60 * 1000;
-  const slots: DerivedAvailabilitySlot[] = [];
+  const slots: AvailabilityWindowRange[] = [];
 
   for (
     let startsAt = range.startsAt.getTime();
@@ -93,7 +102,6 @@ export function deriveAvailabilitySlots(
     startsAt += intervalMilliseconds
   ) {
     slots.push({
-      id: generateId(),
       startsAt: new Date(startsAt),
       endsAt: new Date(startsAt + durationMilliseconds),
     });

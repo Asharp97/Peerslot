@@ -17,12 +17,13 @@ import {
   bookingPages,
   providerProfiles,
 } from "@/db/schema";
-import { createAvailableTimeService } from "@/lib/available-time-service";
 import { expandAvailabilityRule } from "@/lib/availability-recurrence";
 import { expandProviderAppointmentOccurrences } from "@/lib/provider-appointment-occurrence";
-import type {
-  AvailabilityBookingPage,
-  AvailableTimeRange,
+import {
+  calculateAvailableTimes,
+  type AppointmentForCalculation,
+  type AvailabilityBookingPage,
+  type AvailableTimeRange,
 } from "@/lib/available-time";
 
 const postgresAvailableTimeRepository = {
@@ -146,18 +147,33 @@ const postgresAvailableTimeRepository = {
   },
 };
 
-const availableTimeService = createAvailableTimeService(
-  postgresAvailableTimeRepository,
-);
-
-export function getAvailableTimesForBookingPage(
+export async function getAvailableTimesForBookingPage(
   bookingPage: AvailabilityBookingPage,
   range: AvailableTimeRange,
 ) {
-  return availableTimeService.calculate(bookingPage, range);
+  const [windows, appointments] = await Promise.all([
+    postgresAvailableTimeRepository.loadActiveWindows(
+      bookingPage.id,
+      range,
+      bookingPage.timeZone,
+    ),
+    postgresAvailableTimeRepository.loadAppointments(
+      bookingPage.id,
+      range,
+      bookingPage.restBetweenSessionsMinutes,
+    ),
+  ]);
+
+  return calculateAvailableTimes({
+    bookingPage,
+    range,
+    windows,
+    appointments: appointments as AppointmentForCalculation[],
+    now: new Date(),
+  });
 }
 
-export async function findPublishedAvailabilityBookingPage(slug: string) {
+async function findPublishedAvailabilityBookingPage(slug: string) {
   const [bookingPage] = await db
     .select({
       id: bookingPages.id,

@@ -8,23 +8,16 @@ import {
   deleteProviderStudent,
   updateProviderStudent,
 } from "@/lib/provider-appointments";
-import { getCurrentUser } from "@/lib/current-user";
+import { authorizeApiProvider } from "@/lib/api-authorization";
 
 const idSchema = z.string().uuid();
 
 type RouteContext = { params: Promise<{ id: string }> };
 
 export async function PATCH(request: Request, context: RouteContext) {
-  const currentUser = await getCurrentUser(request);
-  if (!currentUser) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-  if (!currentUser.capabilities.canProvide) {
-    return NextResponse.json(
-      { error: "Provider setup required" },
-      { status: 403 },
-    );
-  }
+  const authorization = await authorizeApiProvider(request);
+  if (!authorization.authorized) return authorization.response;
+  const { currentUser } = authorization;
 
   const id = idSchema.safeParse((await context.params).id);
   const input = providerStudentUpdateSchema.safeParse(
@@ -51,16 +44,9 @@ export async function PATCH(request: Request, context: RouteContext) {
 }
 
 export async function DELETE(request: Request, context: RouteContext) {
-  const currentUser = await getCurrentUser(request);
-  if (!currentUser) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-  if (!currentUser.capabilities.canProvide) {
-    return NextResponse.json(
-      { error: "Provider setup required" },
-      { status: 403 },
-    );
-  }
+  const authorization = await authorizeApiProvider(request);
+  if (!authorization.authorized) return authorization.response;
+  const { currentUser } = authorization;
 
   const id = idSchema.safeParse((await context.params).id);
   if (!id.success) {

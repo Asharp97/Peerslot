@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import { providerAppointmentErrorResponse } from "../../appointments/error-response";
 
-import { getCurrentUser } from "@/lib/current-user";
+import { authorizeApiProvider } from "@/lib/api-authorization";
 import {
   emailLocaleFromRequest,
   notifyStudentOfBookingDecision,
@@ -17,18 +17,9 @@ export async function PATCH(
   request: Request,
   context: { params: Promise<{ id: string }> },
 ) {
-  const currentUser = await getCurrentUser(request);
-
-  if (!currentUser) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  if (!currentUser.capabilities.canProvide) {
-    return NextResponse.json(
-      { error: "Provider setup required" },
-      { status: 403 },
-    );
-  }
+  const authorization = await authorizeApiProvider(request);
+  if (!authorization.authorized) return authorization.response;
+  const { currentUser } = authorization;
 
   const id = idSchema.safeParse((await context.params).id);
   const input = providerAppointmentReviewSchema.safeParse(

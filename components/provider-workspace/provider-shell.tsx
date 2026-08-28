@@ -19,12 +19,12 @@ import {
 } from "react";
 
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
+import { fetchAccessToken } from "@/lib/auth-browser";
 import type { ProviderWorkspaceData } from "@/lib/provider-workspace-types";
 
 export type ProviderShellCopy = {
   loading: string;
   overview: string;
-  availability: string;
   appointments: string;
   requests: string;
   settings: string;
@@ -78,7 +78,7 @@ export function ProviderShell({
     let cancelled = false;
 
     async function initialize() {
-      const token = await mintAccessToken();
+      const token = await fetchAccessToken();
       if (cancelled) return;
 
       if (!token) {
@@ -273,13 +273,4 @@ export function useProviderWorkspace() {
     throw new Error("useProviderWorkspace must be used inside ProviderShell");
   }
   return context;
-}
-
-async function mintAccessToken() {
-  const response = await fetch("/api/auth/token", {
-    credentials: "include",
-    cache: "no-store",
-  });
-  if (!response.ok) return null;
-  return ((await response.json()) as { token?: string }).token ?? null;
 }
