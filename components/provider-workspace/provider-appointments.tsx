@@ -16,7 +16,9 @@ import FullCalendar from "@fullcalendar/react";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import {
   CalendarPlus,
+  ClipboardPaste,
   Clock3,
+  Copy,
   GripVertical,
   LoaderCircle,
   Pencil,
@@ -28,6 +30,7 @@ import {
 import { useLocale } from "next-intl";
 import {
   FormEvent,
+  type MouseEvent,
   useCallback,
   useEffect,
   useMemo,
@@ -36,6 +39,12 @@ import {
 } from "react";
 
 import { Button } from "@/components/ui/button";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu";
 import {
   Dialog,
   DialogContent,
@@ -115,6 +124,11 @@ type SessionDraft = {
   color: string;
 };
 
+type CalendarContextTarget = {
+  appointment?: CalendarAppointment;
+  date: Date;
+};
+
 export type ProviderAppointmentsCopy = {
   eyebrow: string;
   title: string;
@@ -151,6 +165,11 @@ export type ProviderAppointmentsCopy = {
   saving: string;
   updatingSession: string;
   dragHint: string;
+  copySession: string;
+  pasteSession: string;
+  copyPasteHint: string;
+  sessionCopied: string;
+  pasteDayError: string;
   cancelSession: string;
   restoreSession: string;
   repetition: string;
@@ -215,6 +234,10 @@ export function ProviderAppointments({
   const [interactionSaving, setInteractionSaving] = useState(false);
   const [error, setError] = useState("");
   const [draft, setDraft] = useState<SessionDraft | null>(null);
+  const [contextTarget, setContextTarget] =
+    useState<CalendarContextTarget | null>(null);
+  const [copiedAppointment, setCopiedAppointment] =
+    useState<CalendarAppointment | null>(null);
   const calendarRef = useRef<FullCalendar>(null);
   const timeZone = data.bookingPage.timeZone;
   const earliestAvailability = useMemo(
@@ -373,6 +396,89 @@ export function ProviderAppointments({
     },
     [openNewSession],
   );
+
+  function handleCalendarContextMenu(event: MouseEvent<HTMLDivElement>) {
+    const target = event.target instanceof Element ? event.target : null;
+    const eventElement = target?.closest<HTMLElement>(
+      "[data-calendar-event-id]",
+    );
+    const calendarEvent = eventElement
+      ? calendarRef.current
+          ?.getApi()
+          .getEventById(eventElement.dataset.calendarEventId!)
+      : null;
+    const appointment = calendarEvent?.extendedProps.appointment as
+      CalendarAppointment | undefined;
+    const date =
+      calendarEvent?.start ??
+      calendarTimeAtPointer(
+        event.currentTarget,
+        target,
+        event.clientX,
+        event.clientY,
+      );
+
+    if (
+      !date ||
+      loading ||
+      saving ||
+      interactionSaving ||
+      calendarInteractionActive
+    ) {
+      setContextTarget(null);
+      // Leave the native menu available on headers and toolbar controls.
+      event.stopPropagation();
+      return;
+    }
+
+    setContextTarget({ appointment, date });
+  }
+
+  function pasteSession() {
+    if (!copiedAppointment || !contextTarget || contextTarget.appointment)
+      return;
+
+    try {
+      const startsAt = calendarWallTimeToUtc(contextTarget.date, timeZone);
+      const duration =
+        new Date(copiedAppointment.endsAt).getTime() -
+        new Date(copiedAppointment.startsAt).getTime();
+      const start = splitProviderDateTime(startsAt.toISOString(), timeZone);
+      const end = splitProviderDateTime(
+        new Date(startsAt.getTime() + duration).toISOString(),
+        timeZone,
+      );
+      if (start.date !== end.date) throw new Error(copy.pasteDayError);
+
+      const student = students.find(
+        ({ id }) => id === copiedAppointment.providerStudentId,
+      );
+      setDraft({
+        entryType: "session",
+        appointmentId: null,
+        availabilityWindowId: null,
+        studentId: student?.id ?? newStudentValue,
+        studentName: copiedAppointment.studentName,
+        newStudentName: student ? "" : copiedAppointment.studentName,
+        newStudentEmail: "",
+        date: start.date,
+        startsAt: start.time,
+        endsAt: end.time,
+        comment: copiedAppointment.comment ?? "",
+        status: "scheduled",
+        recurrence: copiedAppointment.isException
+          ? "none"
+          : copiedAppointment.recurrence,
+        editScope: "exception",
+        occurrenceStartsAt: null,
+        color: copiedAppointment.color,
+      });
+      setError("");
+      setDialogOpen(true);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : copy.saveError);
+    }
+  }
 
   const handleEventClick = useCallback(
     (info: EventClickArg) => {
@@ -762,7 +868,7 @@ export function ProviderAppointments({
             </span>
           </div>
           <p className="mt-2 max-w-2xl text-xs text-black/45">
-            {copy.dragHint}
+            {copy.dragHint} {copy.copyPasteHint}
           </p>
         </div>
         <div className="flex flex-wrap justify-end gap-2">
@@ -788,59 +894,107 @@ export function ProviderAppointments({
         </p>
       ) : null}
 
-      <section
-        aria-busy={loading || interactionSaving}
-        className={`provider-calendar relative min-h-0 flex-1 overflow-x-auto rounded-[24px] border border-black/10 bg-[#fbfaf4] p-3 shadow-sm sm:p-4 ${calendarInteractionActive ? "provider-calendar-interacting" : ""}`}
-      >
-        {loading || interactionSaving ? (
-          <span
-            aria-live="polite"
-            className="absolute top-4 right-4 z-10 flex min-h-9 items-center gap-2 rounded-full bg-lavender-whisper px-3 text-xs font-bold shadow-sm"
-            role="status"
+      {copiedAppointment ? (
+        <p role="status" className="mb-3 text-xs font-semibold text-black/60">
+          {copy.sessionCopied.replace("{name}", copiedAppointment.studentName)}
+        </p>
+      ) : null}
+
+      <ContextMenu modal={false}>
+        <section
+          aria-busy={loading || interactionSaving}
+          className={`provider-calendar relative min-h-0 flex-1 overflow-x-auto rounded-[24px] border border-black/10 bg-[#fbfaf4] p-3 shadow-sm sm:p-4 ${calendarInteractionActive ? "provider-calendar-interacting" : ""}`}
+        >
+          {loading || interactionSaving ? (
+            <span
+              aria-live="polite"
+              className="absolute top-4 right-4 z-10 flex min-h-9 items-center gap-2 rounded-full bg-lavender-whisper px-3 text-xs font-bold shadow-sm"
+              role="status"
+            >
+              <LoaderCircle
+                className="animate-spin motion-reduce:animate-none"
+                size={16}
+              />
+              {interactionSaving ? copy.updatingSession : null}
+            </span>
+          ) : null}
+          <ContextMenuTrigger
+            asChild
+            disabled={loading || saving || interactionSaving}
           >
-            <LoaderCircle
-              className="animate-spin motion-reduce:animate-none"
-              size={16}
-            />
-            {interactionSaving ? copy.updatingSession : null}
-          </span>
-        ) : null}
-        <div className="h-full min-w-190">
-          <FullCalendar
-            allDaySlot={false}
-            dateClick={handleDateClick}
-            dayHeaderFormat={calendarDayHeaderFormat}
-            eventClick={handleEventClick}
-            eventContent={renderSession}
-            eventDragStart={() => setCalendarInteractionActive(true)}
-            eventDragStop={() => setCalendarInteractionActive(false)}
-            eventDrop={handleCalendarEventChange}
-            eventResizeStart={() => setCalendarInteractionActive(true)}
-            eventResizeStop={() => setCalendarInteractionActive(false)}
-            eventResize={handleCalendarEventChange}
-            eventAllow={() => !interactionSaving}
-            eventMinHeight={34}
-            eventTimeFormat={calendarEventTimeFormat}
-            events={loadCalendarEvents}
-            expandRows
-            firstDay={1}
-            headerToolbar={calendarHeaderToolbar}
-            height="100%"
-            initialView="timeGridWeek"
-            locale={locale}
-            locales={calendarLocales}
-            nowIndicator
-            plugins={calendarPlugins}
-            ref={calendarRef}
-            scrollTime="08:00:00"
-            snapDuration="00:15:00"
-            slotDuration="00:30:00"
-            slotMaxTime="22:00:00"
-            slotMinTime="07:00:00"
-            timeZone="local"
-          />
-        </div>
-      </section>
+            <div
+              className="h-full min-w-190"
+              onContextMenuCapture={handleCalendarContextMenu}
+              onPointerDownCapture={(event) => {
+                if (event.pointerType === "touch")
+                  handleCalendarContextMenu(event);
+              }}
+            >
+              <FullCalendar
+                allDaySlot={false}
+                dateClick={handleDateClick}
+                dayHeaderFormat={calendarDayHeaderFormat}
+                eventClick={handleEventClick}
+                eventContent={renderSession}
+                eventDidMount={(info) => {
+                  info.el.dataset.calendarEventId = info.event.id;
+                }}
+                eventDragStart={() => setCalendarInteractionActive(true)}
+                eventDragStop={() => setCalendarInteractionActive(false)}
+                eventDrop={handleCalendarEventChange}
+                eventResizeStart={() => setCalendarInteractionActive(true)}
+                eventResizeStop={() => setCalendarInteractionActive(false)}
+                eventResize={handleCalendarEventChange}
+                eventAllow={() => !interactionSaving}
+                eventMinHeight={34}
+                eventTimeFormat={calendarEventTimeFormat}
+                events={loadCalendarEvents}
+                expandRows
+                firstDay={1}
+                headerToolbar={calendarHeaderToolbar}
+                height="100%"
+                initialView="timeGridWeek"
+                locale={locale}
+                locales={calendarLocales}
+                nowIndicator
+                plugins={calendarPlugins}
+                ref={calendarRef}
+                scrollTime="08:00:00"
+                snapDuration="00:15:00"
+                slotDuration="00:30:00"
+                slotMaxTime="22:00:00"
+                slotMinTime="07:00:00"
+                timeZone="local"
+              />
+            </div>
+          </ContextMenuTrigger>
+        </section>
+        <ContextMenuContent
+          onCloseAutoFocus={(event) => event.preventDefault()}
+        >
+          <ContextMenuItem
+            disabled={!contextTarget?.appointment}
+            onSelect={() => {
+              if (contextTarget?.appointment) {
+                setCopiedAppointment({ ...contextTarget.appointment });
+                setError("");
+              }
+            }}
+          >
+            <Copy aria-hidden="true" /> {copy.copySession}
+          </ContextMenuItem>
+          <ContextMenuItem
+            disabled={
+              !copiedAppointment ||
+              !contextTarget ||
+              !!contextTarget.appointment
+            }
+            onSelect={pasteSession}
+          >
+            <ClipboardPaste aria-hidden="true" /> {copy.pasteSession}
+          </ContextMenuItem>
+        </ContextMenuContent>
+      </ContextMenu>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-h-[92dvh] overflow-y-auto sm:max-w-xl">
@@ -1055,10 +1209,7 @@ export function ProviderAppointments({
                 ) : null}
                 {draft.entryType === "session" ? (
                   <>
-                    <Field
-                      className="sm:col-span-2"
-                      label={copy.sessionColor}
-                    >
+                    <Field label={copy.sessionColor}>
                       <div className="flex min-h-11 items-center gap-3 rounded-xl border border-black/10 bg-white px-3">
                         <Input
                           aria-label={copy.sessionColor}
@@ -1532,6 +1683,46 @@ function localDateTime(date: Date) {
 function calendarWallTimeToUtc(date: Date, timeZone: string) {
   const local = localDateTime(date);
   return zonedLocalDateTimeToUtc(local.date, local.time, timeZone);
+}
+
+function calendarTimeAtPointer(
+  calendar: HTMLElement,
+  target: Element | null,
+  clientX: number,
+  clientY: number,
+): Date | null {
+  const dayColumn =
+    target?.closest<HTMLElement>(".fc-timegrid-col[data-date]") ??
+    (target?.closest(".fc-timegrid-slots")
+      ? Array.from(
+          calendar.querySelectorAll<HTMLElement>(".fc-timegrid-col[data-date]"),
+        ).find((column) => {
+          const bounds = column.getBoundingClientRect();
+          return clientX >= bounds.left && clientX < bounds.right;
+        })
+      : null);
+  const day = dayColumn?.dataset.date;
+  if (!day) return null;
+
+  // Day columns and time rows are separate, overlaid FullCalendar tables.
+  // Use viewport bounds so scrolling and different row heights stay accurate.
+  const rows = calendar.querySelectorAll<HTMLElement>(
+    ".fc-timegrid-slot-lane[data-time]",
+  );
+  for (const row of rows) {
+    const bounds = row.getBoundingClientRect();
+    if (bounds.height <= 0 || clientY < bounds.top || clientY >= bounds.bottom)
+      continue;
+    const [hours, minutes] = row.dataset.time!.split(":").map(Number);
+    const snappedMinutes =
+      hours * 60 +
+      minutes +
+      Math.floor(((clientY - bounds.top) / bounds.height) * 2) * 15;
+    return new Date(
+      `${day}T${pad(Math.floor(snappedMinutes / 60))}:${pad(snappedMinutes % 60)}:00`,
+    );
+  }
+  return null;
 }
 
 function splitProviderDateTime(value: string, timeZone: string) {

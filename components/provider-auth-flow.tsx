@@ -100,7 +100,6 @@ export function ProviderAuthFlow({
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [termsAccepted, setTermsAccepted] = useState(false);
   const [settings, setSettings] = useState({
     displayName: "",
     professionalTitle: "",
@@ -197,11 +196,6 @@ export function ProviderAuthFlow({
   }
 
   async function handleSocialAuth() {
-    if (mode === "register" && !termsAccepted) {
-      setError(copy.errors.consent);
-      return;
-    }
-
     setSubmitting(true);
     setError("");
 
@@ -348,33 +342,24 @@ export function ProviderAuthFlow({
 
         {error ? <ErrorMessage message={error} /> : null}
         {mode === "register" ? (
-          <label className="flex items-start gap-3 text-sm leading-6 text-[#62625a]">
-            <input
-              checked={termsAccepted}
-              className="mt-1 size-4 accent-vast-ink"
-              onChange={(event) => setTermsAccepted(event.target.checked)}
-              required
-              type="checkbox"
-            />
-            <span>
-              {copy.consentPrefix}{" "}
-              <Link
-                className="font-semibold text-vast-ink underline underline-offset-3"
-                href="/policy/terms-agreements"
-                target="_blank"
-              >
-                {copy.termsLink}
-              </Link>{" "}
-              {copy.consentJoin}{" "}
-              <Link
-                className="font-semibold text-vast-ink underline underline-offset-3"
-                href="/policy/privacy"
-                target="_blank"
-              >
-                {copy.privacyLink}
-              </Link>
-            </span>
-          </label>
+          <p className="text-sm leading-6 text-[#62625a]">
+            {copy.consentPrefix}{" "}
+            <Link
+              className="font-semibold text-vast-ink underline underline-offset-3"
+              href="/policy/terms-agreements"
+              target="_blank"
+            >
+              {copy.termsLink}
+            </Link>{" "}
+            {copy.consentJoin}{" "}
+            <Link
+              className="font-semibold text-vast-ink underline underline-offset-3"
+              href="/policy/privacy"
+              target="_blank"
+            >
+              {copy.privacyLink}
+            </Link>
+          </p>
         ) : null}
         <button
           className="inline-flex min-h-13 w-full items-center justify-center gap-2 rounded-xl border-2 border-vast-ink bg-vast-ink px-5 text-sm font-semibold text-lumen-cream disabled:cursor-wait disabled:opacity-60"

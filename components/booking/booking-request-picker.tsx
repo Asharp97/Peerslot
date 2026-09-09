@@ -113,7 +113,6 @@ export function BookingRequestPicker({
   const [studentName, setStudentName] = useState("");
   const [studentEmail, setStudentEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [termsAccepted, setTermsAccepted] = useState(false);
   const [comment, setComment] = useState("");
   const [saving, setSaving] = useState(false);
   const [requested, setRequested] = useState(false);
@@ -273,10 +272,6 @@ export function BookingRequestPicker({
 
   async function handleSocialAuth() {
     if (!selected) return;
-    if (authMode === "register" && !termsAccepted) {
-      setError(copy.consentError);
-      return;
-    }
     setSaving(true);
     setError("");
 
@@ -609,35 +604,24 @@ export function BookingRequestPicker({
                       />
                     </div>
                     {authMode === "register" ? (
-                      <label className="flex items-start gap-3 text-sm leading-6 text-black/55">
-                        <input
-                          checked={termsAccepted}
-                          className="mt-1 size-4 accent-vast-ink"
-                          onChange={(event) =>
-                            setTermsAccepted(event.target.checked)
-                          }
-                          required
-                          type="checkbox"
-                        />
-                        <span>
-                          {copy.consentPrefix}{" "}
-                          <a
-                            className="font-semibold text-vast-ink underline underline-offset-3"
-                            href={`/${locale}/policy/terms-agreements`}
-                            target="_blank"
-                          >
-                            {copy.termsLink}
-                          </a>{" "}
-                          {copy.consentJoin}{" "}
-                          <a
-                            className="font-semibold text-vast-ink underline underline-offset-3"
-                            href={`/${locale}/policy/privacy`}
-                            target="_blank"
-                          >
-                            {copy.privacyLink}
-                          </a>
-                        </span>
-                      </label>
+                      <p className="text-sm leading-6 text-black/55">
+                        {copy.consentPrefix}{" "}
+                        <a
+                          className="font-semibold text-vast-ink underline underline-offset-3"
+                          href={`/${locale}/policy/terms-agreements`}
+                          target="_blank"
+                        >
+                          {copy.termsLink}
+                        </a>{" "}
+                        {copy.consentJoin}{" "}
+                        <a
+                          className="font-semibold text-vast-ink underline underline-offset-3"
+                          href={`/${locale}/policy/privacy`}
+                          target="_blank"
+                        >
+                          {copy.privacyLink}
+                        </a>
+                      </p>
                     ) : null}
                     <ErrorMessage message={error} />
                   </div>
