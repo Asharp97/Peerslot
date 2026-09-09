@@ -18,7 +18,7 @@ describe("PeerSlot email templates", () => {
     const template = newBookingRequestTemplate({
       ...appointment,
       comment: "<script>alert('x')</script>",
-      reviewUrl: "https://peerslot.com/en/provider/dashboard",
+      reviewUrl: "https://peerslot.com/en/provider/requests",
       studentEmail: "ada@example.com",
     });
 

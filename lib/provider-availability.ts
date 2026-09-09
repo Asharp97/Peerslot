@@ -4,17 +4,16 @@ export type ProviderWindowStatus =
   "available" | "booked" | "past" | "unpublished";
 
 export function getProviderWindowStatus(input: {
-  windowId: string;
   startsAt: Date;
   endsAt: Date;
   isActive: boolean;
   isPagePublished: boolean;
-  bookedWindowIds: Set<string>;
+  hasAppointments: boolean;
   now: Date;
   recurrence?: "none" | "weekly";
 }): ProviderWindowStatus {
   if (input.recurrence !== "weekly" && input.endsAt <= input.now) return "past";
-  if (input.bookedWindowIds.has(input.windowId)) return "booked";
+  if (input.hasAppointments) return "booked";
   if (!input.isActive || !input.isPagePublished) return "unpublished";
   return "available";
 }

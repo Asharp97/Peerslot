@@ -47,25 +47,12 @@ export async function updateBookingPage(
     throw new BookingPageNotFoundError();
   }
 
-  const {
-    bookingIntervalMinutes: requestedInterval,
-    restBetweenSessionsMinutes,
-    ...bookingPageSettings
-  } = settings;
+  const { restBetweenSessionsMinutes, ...bookingPageSettings } = settings;
   const duration =
     settings.appointmentDurationMinutes ??
     current.bookingPage.appointmentDurationMinutes;
   const rest = restBetweenSessionsMinutes ?? current.restBetweenSessionsMinutes;
   const bookingIntervalMinutes = duration + rest;
-
-  if (
-    requestedInterval !== undefined &&
-    requestedInterval !== bookingIntervalMinutes
-  ) {
-    throw new RangeError(
-      "Booking interval must equal appointment duration plus rest",
-    );
-  }
 
   const now = new Date();
   const [, updatedPages] = await db.batch([

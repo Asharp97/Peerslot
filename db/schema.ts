@@ -276,8 +276,6 @@ export const appointments = pgTable(
     rescheduleCount: integer("reschedule_count").default(0).notNull(),
     status: appointmentStatus("status").default("scheduled").notNull(),
     comment: text("comment"),
-    examName: text("exam_name"),
-    schoolYear: text("school_year"),
     recurrence: availabilityRecurrence("recurrence").default("none").notNull(),
     recurrenceEndsAt: timestamp("recurrence_ends_at", {
       withTimezone: true,
@@ -330,10 +328,6 @@ export const appointments = pgTable(
     check(
       "appointment_student_present",
       sql`${table.studentId} is not null or ${table.providerStudentId} is not null`,
-    ),
-    check(
-      "appointment_context_single",
-      sql`num_nonnulls(${table.examName}, ${table.schoolYear}) <= 1`,
     ),
     check(
       "appointment_exception_fields_paired",

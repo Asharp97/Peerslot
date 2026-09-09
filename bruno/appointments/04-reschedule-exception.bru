@@ -23,8 +23,6 @@ body:json {
   {
     "startsAt": "{{rescheduledSessionStartsAt}}",
     "endsAt": "{{rescheduledSessionEndsAt}}",
-    "examName": "LGS",
-    "schoolYear": null,
     "comment": "Moved once because the student had a conflict",
     "editScope": "exception",
     "occurrenceStartsAt": "{{providerSessionStartsAt}}",
@@ -49,8 +47,6 @@ tests {
     expect(appointment.startsAt).to.equal(bru.getVar("rescheduledSessionStartsAt"));
     expect(appointment.endsAt).to.equal(bru.getVar("rescheduledSessionEndsAt"));
     expect(appointment.rescheduleCount).to.equal(1);
-    expect(appointment.examName).to.equal("LGS");
-    expect(appointment.schoolYear).to.equal(null);
     expect(appointment.exceptionForAppointmentId).to.equal(bru.getVar("providerAppointmentId"));
     expect(appointment.color).to.equal("#ffa946");
   });

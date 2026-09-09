@@ -53,7 +53,7 @@ describe("provider appointments API integration", () => {
     expect(await response.json()).toEqual({ appointments: [] });
   });
 
-  it("creates a session with a provider-managed student and school year", async () => {
+  it("creates a session with a provider-managed student", async () => {
     vi.mocked(createProviderAppointment).mockResolvedValue({
       id: appointmentId,
     } as Awaited<ReturnType<typeof createProviderAppointment>>);
@@ -62,7 +62,6 @@ describe("provider appointments API integration", () => {
         providerStudentId,
         startsAt: "2030-01-15T09:00:00+03:00",
         endsAt: "2030-01-15T09:45:00+03:00",
-        schoolYear: "Year 8",
         comment: "Focus on geometry",
       }),
     );
@@ -72,8 +71,8 @@ describe("provider appointments API integration", () => {
       providerId,
       expect.objectContaining({
         providerStudentId,
-        schoolYear: "Year 8",
         startsAt: new Date("2030-01-15T06:00:00Z"),
+        comment: "Focus on geometry",
       }),
     );
   });

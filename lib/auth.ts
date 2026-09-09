@@ -32,16 +32,6 @@ const google =
       }
     : undefined;
 
-// Facebook OAuth is intentionally disabled until PeerSlot has a registered
-// parent company that can complete Meta Business Verification.
-// const facebook =
-//   process.env.FACEBOOK_CLIENT_ID && process.env.FACEBOOK_CLIENT_SECRET
-//     ? {
-//         clientId: process.env.FACEBOOK_CLIENT_ID,
-//         clientSecret: process.env.FACEBOOK_CLIENT_SECRET,
-//       }
-//     : undefined;
-
 export const auth = betterAuth({
   appName: "PeerSlot",
   baseURL,
@@ -142,8 +132,6 @@ export const auth = betterAuth({
   ],
   socialProviders: {
     ...(google ? { google } : {}),
-    // Re-enable after Meta Business Verification is complete.
-    // ...(facebook ? { facebook } : {}),
   },
   trustedOrigins: [baseURL],
 });

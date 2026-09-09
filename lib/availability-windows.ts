@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 
-import { and, asc, eq, ne, notExists } from "drizzle-orm";
+import { and, asc, eq, isNotNull, ne, notExists } from "drizzle-orm";
 
 import { db } from "@/db";
 import {
@@ -65,15 +65,35 @@ export class AvailabilityWindowHasAppointmentsError extends Error {
 
 export async function listAvailabilityWindows(providerId: string) {
   const bookingPage = await requireBookingPage(providerId);
-  const windows = await db
-    .select()
-    .from(availabilityWindows)
-    .where(eq(availabilityWindows.bookingPageId, bookingPage.id))
-    .orderBy(asc(availabilityWindows.startsAt));
-
-  return windows.map((window) =>
-    presentAvailabilityWindow(window, bookingPage.timeZone),
+  const [windows, appointmentWindows] = await Promise.all([
+    db
+      .select()
+      .from(availabilityWindows)
+      .where(eq(availabilityWindows.bookingPageId, bookingPage.id))
+      .orderBy(asc(availabilityWindows.startsAt)),
+    db
+      .selectDistinct({ id: availabilitySlots.availabilityWindowId })
+      .from(availabilitySlots)
+      .innerJoin(appointments, eq(appointments.slotId, availabilitySlots.id))
+      .innerJoin(
+        availabilityWindows,
+        eq(availabilityWindows.id, availabilitySlots.availabilityWindowId),
+      )
+      .where(
+        and(
+          eq(availabilityWindows.bookingPageId, bookingPage.id),
+          isNotNull(availabilitySlots.availabilityWindowId),
+        ),
+      ),
+  ]);
+  const appointmentWindowIds = new Set(
+    appointmentWindows.flatMap(({ id }) => (id ? [id] : [])),
   );
+
+  return windows.map((window) => ({
+    ...presentAvailabilityWindow(window, bookingPage.timeZone),
+    hasAppointments: appointmentWindowIds.has(window.id),
+  }));
 }
 
 export async function createAvailabilityWindow(

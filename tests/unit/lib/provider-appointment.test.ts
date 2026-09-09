@@ -36,33 +36,36 @@ describe("provider student input", () => {
 });
 
 describe("provider appointment input", () => {
-  it.each([
-    { examName: "LGS", schoolYear: undefined },
-    { examName: undefined, schoolYear: "Year 8" },
-  ])("accepts exactly one session context", (context) => {
+  it("normalizes a provider-created session", () => {
     const result = providerAppointmentCreateSchema.parse({
       providerStudentId: studentId,
       startsAt: "2030-01-15T09:00:00+03:00",
       endsAt: "2030-01-15T09:45:00+03:00",
       comment: "Focus on geometry",
-      ...context,
     });
 
     expect(result.startsAt.toISOString()).toBe("2030-01-15T06:00:00.000Z");
     expect(result.endsAt.toISOString()).toBe("2030-01-15T06:45:00.000Z");
+    expect(result.comment).toBe("Focus on geometry");
   });
 
-  it.each([{}, { examName: "LGS", schoolYear: "Year 8" }])(
-    "rejects missing or competing session contexts",
-    (context) => {
+  it.each(["examName", "schoolYear"])(
+    "rejects the removed %s field",
+    (field) => {
       const result = providerAppointmentCreateSchema.safeParse({
         providerStudentId: studentId,
         startsAt: "2030-01-15T09:00:00Z",
         endsAt: "2030-01-15T09:45:00Z",
-        ...context,
+        [field]: "legacy context",
       });
 
       expect(result.success).toBe(false);
+      expect(
+        providerAppointmentUpdateSchema.safeParse({
+          comment: "Keep this note",
+          [field]: "legacy context",
+        }).success,
+      ).toBe(false);
     },
   );
 
@@ -71,7 +74,6 @@ describe("provider appointment input", () => {
       providerStudentId: studentId,
       startsAt: "2030-01-15T09:45:00Z",
       endsAt: "2030-01-15T09:00:00Z",
-      schoolYear: "Year 8",
     });
 
     expect(result.success).toBe(false);
@@ -81,13 +83,11 @@ describe("provider appointment input", () => {
     const result = providerAppointmentUpdateSchema.parse({
       startsAt: "2030-01-16T10:00:00Z",
       endsAt: "2030-01-16T10:45:00Z",
-      examName: "LGS",
-      schoolYear: null,
       comment: "One-off change",
     });
 
     expect(result.startsAt).toEqual(new Date("2030-01-16T10:00:00Z"));
-    expect(result.schoolYear).toBeNull();
+    expect(result.comment).toBe("One-off change");
   });
 
   it("accepts weekly sessions and validates their color", () => {
@@ -95,7 +95,6 @@ describe("provider appointment input", () => {
       providerStudentId: studentId,
       startsAt: "2030-01-15T09:00:00Z",
       endsAt: "2030-01-15T09:45:00Z",
-      schoolYear: "Year 8",
       recurrence: "weekly",
       color: "#034f46",
     });
@@ -106,7 +105,6 @@ describe("provider appointment input", () => {
         providerStudentId: studentId,
         startsAt: "2030-01-15T09:00:00Z",
         endsAt: "2030-01-15T09:45:00Z",
-        schoolYear: "Year 8",
         color: "green",
       }).success,
     ).toBe(false);
@@ -161,14 +159,6 @@ describe("provider appointment input", () => {
       }).success,
     ).toBe(false);
     expect(providerAppointmentUpdateSchema.safeParse({}).success).toBe(false);
-  });
-
-  it("requires both context fields when switching context type", () => {
-    expect(
-      providerAppointmentUpdateSchema.safeParse({
-        examName: "LGS",
-      }).success,
-    ).toBe(false);
   });
 
   it("limits calendar requests to 45 days", () => {

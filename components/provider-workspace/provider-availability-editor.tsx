@@ -42,6 +42,7 @@ type AvailabilityWindow = {
   localEndsAt: string;
   timeZone: string;
   recurrence: "none" | "weekly";
+  hasAppointments: boolean;
 };
 
 export type ProviderAvailabilityCopy = {
@@ -81,7 +82,7 @@ export function ProviderAvailabilityEditor({
   copy: ProviderAvailabilityCopy;
 }) {
   const locale = useLocale() as "en" | "tr";
-  const { accessToken, data, refresh } = useProviderWorkspace();
+  const { accessToken, data } = useProviderWorkspace();
   const earliestAvailability = useMemo(
     () =>
       earliestAvailabilityLocal({
@@ -155,16 +156,6 @@ export function ProviderAvailabilityEditor({
     }
   }, [data.bookingPage, date, earliestAvailability, endsAt, startsAt]);
 
-  const bookedWindowIds = useMemo(
-    () =>
-      new Set(
-        data.upcomingAppointments.flatMap(({ windowId }) =>
-          windowId ? [windowId] : [],
-        ),
-      ),
-    [data.upcomingAppointments],
-  );
-
   async function saveWindow(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!preview || preview.slots.length === 0) {
@@ -205,7 +196,7 @@ export function ProviderAvailabilityEditor({
       }
 
       resetForm();
-      await Promise.all([loadWindows(), refresh()]);
+      await loadWindows();
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : copy.saveError);
     } finally {
@@ -271,7 +262,7 @@ export function ProviderAvailabilityEditor({
       return;
     }
     if (editingId === windowId) resetForm();
-    await Promise.all([loadWindows(), refresh()]);
+    await loadWindows();
   }
 
   function resetForm() {
@@ -430,13 +421,12 @@ export function ProviderAvailabilityEditor({
             ) : windows.length ? (
               windows.map((window) => {
                 const status = getProviderWindowStatus({
-                  windowId: window.id,
                   startsAt: new Date(window.startsAt),
                   endsAt: new Date(window.endsAt),
                   isActive: window.isActive,
                   isPagePublished: data.bookingPage.isPublished,
                   recurrence: window.recurrence,
-                  bookedWindowIds,
+                  hasAppointments: window.hasAppointments,
                   now: new Date(),
                 });
                 const booked = status === "booked";

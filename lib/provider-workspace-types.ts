@@ -1,21 +1,12 @@
 type ProviderWorkspaceAppointment = {
   id: string;
-  windowId: string | null;
   studentName: string;
-  studentEmail: string | null;
-  providerStudentId: string | null;
   startsAt: string;
-  endsAt: string;
   status: "pending" | "scheduled" | "declined" | "cancelled";
-  comment: string | null;
-  examName: string | null;
-  schoolYear: string | null;
-  createdByProvider: boolean;
-  rescheduleCount: number;
   createdAt: string;
 };
 
-export type ProviderWorkspaceData = {
+export type ProviderSetupData = {
   profile: {
     displayName: string;
     professionalTitle: string;
@@ -34,6 +25,9 @@ export type ProviderWorkspaceData = {
     minimumNoticeHours: number;
     isPublished: boolean;
   };
+};
+
+export type ProviderDashboardData = ProviderSetupData & {
   upcomingAppointments: ProviderWorkspaceAppointment[];
   recentBookings: ProviderWorkspaceAppointment[];
   openTimesThisWeek: Array<{

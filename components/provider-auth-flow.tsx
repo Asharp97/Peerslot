@@ -133,7 +133,7 @@ export function ProviderAuthFlow({
       }
 
       if (setup.status === "active") {
-        router.replace("/provider/dashboard");
+        router.replace("/provider");
         return;
       }
 
@@ -240,7 +240,7 @@ export function ProviderAuthFlow({
     }
 
     if (setup.status === "active") {
-      router.replace("/provider/dashboard");
+      router.replace("/provider");
       return;
     }
 
@@ -274,7 +274,7 @@ export function ProviderAuthFlow({
       return;
     }
 
-    router.replace("/provider/dashboard");
+    router.replace("/provider");
   }
 
   if (phase === "checking") {

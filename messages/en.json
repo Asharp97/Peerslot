@@ -207,7 +207,7 @@
             "Account and identity information, including name, email address, profile image when provided by a sign-in provider, email-verification status, and authentication credentials or tokens.",
             "Provider profile and booking-page information, including display name, professional title, time zone, appointment duration, rest time, minimum notice, public booking link, and publication status.",
             "Scheduling information, including availability windows, appointment dates and times, recurrence choices, booking status, reschedule history, session color, and exceptions to recurring sessions.",
-            "Student records entered by providers or students, including name, email address, comments, exam name or school year, and appointment history.",
+            "Student records entered by providers or students, including name, email address, comments, and appointment history.",
             "Communications generated through the service, such as verification emails and booking-request, acceptance, or decline notifications.",
             "Technical and security information, such as session identifiers, IP address, browser or device user agent, language preference, request logs, and failed-booking or rate-limit events."
           ]
@@ -231,7 +231,7 @@
             "We do not sell personal information. We share it only as needed to provide and protect PeerSlot, including with:"
           ],
           "items": [
-            "The provider or student involved in an appointment. Providers can see the identity, contact details, scheduling details, and optional context associated with their students and bookings.",
+            "The provider or student involved in an appointment. Providers can see the identity, contact details, and scheduling details associated with their students and bookings.",
             "Infrastructure, database, email-delivery, security, and authentication vendors acting on our behalf.",
             "Google when you choose its sign-in option, subject to Google's own privacy terms.",
             "Authorities, advisers, or other parties when required by law, necessary to protect rights and safety, or connected with a merger, financing, acquisition, or sale of assets."
@@ -297,7 +297,7 @@
           "heading": "3. Provider responsibilities",
           "items": [
             "Keep availability, time zone, duration, rest time, notice periods, student records, and appointment information accurate.",
-            "Obtain any consent or other lawful basis needed to add student names, email addresses, comments, exam names, school years, or other personal information.",
+            "Obtain any consent or other lawful basis needed to add student names, email addresses, comments, or other personal information.",
             "Review pending appointment requests and communicate material schedule changes to affected students.",
             "Use appropriate professional judgment. PeerSlot availability and notifications do not replace your own calendar checks, emergency procedures, or record-keeping duties.",
             "Protect public booking links and regenerate a link if you believe it is compromised or shared too broadly."
@@ -491,7 +491,9 @@
       "bookedBy": "{name} booked an appointment.",
       "pendingBy": "{name} requested an appointment.",
       "declinedBy": "{name}’s appointment request was declined.",
-      "cancelledBy": "{name} cancelled an appointment."
+      "cancelledBy": "{name} cancelled an appointment.",
+      "loading": "Loading your overview…",
+      "loadError": "We couldn't load your overview. Please refresh and try again."
     },
     "availability": {
       "eyebrow": "Availability editor",
@@ -558,10 +560,6 @@
       "date": "Date",
       "startsAt": "Starts at",
       "endsAt": "Ends at",
-      "sessionContext": "Session context",
-      "examName": "Exam name",
-      "schoolYear": "School year",
-      "contextValue": "Exam or school-year value",
       "comment": "Comment",
       "commentPlaceholder": "Preparation, goals, or anything to remember…",
       "save": "Save session",

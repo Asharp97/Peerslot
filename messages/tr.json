@@ -207,7 +207,7 @@
             "Ad, e-posta adresi, giriş sağlayıcısı tarafından sunulduğunda profil görseli, e-posta doğrulama durumu ve kimlik doğrulama bilgileri veya belirteçleri dahil hesap ve kimlik bilgileri.",
             "Görünen ad, mesleki unvan, saat dilimi, randevu süresi, dinlenme süresi, asgari bildirim süresi, herkese açık rezervasyon bağlantısı ve yayın durumu dahil sağlayıcı profili ve rezervasyon sayfası bilgileri.",
             "Uygunluk aralıkları, randevu tarih ve saatleri, tekrarlama seçimleri, rezervasyon durumu, yeniden planlama geçmişi, görüşme rengi ve tekrarlanan görüşme istisnaları dahil planlama bilgileri.",
-            "Sağlayıcıların veya öğrencilerin girdiği ad, e-posta adresi, yorum, sınav adı veya okul yılı ve randevu geçmişi dahil öğrenci kayıtları.",
+            "Sağlayıcıların veya öğrencilerin girdiği ad, e-posta adresi, yorum ve randevu geçmişi dahil öğrenci kayıtları.",
             "Doğrulama e-postaları ile rezervasyon talebi, kabul veya ret bildirimleri gibi hizmet üzerinden oluşturulan iletişimler.",
             "Oturum tanımlayıcıları, IP adresi, tarayıcı veya cihaz bilgisi, dil tercihi, istek günlükleri ve başarısız rezervasyon veya hız sınırı olayları gibi teknik ve güvenlik bilgileri."
           ]
@@ -231,7 +231,7 @@
             "Kişisel bilgileri satmayız. Bilgileri yalnızca PeerSlot'u sunmak ve korumak için gerektiğinde şu taraflarla paylaşırız:"
           ],
           "items": [
-            "Randevuyla ilgili sağlayıcı veya öğrenci. Sağlayıcılar, öğrenci ve rezervasyonlarıyla bağlantılı kimlik, iletişim, planlama ve isteğe bağlı bağlam bilgilerini görebilir.",
+            "Randevuyla ilgili sağlayıcı veya öğrenci. Sağlayıcılar, öğrenci ve rezervasyonlarıyla bağlantılı kimlik, iletişim ve planlama bilgilerini görebilir.",
             "Bizim adımıza çalışan altyapı, veri tabanı, e-posta gönderimi, güvenlik ve kimlik doğrulama sağlayıcıları.",
             "Google ile giriş seçeneğini kullandığınızda, kendi gizlilik koşullarına tabi olan Google.",
             "Yasalar gerektirdiğinde, hakları ve güvenliği korumak için gerektiğinde veya birleşme, finansman, satın alma ya da varlık satışıyla bağlantılı olarak yetkililer, danışmanlar veya diğer taraflar."
@@ -297,7 +297,7 @@
           "heading": "3. Sağlayıcının sorumlulukları",
           "items": [
             "Uygunluk, saat dilimi, süre, dinlenme süresi, bildirim süreleri, öğrenci kayıtları ve randevu bilgilerini doğru tutmak.",
-            "Öğrenci adları, e-posta adresleri, yorumlar, sınav adları, okul yılları veya diğer kişisel bilgileri eklemek için gerekli rızayı ya da başka bir hukuki dayanağı edinmek.",
+            "Öğrenci adları, e-posta adresleri, yorumlar veya diğer kişisel bilgileri eklemek için gerekli rızayı ya da başka bir hukuki dayanağı edinmek.",
             "Bekleyen randevu taleplerini incelemek ve önemli program değişikliklerini etkilenen öğrencilere bildirmek.",
             "Uygun mesleki muhakemeyi kullanmak. PeerSlot uygunluğu ve bildirimleri kendi takvim kontrollerinizin, acil durum süreçlerinizin veya kayıt tutma yükümlülüklerinizin yerini almaz.",
             "Herkese açık rezervasyon bağlantılarını korumak ve bağlantının ele geçirildiğini ya da gereğinden geniş paylaşıldığını düşünüyorsanız yenilemek."
@@ -491,7 +491,9 @@
       "bookedBy": "{name} bir randevu aldı.",
       "pendingBy": "{name} bir randevu talep etti.",
       "declinedBy": "{name} için randevu talebi reddedildi.",
-      "cancelledBy": "{name} randevusunu iptal etti."
+      "cancelledBy": "{name} randevusunu iptal etti.",
+      "loading": "Genel bakışınız yükleniyor…",
+      "loadError": "Genel bakışınız yüklenemedi. Lütfen sayfayı yenileyip tekrar deneyin."
     },
     "availability": {
       "eyebrow": "Uygunluk düzenleyici",
@@ -558,10 +560,6 @@
       "date": "Tarih",
       "startsAt": "Başlangıç",
       "endsAt": "Bitiş",
-      "sessionContext": "Ders bağlamı",
-      "examName": "Sınav adı",
-      "schoolYear": "Okul yılı",
-      "contextValue": "Sınav veya okul yılı bilgisi",
       "comment": "Not",
       "commentPlaceholder": "Hazırlık, hedefler veya hatırlanacaklar…",
       "save": "Dersi kaydet",

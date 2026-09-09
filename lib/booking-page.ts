@@ -20,10 +20,6 @@ export const bookingPageSettingsSchema = z
       .number()
       .refine((value) => isFiveMinuteOption(value, 10, 90))
       .optional(),
-    bookingIntervalMinutes: z
-      .number()
-      .refine((value) => isFiveMinuteOption(value, 10, 150))
-      .optional(),
     restBetweenSessionsMinutes: z
       .number()
       .refine((value) => isFiveMinuteOption(value, 0, 60))
@@ -34,23 +30,7 @@ export const bookingPageSettingsSchema = z
   .strict()
   .refine((settings) => Object.keys(settings).length > 0, {
     message: "At least one booking page setting is required",
-  })
-  .refine(
-    ({
-      appointmentDurationMinutes,
-      bookingIntervalMinutes,
-      restBetweenSessionsMinutes,
-    }) =>
-      appointmentDurationMinutes === undefined ||
-      bookingIntervalMinutes === undefined ||
-      restBetweenSessionsMinutes === undefined ||
-      bookingIntervalMinutes ===
-        appointmentDurationMinutes + restBetweenSessionsMinutes,
-    {
-      message: "Booking interval must equal appointment duration plus rest",
-      path: ["bookingIntervalMinutes"],
-    },
-  );
+  });
 
 export const bookingSlugSchema = z
   .string()

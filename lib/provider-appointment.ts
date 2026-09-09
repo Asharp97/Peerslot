@@ -56,8 +56,6 @@ export const providerAppointmentCreateSchema = z
     startsAt: timestampWithOffsetSchema,
     endsAt: timestampWithOffsetSchema,
     comment: optionalText(1000),
-    examName: optionalText(120),
-    schoolYear: optionalText(80),
     recurrence: z.enum(["none", "weekly"]).default("none"),
     color: sessionColorSchema.default("#f0d7ff"),
   })
@@ -66,13 +64,6 @@ export const providerAppointmentCreateSchema = z
     message: "endsAt must be after startsAt",
     path: ["endsAt"],
   })
-  .refine(
-    ({ examName, schoolYear }) => Boolean(examName) !== Boolean(schoolYear),
-    {
-      message: "Choose either an exam name or a school year",
-      path: ["examName"],
-    },
-  )
   .transform(({ startsAt, endsAt, ...input }) => ({
     ...input,
     startsAt: new Date(startsAt),
@@ -84,8 +75,6 @@ export const providerAppointmentUpdateSchema = z
     startsAt: timestampWithOffsetSchema.optional(),
     endsAt: timestampWithOffsetSchema.optional(),
     comment: nullableText(1000),
-    examName: nullableText(120),
-    schoolYear: nullableText(80),
     status: z.enum(["scheduled", "cancelled"]).optional(),
     color: sessionColorSchema.optional(),
     editScope: z.enum(["exception", "future"]).optional(),
@@ -116,19 +105,6 @@ export const providerAppointmentUpdateSchema = z
     ({ startsAt, endsAt }) =>
       !startsAt || !endsAt || new Date(endsAt) > new Date(startsAt),
     { message: "endsAt must be after startsAt", path: ["endsAt"] },
-  )
-  .refine(({ examName, schoolYear }) => !(examName && schoolYear), {
-    message: "Choose either an exam name or a school year",
-    path: ["examName"],
-  })
-  .refine(
-    ({ examName, schoolYear }) =>
-      (examName === undefined && schoolYear === undefined) ||
-      (examName !== undefined && schoolYear !== undefined),
-    {
-      message: "examName and schoolYear must be updated together",
-      path: ["schoolYear"],
-    },
   )
   .transform(
     ({ startsAt, endsAt, occurrenceStartsAt, editScope, ...input }) => ({

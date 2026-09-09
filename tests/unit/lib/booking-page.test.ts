@@ -26,31 +26,33 @@ describe("booking pages", () => {
         title: "Book with Ceyda",
         timeZone: "Europe/Istanbul",
         appointmentDurationMinutes: 30,
-        bookingIntervalMinutes: 40,
         restBetweenSessionsMinutes: 10,
         minimumNoticeHours: 24,
         isPublished: false,
       }),
-    ).toMatchObject({ isPublished: false, bookingIntervalMinutes: 40 });
+    ).toMatchObject({
+      appointmentDurationMinutes: 30,
+      restBetweenSessionsMinutes: 10,
+      isPublished: false,
+    });
   });
 
-  it("accepts rest and requires it to be reflected in the interval", () => {
+  it("accepts duration and rest without a client-computed interval", () => {
     expect(
       bookingPageSettingsSchema.parse({
         appointmentDurationMinutes: 45,
-        bookingIntervalMinutes: 55,
         restBetweenSessionsMinutes: 10,
       }),
     ).toMatchObject({
       appointmentDurationMinutes: 45,
-      bookingIntervalMinutes: 55,
       restBetweenSessionsMinutes: 10,
     });
+  });
+
+  it("rejects the server-derived booking interval in client input", () => {
     expect(
       bookingPageSettingsSchema.safeParse({
-        appointmentDurationMinutes: 30,
-        bookingIntervalMinutes: 30,
-        restBetweenSessionsMinutes: 10,
+        bookingIntervalMinutes: 55,
       }).success,
     ).toBe(false);
   });
@@ -59,14 +61,12 @@ describe("booking pages", () => {
     expect(
       bookingPageSettingsSchema.safeParse({
         appointmentDurationMinutes: 10,
-        bookingIntervalMinutes: 70,
         restBetweenSessionsMinutes: 60,
       }).success,
     ).toBe(true);
     expect(
       bookingPageSettingsSchema.safeParse({
         appointmentDurationMinutes: 12,
-        bookingIntervalMinutes: 17,
         restBetweenSessionsMinutes: 5,
       }).success,
     ).toBe(false);

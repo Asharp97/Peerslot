@@ -22,8 +22,6 @@ export async function buildAccountExport(userId: string) {
       endsAt: availabilitySlots.endsAt,
       status: appointments.status,
       comment: appointments.comment,
-      examName: appointments.examName,
-      schoolYear: appointments.schoolYear,
       recurrence: appointments.recurrence,
       recurrenceEndsAt: appointments.recurrenceEndsAt,
       color: appointments.color,

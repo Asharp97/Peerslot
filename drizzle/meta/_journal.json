@@ -127,6 +127,13 @@
       "when": 1787301296735,
       "tag": "0017_windy_serpent_society",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1788982612492,
+      "tag": "0018_tired_captain_america",
+      "breakpoints": true
     }
   ]
 }

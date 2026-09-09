@@ -61,9 +61,10 @@ resolution of the regenerated link, and rejection of a booking slug used as an
 authentication token.
 
 The Availability windows folder creates a three-hour free-time window and
-checks that it derives six 30-minute appointment times. It also covers UTC and
-provider-time-zone representations, past and overlapping-window rejection,
-editing and slot regeneration, disabling/re-enabling, and safe removal.
+checks that it derives five 30-minute appointment times separated by the
+configured 10-minute rest period. It also covers UTC and provider-time-zone
+representations, past and overlapping-window rejection, editing and slot
+regeneration, disabling/re-enabling, and safe removal.
 
 The Available times folder creates an isolated calculation fixture and checks
 the public date-range endpoint for ordered results plus English and Turkish
@@ -100,7 +101,6 @@ continue into the same provider setup form and dashboard.
 | `DELETE` | `/api/availability-windows/:id`         | Provider JWT          | Remove or preserve a future window     |
 | `GET`    | `/api/booking-pages/:slug/availability` | No                    | Calculate available times in a range   |
 | `GET`    | `/api/slots`                            | JWT                   | List future slots for the current user |
-| `GET`    | `/api/slots?teacherId=...`              | JWT                   | List a provider's future slots         |
 
 ## Availability lifecycle
 
@@ -111,9 +111,9 @@ continue into the same provider setup form and dashboard.
   configured appointment. Active windows on the same booking page cannot
   overlap.
 - PeerSlot derives appointment times from the booking page's appointment
-  duration and booking interval. For the MVP these settings are equal, which
-  prevents generated times from overlapping. Providers no longer create slots
-  manually.
+  duration and booking interval. The interval equals the duration plus the
+  provider's configured rest period, which prevents generated times from
+  overlapping. Providers no longer create slots manually.
 - The public calculation endpoint requires offset-aware `startsAt` and `endsAt`
   query parameters. It returns ordered UTC instants and `localized.en` plus
   `localized.tr` labels in the provider's configured time zone.
@@ -140,16 +140,12 @@ continue into the same provider setup form and dashboard.
 
 ## OAuth testing
 
-Add the relevant provider credentials to `.env.local`, then restart the
-development server. Configure these local redirect URLs in the providers:
+Add the Google credentials to `.env.local`, then restart the development
+server. Configure this local redirect URL in Google:
 
 - Google: `http://localhost:3000/api/auth/callback/google`
 
-Facebook OAuth remains disabled until PeerSlot can complete Meta Business
-Verification through its future parent company. Its callback will be
-`http://localhost:3000/api/auth/callback/facebook` when re-enabled.
-
-The Bruno social-login requests return an authorization URL when
+The Bruno social-login request returns an authorization URL when
 `disableRedirect` is enabled. Open that URL in a browser to complete the OAuth
 flow. Browser testing is more convenient than Bruno for the redirect and
 consent portion, while Bruno remains useful for inspecting the initial response

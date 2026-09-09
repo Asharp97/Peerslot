@@ -9,14 +9,11 @@ import {
   type ProviderAppointmentRequestsCopy,
 } from "@/components/provider-workspace/provider-appointment-requests";
 
-const refresh = vi.hoisted(() => vi.fn());
-
 vi.mock("next-intl", () => ({ useLocale: () => "en" }));
 vi.mock("@/components/provider-workspace/provider-shell", () => ({
   useProviderWorkspace: () => ({
     accessToken: "access-token",
     data: { bookingPage: { timeZone: "Europe/Istanbul" } },
-    refresh,
   }),
 }));
 
@@ -25,7 +22,6 @@ describe("provider appointment requests", () => {
     cleanup();
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
-    refresh.mockReset();
   });
 
   it("accepts a pending request and removes it from the queue", async () => {
@@ -42,8 +38,6 @@ describe("provider appointment requests", () => {
               startsAt: "2030-01-15T09:00:00.000Z",
               endsAt: "2030-01-15T09:45:00.000Z",
               comment: "LGS preparation",
-              examName: null,
-              schoolYear: null,
             },
           ],
         }),
@@ -69,7 +63,6 @@ describe("provider appointment requests", () => {
         }),
       );
       expect(screen.queryByText("Ada Student")).toBeNull();
-      expect(refresh).toHaveBeenCalled();
     });
   });
 });

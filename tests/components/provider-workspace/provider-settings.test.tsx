@@ -1,6 +1,12 @@
 // @vitest-environment jsdom
 
-import { cleanup, render, screen } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
@@ -59,6 +65,24 @@ describe("provider scheduling settings", () => {
     for (const select of selects) {
       expect(select.className).toContain("focus-visible:ring-0");
     }
+  });
+
+  it("leaves the derived booking interval out of the settings request", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true });
+    vi.stubGlobal("fetch", fetchMock);
+    render(<ProviderSettings copy={copy} locale="en" />);
+
+    fireEvent.click(screen.getByRole("button", { name: "save" }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledOnce());
+    const [, request] = fetchMock.mock.calls[0] as [string, RequestInit];
+    const body = JSON.parse(String(request.body)) as Record<string, unknown>;
+
+    expect(body).toMatchObject({
+      appointmentDurationMinutes: 45,
+      restBetweenSessionsMinutes: 10,
+    });
+    expect(body).not.toHaveProperty("bookingIntervalMinutes");
   });
 });
 

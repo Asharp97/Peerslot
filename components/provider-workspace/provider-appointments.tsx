@@ -76,22 +76,16 @@ type ProviderStudent = {
 type CalendarAppointment = {
   id: string;
   appointmentId: string;
-  seriesId: string | null;
   occurrenceStartsAt: string;
   recurrence: "none" | "weekly";
   isException: boolean;
   providerStudentId: string | null;
   studentName: string;
-  studentEmail: string | null;
   startsAt: string;
   endsAt: string;
   status: "pending" | "scheduled" | "declined" | "cancelled";
   comment: string | null;
-  examName: string | null;
-  schoolYear: string | null;
   color: string;
-  createdByProvider: boolean;
-  rescheduleCount: number;
 };
 
 type AvailabilityWindow = {
@@ -113,8 +107,6 @@ type SessionDraft = {
   date: string;
   startsAt: string;
   endsAt: string;
-  contextType: "examName" | "schoolYear";
-  contextValue: string;
   comment: string;
   status: "scheduled" | "cancelled";
   recurrence: "none" | "weekly";
@@ -153,10 +145,6 @@ export type ProviderAppointmentsCopy = {
   date: string;
   startsAt: string;
   endsAt: string;
-  sessionContext: string;
-  examName: string;
-  schoolYear: string;
-  contextValue: string;
   comment: string;
   commentPlaceholder: string;
   save: string;
@@ -212,7 +200,7 @@ export function ProviderAppointments({
   copy: ProviderAppointmentsCopy;
 }) {
   const locale = useLocale() as "en" | "tr";
-  const { accessToken, data, refresh } = useProviderWorkspace();
+  const { accessToken, data } = useProviderWorkspace();
   const [students, setStudents] = useState<ProviderStudent[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -348,8 +336,6 @@ export function ProviderAppointments({
         date: local.date,
         startsAt: local.time,
         endsAt: localEnd.time,
-        contextType: "schoolYear",
-        contextValue: "",
         comment: "",
         status: "scheduled",
         recurrence: "weekly",
@@ -416,8 +402,6 @@ export function ProviderAppointments({
           date: startsAt.date,
           startsAt: startsAt.time,
           endsAt: endsAt.time,
-          contextType: "schoolYear",
-          contextValue: "",
           comment: "",
           status: "scheduled",
           recurrence: availabilityWindow.recurrence,
@@ -452,8 +436,6 @@ export function ProviderAppointments({
         date: startsAt.date,
         startsAt: startsAt.time,
         endsAt: endsAt.time,
-        contextType: appointment.examName ? "examName" : "schoolYear",
-        contextValue: appointment.examName ?? appointment.schoolYear ?? "",
         comment: appointment.comment ?? "",
         status: appointment.status,
         recurrence: appointment.recurrence,
@@ -509,7 +491,6 @@ export function ProviderAppointments({
         if (!response.ok) throw new Error(await responseError(response));
 
         calendarRef.current?.getApi().refetchEvents();
-        void refresh().catch(() => undefined);
       } catch (caught) {
         info.revert();
         setError(caught instanceof Error ? caught.message : copy.saveError);
@@ -517,7 +498,7 @@ export function ProviderAppointments({
         setInteractionSaving(false);
       }
     },
-    [accessToken, copy.saveError, refresh, timeZone],
+    [accessToken, copy.saveError, timeZone],
   );
 
   async function saveSession(event: FormEvent<HTMLFormElement>) {
@@ -537,11 +518,6 @@ export function ProviderAppointments({
         draft.endsAt,
         timeZone,
       );
-      const context = {
-        examName: draft.contextType === "examName" ? draft.contextValue : null,
-        schoolYear:
-          draft.contextType === "schoolYear" ? draft.contextValue : null,
-      };
 
       if (draft.entryType === "availability") {
         if (!freeTimePreview?.slots.length) {
@@ -564,7 +540,6 @@ export function ProviderAppointments({
         if (!response.ok) throw new Error(await responseError(response));
 
         calendarRef.current?.getApi().refetchEvents();
-        await refresh();
         setDialogOpen(false);
         return;
       }
@@ -579,7 +554,6 @@ export function ProviderAppointments({
               startsAt: startsAt.toISOString(),
               endsAt: endsAt.toISOString(),
               comment: draft.comment || null,
-              ...context,
               status: draft.status,
               color: draft.color,
               editScope: draft.editScope,
@@ -623,8 +597,6 @@ export function ProviderAppointments({
             startsAt: startsAt.toISOString(),
             endsAt: endsAt.toISOString(),
             comment: draft.comment || undefined,
-            examName: context.examName ?? undefined,
-            schoolYear: context.schoolYear ?? undefined,
             recurrence: draft.recurrence,
             color: draft.color,
           }),
@@ -633,7 +605,6 @@ export function ProviderAppointments({
       }
 
       calendarRef.current?.getApi().refetchEvents();
-      await refresh();
       setDialogOpen(false);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : copy.saveError);
@@ -681,7 +652,6 @@ export function ProviderAppointments({
       if (!response.ok) throw new Error(await responseError(response));
 
       calendarRef.current?.getApi().refetchEvents();
-      await refresh();
       setDialogOpen(false);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : copy.saveError);
@@ -707,7 +677,6 @@ export function ProviderAppointments({
       if (!response.ok) throw new Error(await responseError(response));
 
       calendarRef.current?.getApi().refetchEvents();
-      await refresh();
       setDialogOpen(false);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : copy.saveError);
@@ -769,7 +738,6 @@ export function ProviderAppointments({
     }
     await loadStudents();
     calendarRef.current?.getApi().refetchEvents();
-    await refresh();
     if (editingStudentId === student.id) setEditingStudentId(null);
   }
 
@@ -1087,7 +1055,10 @@ export function ProviderAppointments({
                 ) : null}
                 {draft.entryType === "session" ? (
                   <>
-                    <Field label={copy.sessionColor}>
+                    <Field
+                      className="sm:col-span-2"
+                      label={copy.sessionColor}
+                    >
                       <div className="flex min-h-11 items-center gap-3 rounded-xl border border-black/10 bg-white px-3">
                         <Input
                           aria-label={copy.sessionColor}
@@ -1102,44 +1073,6 @@ export function ProviderAppointments({
                           {draft.color.toUpperCase()}
                         </span>
                       </div>
-                    </Field>
-                    <Field label={copy.sessionContext}>
-                      <Select
-                        onValueChange={(contextType) =>
-                          setDraft({
-                            ...draft,
-                            contextType: contextType as
-                              "examName" | "schoolYear",
-                            contextValue: "",
-                          })
-                        }
-                        value={draft.contextType}
-                      >
-                        <SelectTrigger className="min-h-11 w-full rounded-xl">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="examName">
-                            {copy.examName}
-                          </SelectItem>
-                          <SelectItem value="schoolYear">
-                            {copy.schoolYear}
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </Field>
-                    <Field label={copy.contextValue}>
-                      <Input
-                        className="min-h-11 rounded-xl"
-                        onChange={(event) =>
-                          setDraft({
-                            ...draft,
-                            contextValue: event.target.value,
-                          })
-                        }
-                        required
-                        value={draft.contextValue}
-                      />
                     </Field>
                     <Field className="sm:col-span-2" label={copy.comment}>
                       <Textarea
@@ -1398,7 +1331,6 @@ function renderSession(info: EventContentArg) {
     CalendarAppointment | undefined;
   if (!appointment) return null;
 
-  const context = appointment.examName ?? appointment.schoolYear;
   const recurrenceLabel = info.event.extendedProps.recurrenceLabel as string;
   const isDraggable = appointment.status === "scheduled";
 
@@ -1420,9 +1352,6 @@ function renderSession(info: EventContentArg) {
         <p className="truncate text-[11px] font-bold">
           {appointment.studentName}
         </p>
-        {context ? (
-          <p className="truncate text-[9px] opacity-70">{context}</p>
-        ) : null}
       </div>
     </div>
   );

@@ -91,8 +91,6 @@ const appointmentSelection = {
   exceptionOriginalStartsAt: appointments.exceptionOriginalStartsAt,
   status: appointments.status,
   comment: appointments.comment,
-  examName: appointments.examName,
-  schoolYear: appointments.schoolYear,
   color: appointments.color,
   deletedAt: appointments.deletedAt,
   createdByProvider: appointments.createdByProvider,
@@ -354,8 +352,6 @@ export async function deleteProviderAppointment(
     exceptionForAppointmentId: current.id,
     exceptionOriginalStartsAt: input.occurrenceStartsAt,
     comment: current.comment,
-    examName: current.examName,
-    schoolYear: current.schoolYear,
     color: current.color,
     status: current.status,
     deletedAt: new Date(),
@@ -405,9 +401,6 @@ async function updateFutureAppointmentSeries(
     slotId: targetSlotId,
     recurrence: "weekly" as const,
     comment: input.comment !== undefined ? input.comment : series.comment,
-    examName: input.examName !== undefined ? input.examName : series.examName,
-    schoolYear:
-      input.schoolYear !== undefined ? input.schoolYear : series.schoolYear,
     color: input.color ?? series.color,
     status: input.status ?? series.status,
     createdByProvider: true,
@@ -562,14 +555,6 @@ async function createAppointmentException(
       input.comment !== undefined
         ? input.comment
         : (series.comment ?? undefined),
-    examName:
-      input.examName !== undefined
-        ? input.examName
-        : (series.examName ?? undefined),
-    schoolYear:
-      input.schoolYear !== undefined
-        ? input.schoolYear
-        : (series.schoolYear ?? undefined),
     color: input.color ?? series.color,
     status: input.status ?? series.status,
     createdByProvider: true,
@@ -597,8 +582,6 @@ async function updateAppointmentRecord(
   const timesChanged = appointmentTimesChanged(input, comparisonRange);
   const appointmentUpdate = {
     ...(input.comment !== undefined ? { comment: input.comment } : {}),
-    ...(input.examName !== undefined ? { examName: input.examName } : {}),
-    ...(input.schoolYear !== undefined ? { schoolYear: input.schoolYear } : {}),
     ...(input.status !== undefined ? { status: input.status } : {}),
     ...(input.color !== undefined ? { color: input.color } : {}),
     ...(timesChanged
@@ -674,8 +657,6 @@ type InsertAppointmentInput = {
   exceptionForAppointmentId?: string;
   exceptionOriginalStartsAt?: Date;
   comment?: string | null;
-  examName?: string | null;
-  schoolYear?: string | null;
   color: string;
   status?: "pending" | "scheduled" | "declined" | "cancelled";
   deletedAt?: Date;
@@ -698,8 +679,6 @@ async function insertAppointment(
     exceptionForAppointmentId: input.exceptionForAppointmentId,
     exceptionOriginalStartsAt: input.exceptionOriginalStartsAt,
     comment: input.comment,
-    examName: input.examName,
-    schoolYear: input.schoolYear,
     color: input.color,
     status: input.status,
     deletedAt: input.deletedAt,

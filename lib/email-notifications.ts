@@ -32,7 +32,7 @@ export async function notifyProviderOfBookingRequest(
     endsAt: input.endsAt,
     locale: input.locale,
     providerName: input.providerName,
-    reviewUrl: applicationUrl(`/${input.locale}/provider/dashboard`),
+    reviewUrl: applicationUrl(`/${input.locale}/provider/requests`),
     startsAt: input.startsAt,
     studentEmail: input.studentEmail,
     studentName: input.studentName,

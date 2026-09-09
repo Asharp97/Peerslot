@@ -24,7 +24,6 @@ tests {
     expect(res.getStatus()).to.equal(200);
     expect(appointment).to.be.an("object");
     expect(appointment.studentName).to.equal("Bruno Student");
-    expect(appointment.schoolYear).to.equal("Year 8");
     expect(appointment.recurrence).to.equal("weekly");
     expect(appointment.isException).to.equal(false);
   });

@@ -55,12 +55,11 @@ describe("provider availability editor", () => {
 
   it("distinguishes booked, past, unpublished, and available windows", () => {
     const common = {
-      windowId: "window-id",
       startsAt: new Date("2030-01-15T10:00:00.000Z"),
       endsAt: new Date("2030-01-15T11:00:00.000Z"),
       isActive: true,
       isPagePublished: true,
-      bookedWindowIds: new Set<string>(),
+      hasAppointments: false,
       now: new Date("2030-01-15T09:00:00.000Z"),
     };
 
@@ -68,7 +67,7 @@ describe("provider availability editor", () => {
     expect(
       getProviderWindowStatus({
         ...common,
-        bookedWindowIds: new Set(["window-id"]),
+        hasAppointments: true,
       }),
     ).toBe("booked");
     expect(getProviderWindowStatus({ ...common, isPagePublished: false })).toBe(

@@ -10,11 +10,13 @@ import {
   Eye,
   EyeOff,
   Link2,
+  LoaderCircle,
 } from "lucide-react";
 import { useLocale } from "next-intl";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { Link } from "@/i18n/navigation";
+import type { ProviderDashboardData } from "@/lib/provider-workspace-types";
 
 import { useProviderWorkspace } from "./provider-shell";
 
@@ -42,14 +44,49 @@ export type ProviderOverviewCopy = {
   pendingBy: string;
   declinedBy: string;
   cancelledBy: string;
+  loading: string;
+  loadError: string;
 };
 
 export function ProviderOverview({ copy }: { copy: ProviderOverviewCopy }) {
   const locale = useLocale() as "en" | "tr";
-  const { accessToken, data, refresh } = useProviderWorkspace();
+  const { accessToken, data: setup, refresh } = useProviderWorkspace();
+  const [dashboard, setDashboard] = useState<ProviderDashboardData | null>(
+    null,
+  );
+  const [loadError, setLoadError] = useState("");
   const [copied, setCopied] = useState(false);
   const [publishing, setPublishing] = useState(false);
-  const bookingPath = `/${locale}/book/${data.bookingPage.slug}`;
+  const bookingPath = `/${locale}/book/${setup.bookingPage.slug}`;
+
+  const fetchDashboard = useCallback(async () => {
+    const response = await fetch("/api/provider/dashboard", {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      cache: "no-store",
+    });
+    if (!response.ok) throw new Error("Unable to load provider dashboard");
+
+    return (await response.json()) as ProviderDashboardData;
+  }, [accessToken]);
+
+  useEffect(() => {
+    let active = true;
+
+    void fetchDashboard().then(
+      (nextDashboard) => {
+        if (!active) return;
+        setDashboard(nextDashboard);
+        setLoadError("");
+      },
+      () => {
+        if (active) setLoadError(copy.loadError);
+      },
+    );
+
+    return () => {
+      active = false;
+    };
+  }, [copy.loadError, fetchDashboard]);
 
   async function copyLink() {
     await navigator.clipboard.writeText(
@@ -69,14 +106,42 @@ export function ProviderOverview({ copy }: { copy: ProviderOverviewCopy }) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          isPublished: !data.bookingPage.isPublished,
+          isPublished: !setup.bookingPage.isPublished,
         }),
       });
-      if (response.ok) await refresh();
+      if (response.ok) {
+        const [, nextDashboard] = await Promise.all([
+          refresh(),
+          fetchDashboard(),
+        ]);
+        setDashboard(nextDashboard);
+        setLoadError("");
+      }
     } finally {
       setPublishing(false);
     }
   }
+
+  if (!dashboard) {
+    return (
+      <div
+        aria-busy={!loadError}
+        className="grid min-h-72 place-items-center rounded-[28px] border border-black/10 bg-[#fbfaf4] p-8 text-center"
+      >
+        <div>
+          <LoaderCircle
+            className={loadError ? "mx-auto" : "mx-auto animate-spin"}
+            size={24}
+          />
+          <p className="mt-4 text-sm font-semibold text-black/55">
+            {loadError || copy.loading}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const data = dashboard;
 
   return (
     <div>

@@ -21,10 +21,6 @@ const calendar = vi.hoisted(() => ({
   props: null as Record<string, unknown> | null,
 }));
 
-const workspace = vi.hoisted(() => ({
-  refresh: vi.fn(async () => undefined),
-}));
-
 vi.mock("@fullcalendar/react", () => ({
   default: (props: Record<string, unknown>) => {
     calendar.props = props;
@@ -45,7 +41,6 @@ vi.mock("@/components/provider-workspace/provider-shell", () => ({
         isPublished: true,
       },
     },
-    refresh: workspace.refresh,
   }),
 }));
 
@@ -54,7 +49,6 @@ describe("provider appointments calendar", () => {
     cleanup();
     vi.unstubAllGlobals();
     calendar.props = null;
-    workspace.refresh.mockClear();
   });
 
   it("loads the visible range through an event source without a datesSet state loop", async () => {
@@ -71,22 +65,16 @@ describe("provider appointments calendar", () => {
           {
             id: "occurrence-id",
             appointmentId: "appointment-id",
-            seriesId: "appointment-id",
             occurrenceStartsAt: "2030-01-15T09:00:00Z",
             recurrence: "weekly",
             isException: false,
             providerStudentId: "student-id",
             studentName: "Ada",
-            studentEmail: null,
             startsAt: "2030-01-15T09:00:00Z",
             endsAt: "2030-01-15T09:45:00Z",
             status: "scheduled",
             comment: null,
-            examName: "LGS",
-            schoolYear: null,
             color: "#034f46",
-            createdByProvider: true,
-            rescheduleCount: 0,
           },
         ],
       });
@@ -466,22 +454,16 @@ describe("provider appointments calendar", () => {
     const appointment = {
       id: "occurrence-id",
       appointmentId: "appointment-id",
-      seriesId: "appointment-id",
       occurrenceStartsAt: "2030-01-15T09:00:00Z",
       recurrence: "weekly" as const,
       isException: false,
       providerStudentId: "student-id",
       studentName: "Ada",
-      studentEmail: null,
       startsAt: "2030-01-15T09:00:00Z",
       endsAt: "2030-01-15T09:45:00Z",
       status: "scheduled" as const,
       comment: null,
-      examName: "LGS",
-      schoolYear: null,
       color: "#034f46",
-      createdByProvider: true,
-      rescheduleCount: 0,
     };
     const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input);
@@ -660,22 +642,16 @@ const availabilityWindow = {
 const scheduledAppointment = {
   id: "occurrence-id",
   appointmentId: "appointment-id",
-  seriesId: "appointment-id",
   occurrenceStartsAt: "2030-01-15T09:00:00Z",
   recurrence: "weekly" as const,
   isException: false,
   providerStudentId: "student-id",
   studentName: "Ada",
-  studentEmail: null,
   startsAt: "2030-01-15T09:00:00Z",
   endsAt: "2030-01-15T09:45:00Z",
   status: "scheduled" as const,
   comment: null,
-  examName: "LGS",
-  schoolYear: null,
   color: "#034f46",
-  createdByProvider: true,
-  rescheduleCount: 0,
 };
 
 function calendarFetchMock({

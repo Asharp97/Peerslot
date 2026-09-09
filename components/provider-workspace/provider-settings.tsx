@@ -92,7 +92,6 @@ export function ProviderSettings({
         title,
         timeZone,
         appointmentDurationMinutes: duration,
-        bookingIntervalMinutes: duration + rest,
         restBetweenSessionsMinutes: rest,
         minimumNoticeHours: notice,
         isPublished: published,

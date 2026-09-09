@@ -20,7 +20,7 @@ import {
 
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import { fetchAccessToken } from "@/lib/auth-browser";
-import type { ProviderWorkspaceData } from "@/lib/provider-workspace-types";
+import type { ProviderSetupData } from "@/lib/provider-workspace-types";
 
 export type ProviderShellCopy = {
   loading: string;
@@ -33,14 +33,20 @@ export type ProviderShellCopy = {
   loadError: string;
 };
 
-type ProviderWorkspaceContextValue = {
+type ProviderWorkspaceState = {
   accessToken: string;
-  data: ProviderWorkspaceData;
+  data: ProviderSetupData;
   refresh: () => Promise<void>;
 };
 
+type ProviderSetupResponse = {
+  status: "active" | "setup_required";
+  profile: ProviderSetupData["profile"] | null;
+  bookingPage: ProviderSetupData["bookingPage"] | null;
+};
+
 const ProviderWorkspaceContext =
-  createContext<ProviderWorkspaceContextValue | null>(null);
+  createContext<ProviderWorkspaceState | null>(null);
 
 export function ProviderShell({
   children,
@@ -52,12 +58,12 @@ export function ProviderShell({
   const router = useRouter();
   const pathname = usePathname();
   const [accessToken, setAccessToken] = useState("");
-  const [data, setData] = useState<ProviderWorkspaceData | null>(null);
+  const [data, setData] = useState<ProviderSetupData | null>(null);
   const [error, setError] = useState("");
 
-  const loadWorkspace = useCallback(
+  const loadProviderSetup = useCallback(
     async (token: string) => {
-      const response = await fetch("/api/provider/dashboard", {
+      const response = await fetch("/api/provider", {
         headers: { Authorization: `Bearer ${token}` },
         cache: "no-store",
       });
@@ -67,8 +73,19 @@ export function ProviderShell({
         return;
       }
 
-      if (!response.ok) throw new Error("Unable to load provider workspace");
-      setData((await response.json()) as ProviderWorkspaceData);
+      if (!response.ok) throw new Error("Unable to load provider setup");
+
+      const setup = (await response.json()) as ProviderSetupResponse;
+      if (
+        setup.status !== "active" ||
+        !setup.profile ||
+        !setup.bookingPage
+      ) {
+        router.replace("/auth/provider");
+        return;
+      }
+
+      setData({ profile: setup.profile, bookingPage: setup.bookingPage });
       setError("");
     },
     [router],
@@ -88,7 +105,7 @@ export function ProviderShell({
 
       setAccessToken(token);
       try {
-        await loadWorkspace(token);
+        await loadProviderSetup(token);
       } catch {
         if (!cancelled) setError(copy.loadError);
       }
@@ -98,18 +115,18 @@ export function ProviderShell({
     return () => {
       cancelled = true;
     };
-  }, [copy.loadError, loadWorkspace, router]);
+  }, [copy.loadError, loadProviderSetup, router]);
 
-  const contextValue = useMemo(
+  const workspaceState = useMemo(
     () =>
       accessToken && data
         ? {
             accessToken,
             data,
-            refresh: () => loadWorkspace(accessToken),
+            refresh: () => loadProviderSetup(accessToken),
           }
         : null,
-    [accessToken, data, loadWorkspace],
+    [accessToken, data, loadProviderSetup],
   );
 
   async function signOut() {
@@ -122,7 +139,7 @@ export function ProviderShell({
     router.replace("/auth/provider");
   }
 
-  if (!contextValue) {
+  if (!workspaceState) {
     return (
       <main className="grid min-h-screen place-items-center bg-[#f4f3eb] px-6 text-vast-ink">
         <div className="max-w-sm text-center">
@@ -135,7 +152,7 @@ export function ProviderShell({
     );
   }
 
-  const workspaceData = contextValue.data;
+  const workspaceData = workspaceState.data;
   const isAppointmentsPage = pathname.startsWith("/provider/appointments");
 
   const navigation = [
@@ -150,7 +167,7 @@ export function ProviderShell({
   ] as const;
 
   return (
-    <ProviderWorkspaceContext.Provider value={contextValue}>
+    <ProviderWorkspaceContext.Provider value={workspaceState}>
       <div className="min-h-screen bg-[#f4f3eb] text-vast-ink">
         <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-black/10 bg-[#fbfaf4] p-5 lg:flex">
           <Link className="flex items-center gap-3 px-2 py-2" href="/">

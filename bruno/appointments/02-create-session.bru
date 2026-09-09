@@ -24,7 +24,6 @@ body:json {
     "providerStudentId": "{{providerStudentId}}",
     "startsAt": "{{providerSessionStartsAt}}",
     "endsAt": "{{providerSessionEndsAt}}",
-    "schoolYear": "Year 8",
     "comment": "Weekly timetable session",
     "recurrence": "weekly",
     "color": "#034f46"
@@ -50,13 +49,11 @@ script:post-response {
 }
 
 tests {
-  test("provider-created session preserves its student context and comment", function () {
+  test("provider-created session preserves its student and comment", function () {
     const appointment = res.getBody().appointment;
     expect(res.getStatus()).to.equal(201);
     expect(appointment.providerStudentId).to.equal(bru.getVar("providerStudentId"));
     expect(appointment.studentName).to.equal("Bruno Student");
-    expect(appointment.schoolYear).to.equal("Year 8");
-    expect(appointment.examName).to.equal(null);
     expect(appointment.comment).to.equal("Weekly timetable session");
     expect(appointment.recurrence).to.equal("weekly");
     expect(appointment.color).to.equal("#034f46");

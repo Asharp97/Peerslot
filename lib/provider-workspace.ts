@@ -8,39 +8,19 @@ import { findProviderSetup } from "@/lib/provider-profiles";
 
 type ProviderWorkspaceAppointmentRow = {
   accountStudentName: string | null;
-  accountStudentEmail: string | null;
-  providerStudentId: string | null;
   providerStudentName: string | null;
-  providerStudentEmail: string | null;
   id: string;
-  windowId: string | null;
   startsAt: Date;
-  endsAt: Date;
   status: "pending" | "scheduled" | "declined" | "cancelled";
-  comment: string | null;
-  examName: string | null;
-  schoolYear: string | null;
-  createdByProvider: boolean;
-  rescheduleCount: number;
   createdAt: Date;
 };
 
 const providerWorkspaceAppointmentSelection = {
   id: appointments.id,
-  windowId: availabilitySlots.availabilityWindowId,
   accountStudentName: user.name,
-  accountStudentEmail: user.email,
-  providerStudentId: providerStudents.id,
   providerStudentName: providerStudents.displayName,
-  providerStudentEmail: providerStudents.email,
   startsAt: availabilitySlots.startsAt,
-  endsAt: availabilitySlots.endsAt,
   status: appointments.status,
-  comment: appointments.comment,
-  examName: appointments.examName,
-  schoolYear: appointments.schoolYear,
-  createdByProvider: appointments.createdByProvider,
-  rescheduleCount: appointments.rescheduleCount,
   createdAt: appointments.createdAt,
 };
 
@@ -104,12 +84,9 @@ function selectProviderAppointments() {
 }
 
 function presentAppointment(appointment: ProviderWorkspaceAppointmentRow) {
-  const { accountStudentName, accountStudentEmail, ...rest } = appointment;
+  const { accountStudentName, providerStudentName, ...rest } = appointment;
   return {
     ...rest,
-    studentName:
-      appointment.providerStudentName ?? accountStudentName ?? "Student",
-    studentEmail:
-      appointment.providerStudentEmail ?? accountStudentEmail ?? null,
+    studentName: providerStudentName ?? accountStudentName ?? "Student",
   };
 }

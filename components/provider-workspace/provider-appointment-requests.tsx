@@ -15,8 +15,6 @@ type AppointmentRequest = {
   startsAt: string;
   endsAt: string;
   comment: string | null;
-  examName: string | null;
-  schoolYear: string | null;
 };
 
 export type ProviderAppointmentRequestsCopy = {
@@ -41,7 +39,7 @@ export function ProviderAppointmentRequests({
   copy: ProviderAppointmentRequestsCopy;
 }) {
   const locale = useLocale();
-  const { accessToken, data, refresh } = useProviderWorkspace();
+  const { accessToken, data } = useProviderWorkspace();
   const [appointments, setAppointments] = useState<AppointmentRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [reviewing, setReviewing] = useState<{
@@ -100,7 +98,6 @@ export function ProviderAppointmentRequests({
       setAppointments((current) =>
         current.filter(({ id }) => id !== appointmentId),
       );
-      await refresh();
     } catch {
       setError(copy.reviewError);
     } finally {
@@ -135,7 +132,6 @@ export function ProviderAppointmentRequests({
           </div>
         ) : appointments.length ? (
           appointments.map((appointment) => {
-            const context = appointment.examName ?? appointment.schoolYear;
             const isAccepting =
               reviewing?.id === appointment.id &&
               reviewing.decision === "accept";
@@ -156,9 +152,6 @@ export function ProviderAppointmentRequests({
                     <h2 className="truncate text-lg font-bold">
                       {appointment.studentName}
                     </h2>
-                    {context ? (
-                      <span className="text-sm text-black/45">{context}</span>
-                    ) : null}
                   </div>
                   <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm text-black/60">
                     <span className="inline-flex items-center gap-2 font-semibold">
