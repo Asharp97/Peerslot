@@ -968,10 +968,10 @@ export function ProviderAppointments({
                 plugins={calendarPlugins}
                 ref={calendarRef}
                 scrollTime="08:00:00"
-                snapDuration="00:15:00"
+                snapDuration="00:10:00"
                 slotDuration="00:30:00"
-                slotMaxTime="22:00:00"
-                slotMinTime="07:00:00"
+                slotMaxTime="29:00:00"
+                slotMinTime="05:00:00"
                 timeZone="local"
               />
             </div>
