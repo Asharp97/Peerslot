@@ -1,0 +1,2 @@
+DROP INDEX "provider_students_provider_email_unique";--> statement-breakpoint
+CREATE UNIQUE INDEX "provider_students_provider_email_unique" ON "provider_students" USING btree ("provider_id",lower(btrim("email"))) WHERE "provider_students"."is_active" = true;

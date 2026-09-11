@@ -596,6 +596,7 @@
       "pasteSession": "Paste session",
       "copyPasteHint": "Right-click a session to copy it, then right-click an empty time or available slot to paste and review it before saving.",
       "sessionCopied": "Copied {name}’s session. Right-click a time to paste it.",
+      "studentEmailConflict": "This email already belongs to {name}.",
       "pastSessionError": "Choose a future date and time for this session.",
       "pasteDayError": "Choose an earlier time so the copied session ends on the same day.",
       "cancelSession": "Cancel session",

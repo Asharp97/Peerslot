@@ -195,6 +195,7 @@ export type ProviderAppointmentsCopy = {
   loadError: string;
   saveError: string;
   pastSessionError: string;
+  studentEmailConflict: string;
 };
 
 const newStudentValue = "__new_student__";
@@ -1645,7 +1646,11 @@ async function responseError(
   const body = (await response.json().catch(() => null)) as {
     error?: string;
     code?: string;
+    studentName?: string;
   } | null;
+  if (body?.code === "student_email_conflict" && body.studentName) {
+    return copy.studentEmailConflict.replace("{name}", body.studentName);
+  }
   if (body?.code === "past") return copy.pastSessionError;
   return body?.error ?? copy.saveError;
 }

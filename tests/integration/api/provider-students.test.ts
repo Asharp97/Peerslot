@@ -6,6 +6,7 @@ import {
   deleteProviderStudent,
   updateProviderStudent,
 } from "@/lib/provider-appointments";
+import { ProviderStudentEmailConflictError } from "@/lib/provider-student-errors";
 import { getCurrentUser } from "@/lib/current-user";
 
 vi.mock("@/lib/current-user", () => ({ getCurrentUser: vi.fn() }));
@@ -28,6 +29,24 @@ describe("provider students API integration", () => {
       user: { id: providerId },
       capabilities: { canProvide: true },
     } as Awaited<ReturnType<typeof getCurrentUser>>);
+  });
+
+  it("identifies the visible student whose email conflicts", async () => {
+    vi.mocked(updateProviderStudent).mockRejectedValue(
+      new ProviderStudentEmailConflictError("Existing Ada"),
+    );
+    const response = await PATCH(
+      jsonRequest("http://localhost/api/provider/students/" + studentId, {
+        email: "ada@example.com",
+      }),
+      { params: Promise.resolve({ id: studentId }) },
+    );
+    expect(response.status).toBe(409);
+    expect(await response.json()).toEqual({
+      error: "This email already belongs to Existing Ada.",
+      code: "student_email_conflict",
+      studentName: "Existing Ada",
+    });
   });
 
   it("edits an owned student", async () => {

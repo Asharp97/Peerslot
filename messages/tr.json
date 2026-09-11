@@ -596,6 +596,7 @@
       "pasteSession": "Dersi yapıştır",
       "copyPasteHint": "Bir dersi kopyalamak için sağ tıklayın. Ardından boş bir saate veya uygun zaman dilimine sağ tıklayıp yapıştırın ve kaydetmeden önce gözden geçirin.",
       "sessionCopied": "{name} adlı öğrencinin dersi kopyalandı. Yapıştırmak için bir saate sağ tıklayın.",
+      "studentEmailConflict": "Bu e-posta adresi zaten {name} adlı öğrenciye ait.",
       "pastSessionError": "Bu ders için gelecekte bir tarih ve saat seçin.",
       "pasteDayError": "Kopyalanan dersin aynı gün bitmesi için daha erken bir saat seçin.",
       "cancelSession": "Dersi iptal et",

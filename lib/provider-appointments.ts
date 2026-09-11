@@ -3,6 +3,8 @@ import { randomUUID } from "node:crypto";
 import {
   and,
   asc,
+  desc,
+  ne,
   eq,
   gte,
   gt,
@@ -17,6 +19,7 @@ import {
 import { db } from "@/db";
 import { user } from "@/db/auth-schema";
 import { appointments, availabilitySlots, providerStudents } from "@/db/schema";
+import { ProviderStudentEmailConflictError } from "@/lib/provider-student-errors";
 import { findBookingPage } from "@/lib/booking-pages";
 import { isPostgresError } from "@/lib/database-errors";
 import {
@@ -118,40 +121,73 @@ export async function createProviderStudent(
   providerId: string,
   input: ProviderStudentCreateInput,
 ) {
+  const email = input.email?.trim().toLowerCase();
   try {
+    const existing = email
+      ? await findProviderStudentByEmail(providerId, email)
+      : undefined;
+    if (existing?.isActive) return existing;
+    if (existing) {
+      const [reactivated] = await db
+        .update(providerStudents)
+        .set({
+          displayName: input.displayName,
+          email,
+          isActive: true,
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(providerStudents.id, existing.id),
+            eq(providerStudents.providerId, providerId),
+            eq(providerStudents.isActive, false),
+            sql`lower(btrim(${providerStudents.email})) = ${email}`,
+          ),
+        )
+        .returning();
+      if (reactivated) return reactivated;
+    }
+
     const [student] = await db
       .insert(providerStudents)
-      .values({ providerId, ...input })
+      .values({ providerId, ...input, email })
       .returning();
     return student;
   } catch (error) {
-    if (!input.email || !isPostgresError(error, "23505")) throw error;
-
-    const [existing] = await db
-      .select()
-      .from(providerStudents)
-      .where(
-        and(
-          eq(providerStudents.providerId, providerId),
-          eq(providerStudents.email, input.email),
-        ),
-      )
-      .limit(1);
-
+    if (!email || !isPostgresError(error, "23505")) throw error;
+    // Another request may have claimed the email after our lookup.
+    const existing = await findProviderStudentByEmail(providerId, email, true);
     if (!existing) throw error;
-    if (existing.isActive) return existing;
-
-    const [reactivated] = await db
-      .update(providerStudents)
-      .set({
-        displayName: input.displayName,
-        isActive: true,
-        updatedAt: new Date(),
-      })
-      .where(eq(providerStudents.id, existing.id))
-      .returning();
-    return reactivated;
+    return existing;
   }
+}
+
+async function findProviderStudentByEmail(
+  providerId: string,
+  email: string,
+  activeOnly = false,
+  excludedStudentId?: string,
+) {
+  const [student] = await db
+    .select()
+    .from(providerStudents)
+    .where(
+      and(
+        eq(providerStudents.providerId, providerId),
+        sql`lower(btrim(${providerStudents.email})) = ${email.trim().toLowerCase()}`,
+        activeOnly ? eq(providerStudents.isActive, true) : undefined,
+        excludedStudentId
+          ? ne(providerStudents.id, excludedStudentId)
+          : undefined,
+      ),
+    )
+    .orderBy(
+      desc(providerStudents.isActive),
+      desc(providerStudents.updatedAt),
+      asc(providerStudents.id),
+    )
+    .limit(1);
+  return student;
 }
 
 export async function updateProviderStudent(
@@ -175,10 +211,15 @@ export async function updateProviderStudent(
     if (!student) throw new ProviderStudentNotFoundError();
     return student;
   } catch (error) {
-    if (isPostgresError(error, "23505")) {
-      throw new ProviderAppointmentConflictError(
-        "A student with this email already exists",
+    if (input.email && isPostgresError(error, "23505")) {
+      const existing = await findProviderStudentByEmail(
+        providerId,
+        input.email,
+        true,
+        studentId,
       );
+      if (existing)
+        throw new ProviderStudentEmailConflictError(existing.displayName);
     }
     throw error;
   }

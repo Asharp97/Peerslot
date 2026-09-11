@@ -252,10 +252,11 @@ export const providerStudents = pgTable(
   },
   (table) => [
     index("provider_students_provider_idx").on(table.providerId),
-    uniqueIndex("provider_students_provider_email_unique").on(
-      table.providerId,
-      table.email,
-    ),
+    // Removed students retain their history without reserving an email in
+    // the provider's active list. Accounts and other providers are independent.
+    uniqueIndex("provider_students_provider_email_unique")
+      .on(table.providerId, sql`lower(btrim(${table.email}))`)
+      .where(sql`${table.isActive} = true`),
   ],
 );
 

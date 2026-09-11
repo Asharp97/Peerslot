@@ -7,6 +7,7 @@ import {
   render,
   screen,
   waitFor,
+  within,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -16,6 +17,8 @@ import {
   readableTextColor,
   type ProviderAppointmentsCopy,
 } from "@/components/provider-workspace/provider-appointments";
+import en from "@/messages/en.json";
+import tr from "@/messages/tr.json";
 import { findAppointmentConflictInRows } from "@/lib/provider-appointment-occurrence";
 
 const calendar = vi.hoisted(() => ({
@@ -46,6 +49,52 @@ vi.mock("@/components/provider-workspace/provider-shell", () => ({
 }));
 
 describe("provider appointments calendar", () => {
+  it.each(["en", "tr"] as const)(
+    "shows the conflicting student's name in %s while preserving the edit",
+    async (locale) => {
+      const messages = (locale === "tr" ? tr : en).ProviderWorkspace
+        .appointments;
+      const fetchMock = vi.fn(
+        async (_url: RequestInfo | URL, init?: RequestInit) => {
+          if (init?.method === "PATCH")
+            return Response.json(
+              {
+                code: "student_email_conflict",
+                studentName: "Existing Ada",
+                error: "This email already belongs to Existing Ada.",
+              },
+              { status: 409 },
+            );
+          return Response.json({
+            students: [{ id: "student-id", displayName: "Ada", email: null }],
+          });
+        },
+      );
+      vi.stubGlobal("fetch", fetchMock);
+      render(<ProviderAppointments copy={messages} />);
+      await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+      fireEvent.click(
+        screen.getByRole("button", { name: messages.manageStudents }),
+      );
+      fireEvent.click(
+        await screen.findByRole("button", { name: messages.editStudent }),
+      );
+      const fields = screen.getAllByRole("textbox");
+      const emailInput = fields.find(
+        (field) => field.getAttribute("type") === "email",
+      )!;
+      fireEvent.change(emailInput, { target: { value: "ada@example.com" } });
+      fireEvent.click(screen.getByRole("button", { name: messages.save }));
+      expect(
+        await within(screen.getByRole("dialog")).findByText(
+          messages.studentEmailConflict.replace("{name}", "Existing Ada"),
+        ),
+      ).toBeTruthy();
+      expect((emailInput as HTMLInputElement).value).toBe("ada@example.com");
+      expect(screen.getByRole("button", { name: messages.save })).toBeTruthy();
+    },
+  );
+
   it("explains a past session before creating a student or appointment", async () => {
     const fetchMock = calendarFetchMock({ appointments: [] });
     vi.stubGlobal("fetch", fetchMock);
@@ -232,7 +281,7 @@ describe("provider appointments calendar", () => {
     });
     expect(calendar.props?.datesSet).toBeUndefined();
     expect(calendar.props?.events).toBeTypeOf("function");
-    expect(calendar.props?.snapDuration).toBe("00:15:00");
+    expect(calendar.props?.snapDuration).toBe("00:10:00");
 
     const calendarSurface = document.querySelector(".provider-calendar");
     act(() => {
