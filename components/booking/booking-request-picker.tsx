@@ -71,6 +71,14 @@ export type BookingRequestCopy = {
   requestedTitle: string;
   requestedBody: string;
   requestError: string;
+  pastTimeError: string;
+  minimumNoticeError: string;
+  upcomingAppointmentError: string;
+  unavailableTimeError: string;
+  sessionExpiredError: string;
+  emailUnverifiedError: string;
+  rateLimitError: string;
+  pageUnavailableError: string;
   authError: string;
   socialError: string;
   intentError: string;
@@ -362,7 +370,10 @@ export function BookingRequestPicker({
           comment: comment || undefined,
         }),
       });
-      if (!response.ok) throw new Error(copy.requestError);
+      if (!response.ok) {
+        setError(await bookingRequestError(response, copy, locale));
+        return;
+      }
       sessionStorage.removeItem(draftKey(bookingPageId));
       setRequested(true);
     } catch {
@@ -1014,4 +1025,48 @@ function PeriodIcon({ period }: { period: TimePeriod }) {
     return <SunMedium aria-hidden="true" size={15} />;
   }
   return <MoonStar aria-hidden="true" size={15} />;
+}
+
+async function bookingRequestError(
+  response: Response,
+  copy: BookingRequestCopy,
+  locale: string,
+) {
+  const body = (await response.json().catch(() => null)) as {
+    code?: string;
+    minimumNoticeHours?: number;
+  } | null;
+  if (response.status === 401) return copy.sessionExpiredError;
+  if (response.status === 429) return copy.rateLimitError;
+  switch (body?.code) {
+    case "past":
+      return copy.pastTimeError;
+    case "unavailable":
+      return copy.unavailableTimeError;
+    case "page_not_found":
+      return copy.pageUnavailableError;
+    case "email_unverified":
+      return copy.emailUnverifiedError;
+    case "minimum_notice":
+    case "upcoming_appointment": {
+      if (
+        typeof body.minimumNoticeHours !== "number" ||
+        !Number.isFinite(body.minimumNoticeHours) ||
+        body.minimumNoticeHours < 0
+      )
+        return copy.requestError;
+      const notice = new Intl.NumberFormat(locale, {
+        style: "unit",
+        unit: "hour",
+        unitDisplay: "long",
+      }).format(body.minimumNoticeHours);
+      return (
+        body.code === "minimum_notice"
+          ? copy.minimumNoticeError
+          : copy.upcomingAppointmentError
+      ).replace("{notice}", notice);
+    }
+    default:
+      return copy.requestError;
+  }
 }

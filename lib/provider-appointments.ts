@@ -53,7 +53,10 @@ export class ProviderAppointmentNotFoundError extends Error {
 }
 
 export class ProviderAppointmentValidationError extends Error {
-  constructor(message: string) {
+  constructor(
+    message: string,
+    public code?: "past",
+  ) {
     super(message);
     this.name = "ProviderAppointmentValidationError";
   }
@@ -260,6 +263,7 @@ export async function createProviderAppointment(
   providerId: string,
   input: ProviderAppointmentCreateInput,
 ) {
+  assertFutureSession(input.startsAt);
   await requireProviderStudent(providerId, input.providerStudentId);
   await assertNoAppointmentOverlap(providerId, input);
 
@@ -280,6 +284,7 @@ export async function createPendingProviderAppointment(
     comment?: string;
   },
 ) {
+  assertFutureSession(input.startsAt);
   await requireProviderStudent(providerId, input.providerStudentId);
   await assertNoAppointmentOverlap(providerId, {
     ...input,
@@ -302,6 +307,23 @@ export async function updateProviderAppointment(
   input: ProviderAppointmentUpdateInput,
 ) {
   const current = await requireProviderAppointment(providerId, appointmentId);
+
+  const comparisonRange =
+    current.recurrence === "weekly" && input.occurrenceStartsAt
+      ? {
+          startsAt: input.occurrenceStartsAt,
+          endsAt: new Date(
+            input.occurrenceStartsAt.getTime() +
+              current.endsAt.getTime() -
+              current.startsAt.getTime(),
+          ),
+        }
+      : current;
+  // Historical notes/status can still be edited, but rescheduling must target
+  // a future time. Run this before any overlap check, including series edits.
+  if (appointmentTimesChanged(input, comparisonRange)) {
+    assertFutureSession(input.startsAt!);
+  }
 
   if (input.editScope === "future") {
     return updateFutureAppointmentSeries(providerId, current, input);
@@ -924,4 +946,13 @@ async function findSlotByRange(
     .limit(1);
 
   return slot ?? null;
+}
+
+function assertFutureSession(startsAt: Date) {
+  if (startsAt <= new Date()) {
+    throw new ProviderAppointmentValidationError(
+      "Choose a future date and time for this session.",
+      "past",
+    );
+  }
 }

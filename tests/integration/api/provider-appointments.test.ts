@@ -5,6 +5,7 @@ import { DELETE, PATCH } from "@/app/api/provider/appointments/[id]/route";
 
 import {
   createProviderAppointment,
+  ProviderAppointmentValidationError,
   deleteProviderAppointment,
   listProviderAppointments,
   updateProviderAppointment,
@@ -51,6 +52,29 @@ describe("provider appointments API integration", () => {
       endsAt: new Date("2030-01-22T00:00:00Z"),
     });
     expect(await response.json()).toEqual({ appointments: [] });
+  });
+
+  it("returns an actionable validation error for a past session", async () => {
+    vi.mocked(createProviderAppointment).mockRejectedValue(
+      Object.assign(
+        new ProviderAppointmentValidationError(
+          "Choose a future date and time for this session.",
+        ),
+        { code: "past" },
+      ),
+    );
+    const response = await POST(
+      jsonRequest("http://localhost/api/provider/appointments", "POST", {
+        providerStudentId,
+        startsAt: "2020-01-15T09:00:00Z",
+        endsAt: "2020-01-15T09:45:00Z",
+      }),
+    );
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({
+      code: "past",
+      error: "Choose a future date and time for this session.",
+    });
   });
 
   it("creates a session with a provider-managed student", async () => {

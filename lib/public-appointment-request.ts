@@ -7,8 +7,14 @@ import { getAvailableTimesForBookingPage } from "@/lib/available-times";
 import {
   createPendingProviderAppointment,
   createProviderStudent,
+  loadProviderAppointmentRows,
+  ProviderAppointmentValidationError,
   ProviderAppointmentConflictError,
 } from "@/lib/provider-appointments";
+import {
+  assertStudentCanBookWithProvider,
+  PublicAppointmentPolicyError,
+} from "@/lib/public-appointment-policy";
 import type {
   PublicAppointmentIdentity,
   PublicAppointmentRequestInput,
@@ -56,6 +62,26 @@ export async function createPublicAppointmentRequest(
 
   if (!page) throw new PublicAppointmentRequestPageNotFoundError();
 
+  const now = new Date();
+  if (input.startsAt <= now) throw new PublicAppointmentPolicyError("past");
+
+  const noticeCutoff = new Date(
+    now.getTime() + page.minimumNoticeHours * 3_600_000,
+  );
+  if (page.minimumNoticeHours > 0) {
+    const rows = await loadProviderAppointmentRows(page.providerId, {
+      startsAt: now,
+      endsAt: noticeCutoff,
+    });
+    assertStudentCanBookWithProvider(rows, identity, page, now);
+  }
+  if (input.startsAt < noticeCutoff) {
+    throw new PublicAppointmentPolicyError(
+      "minimum_notice",
+      page.minimumNoticeHours,
+    );
+  }
+
   const endsAt = new Date(
     input.startsAt.getTime() + page.appointmentDurationMinutes * 60_000,
   );
@@ -97,6 +123,12 @@ export async function createPublicAppointmentRequest(
       },
     };
   } catch (error) {
+    if (
+      error instanceof ProviderAppointmentValidationError &&
+      error.code === "past"
+    ) {
+      throw new PublicAppointmentPolicyError("past");
+    }
     if (error instanceof ProviderAppointmentConflictError) {
       throw new PublicAppointmentRequestUnavailableError();
     }

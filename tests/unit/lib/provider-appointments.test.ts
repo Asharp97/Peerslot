@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   createProviderAppointment,
   updateProviderAppointment,
+  createPendingProviderAppointment,
 } from "@/lib/provider-appointments";
 import {
   providerAppointmentCreateSchema,
@@ -63,6 +64,67 @@ beforeEach(() => {
 });
 
 describe("provider appointment creation", () => {
+  it.each(["none", "weekly"] as const)(
+    "reports a past start before overlap for a %s session",
+    async (recurrence) => {
+      state.rows = [scheduleRow("existing", "2020-01-08", null)];
+      await expect(
+        createProviderAppointment(
+          "provider-id",
+          providerAppointmentCreateSchema.parse({
+            providerStudentId: "7d45e9f4-6260-4dca-a95a-b5fa6c068cb8",
+            recurrence,
+            startsAt: "2020-01-08T09:15:00Z",
+            endsAt: "2020-01-08T10:00:00Z",
+          }),
+        ),
+      ).rejects.toMatchObject({
+        code: "past",
+        message: "Choose a future date and time for this session.",
+      });
+      expect(state.inserted).toHaveLength(0);
+    },
+  );
+
+  it("rejects creating a pending appointment in the past", async () => {
+    await expect(
+      createPendingProviderAppointment("provider-id", {
+        providerStudentId: "student-id",
+        studentId: "account-id",
+        startsAt: new Date("2020-01-08T09:00:00Z"),
+        endsAt: new Date("2020-01-08T09:45:00Z"),
+      }),
+    ).rejects.toMatchObject({ code: "past" });
+    expect(state.inserted).toHaveLength(0);
+  });
+
+  it.each(["one-off", "exception", "future"] as const)(
+    "rejects moving a %s session into the past before overlap",
+    async (scope) => {
+      state.rows = [
+        {
+          ...scheduleRow("existing", "2030-01-08", null),
+          recurrence: scope === "one-off" ? "none" : "weekly",
+        },
+      ];
+      await expect(
+        updateProviderAppointment(
+          "provider-id",
+          "existing",
+          providerAppointmentUpdateSchema.parse({
+            startsAt: "2020-01-08T09:00:00Z",
+            endsAt: "2020-01-08T09:45:00Z",
+            editScope: scope === "future" ? "future" : "exception",
+            ...(scope === "one-off"
+              ? {}
+              : { occurrenceStartsAt: "2030-01-08T09:00:00Z" }),
+          }),
+        ),
+      ).rejects.toMatchObject({ code: "past" });
+      expect(state.inserted).toHaveLength(0);
+    },
+  );
+
   it("does not restore a cancelled session into a time occupied by a weekly session", async () => {
     state.rows = [
       {

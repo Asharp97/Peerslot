@@ -136,3 +136,51 @@ describe("booking page verification copy", () => {
     },
   );
 });
+
+describe("booking page validation messages", () => {
+  const cases = [
+    ["past", 400, "pastTimeError"],
+    ["minimum_notice", 400, "minimumNoticeError"],
+    ["upcoming_appointment", 409, "upcomingAppointmentError"],
+    ["unavailable", 409, "unavailableTimeError"],
+    ["email_unverified", 403, "emailUnverifiedError"],
+    ["unauthenticated", 401, "sessionExpiredError"],
+    ["page_not_found", 404, "pageUnavailableError"],
+    [undefined, 429, "rateLimitError"],
+    [undefined, 500, "requestError"],
+  ] as const;
+  for (const locale of ["en", "tr"] as const) {
+    it.each(cases)(
+      "shows the real " + locale + " message for %s (%s)",
+      async (code, status, key) => {
+        const copy = (locale === "tr" ? tr : en).BookingPage;
+        const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+          if (String(input) === "/api/auth/get-session")
+            return Response.json({
+              user: { name: "Ada", email: "ada@example.com" },
+            });
+          if (String(input).endsWith("/appointments"))
+            return Response.json({ code, minimumNoticeHours: 24 }, { status });
+          throw new Error("Unexpected request: " + input);
+        });
+        vi.stubGlobal("fetch", fetchMock);
+        render(
+          await BookingPage({
+            params: Promise.resolve({ locale, slug: "ABCDEFGH" }),
+          }),
+        );
+        await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+        fireEvent.click(screen.getByRole("button", { name: /12:00/ }));
+        fireEvent.click(
+          await screen.findByRole("button", { name: copy.confirmRequest }),
+        );
+        const notice = locale === "en" ? "24 hours" : "24 saat";
+        expect(
+          await screen.findByText(copy[key].replace("{notice}", notice)),
+        ).toBeTruthy();
+        expect(screen.queryByText(copy.requestedTitle)).toBeNull();
+        expect(translation.onError).not.toHaveBeenCalled();
+      },
+    );
+  }
+});

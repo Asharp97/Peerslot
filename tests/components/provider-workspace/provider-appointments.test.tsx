@@ -46,6 +46,24 @@ vi.mock("@/components/provider-workspace/provider-shell", () => ({
 }));
 
 describe("provider appointments calendar", () => {
+  it("explains a past session before creating a student or appointment", async () => {
+    const fetchMock = calendarFetchMock({ appointments: [] });
+    vi.stubGlobal("fetch", fetchMock);
+    render(<ProviderAppointments copy={copy} />);
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    act(() => {
+      const dateClick = calendar.props?.dateClick as (info: unknown) => void;
+      dateClick({ allDay: false, date: new Date("2020-01-08T12:00:00") });
+    });
+    fireEvent.submit(
+      screen.getByRole("button", { name: copy.save }).closest("form")!,
+    );
+    expect(await screen.findByText(copy.pastSessionError)).toBeTruthy();
+    expect(
+      fetchMock.mock.calls.some(([, init]) => init?.method === "POST"),
+    ).toBe(false);
+  });
+
   it.each(["none", "weekly"] as const)(
     "saves a %s session on the clicked day when the previous day has the same time",
     async (recurrence) => {

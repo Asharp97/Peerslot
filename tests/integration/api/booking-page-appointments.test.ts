@@ -1,5 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { PublicAppointmentPolicyError } from "@/lib/public-appointment-policy";
+import { clearRateLimitsForTests } from "@/lib/request-security";
+
 import { POST } from "@/app/api/booking-pages/[slug]/appointments/route";
 
 const mocks = vi.hoisted(() => {
@@ -38,7 +41,10 @@ const slug = "ABCDEFGH";
 const startsAt = "2030-01-15T09:00:00.000Z";
 
 describe("public appointment request API integration", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    clearRateLimitsForTests();
+  });
 
   beforeEach(() => {
     mocks.getSession.mockResolvedValue({
@@ -46,8 +52,69 @@ describe("public appointment request API integration", () => {
         id: "student-user-id",
         name: "Authenticated Ada",
         email: "auth@example.com",
+        emailVerified: true,
       },
     });
+  });
+
+  it("requires email verification before matching existing appointments", async () => {
+    mocks.getSession.mockResolvedValue({
+      user: {
+        id: "student-user-id",
+        name: "Ada",
+        email: "auth@example.com",
+        emailVerified: false,
+      },
+    });
+    const response = await POST(request(), {
+      params: Promise.resolve({ slug }),
+    });
+    expect(response.status).toBe(403);
+    expect(await response.json()).toMatchObject({ code: "email_unverified" });
+    expect(mocks.create).not.toHaveBeenCalled();
+    expect(mocks.notifyProvider).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["past", 400, undefined],
+    ["minimum_notice", 400, 24],
+    ["upcoming_appointment", 409, 24],
+  ] as const)(
+    "returns the %s reason without creating a notification",
+    async (code, status, hours) => {
+      mocks.create.mockRejectedValue(
+        new PublicAppointmentPolicyError(code, hours),
+      );
+      const response = await POST(request(), {
+        params: Promise.resolve({ slug }),
+      });
+      expect(response.status).toBe(status);
+      expect(await response.json()).toMatchObject({
+        code,
+        ...(hours === undefined ? {} : { minimumNoticeHours: hours }),
+      });
+      expect(mocks.notifyProvider).not.toHaveBeenCalled();
+    },
+  );
+
+  it("rejects client-supplied identity so another email cannot bypass the notice guard", async () => {
+    const response = await POST(
+      new Request(
+        "http://localhost/api/booking-pages/" + slug + "/appointments",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            startsAt,
+            studentEmail: "different@example.com",
+            studentId: "other-account",
+          }),
+        },
+      ),
+      { params: Promise.resolve({ slug }) },
+    );
+    expect(response.status).toBe(400);
+    expect(mocks.create).not.toHaveBeenCalled();
   });
 
   it("creates a pending appointment request", async () => {

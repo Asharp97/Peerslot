@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { auth } from "@/lib/auth";
+import { PublicAppointmentPolicyError } from "@/lib/public-appointment-policy";
 import { clearBookingIntentCookie } from "@/lib/booking-intent-cookie";
 import {
   createPublicAppointmentRequest,
@@ -33,7 +34,23 @@ export async function POST(
 
   if (!session) {
     logFailedBookingAttempt("unauthenticated", { slug, status: 401 });
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json(
+      {
+        error: "Sign in again to confirm your appointment.",
+        code: "unauthenticated",
+      },
+      { status: 401 },
+    );
+  }
+
+  if (!session.user.emailVerified) {
+    return NextResponse.json(
+      {
+        error: "Verify your email address before booking an appointment.",
+        code: "email_unverified",
+      },
+      { status: 403 },
+    );
   }
 
   const limited = enforceRateLimit(request, "booking-confirmation", {
@@ -100,13 +117,31 @@ export async function POST(
     clearBookingIntentCookie(response);
     return response;
   } catch (error) {
+    if (error instanceof PublicAppointmentPolicyError) {
+      const status = error.code === "upcoming_appointment" ? 409 : 400;
+      logFailedBookingAttempt(error.code, { slug, status });
+      return NextResponse.json(
+        {
+          error: error.message,
+          code: error.code,
+          minimumNoticeHours: error.minimumNoticeHours,
+        },
+        { status },
+      );
+    }
     if (error instanceof PublicAppointmentRequestPageNotFoundError) {
       logFailedBookingAttempt("page_not_found", { slug, status: 404 });
-      return NextResponse.json({ error: error.message }, { status: 404 });
+      return NextResponse.json(
+        { error: error.message, code: "page_not_found" },
+        { status: 404 },
+      );
     }
     if (error instanceof PublicAppointmentRequestUnavailableError) {
       logFailedBookingAttempt("unavailable", { slug, status: 409 });
-      return NextResponse.json({ error: error.message }, { status: 409 });
+      return NextResponse.json(
+        { error: error.message, code: "unavailable" },
+        { status: 409 },
+      );
     }
     throw error;
   }

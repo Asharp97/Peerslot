@@ -21,7 +21,10 @@ export function providerAppointmentErrorResponse(error: unknown) {
   }
 
   if (error instanceof ProviderAppointmentValidationError) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
+    return NextResponse.json(
+      { error: error.message, code: error.code },
+      { status: 400 },
+    );
   }
 
   if (

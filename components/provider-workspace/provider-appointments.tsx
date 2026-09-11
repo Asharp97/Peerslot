@@ -194,6 +194,7 @@ export type ProviderAppointmentsCopy = {
   emptyStudents: string;
   loadError: string;
   saveError: string;
+  pastSessionError: string;
 };
 
 const newStudentValue = "__new_student__";
@@ -600,7 +601,7 @@ export function ProviderAppointments({
           },
         );
 
-        if (!response.ok) throw new Error(await responseError(response));
+        if (!response.ok) throw new Error(await responseError(response, copy));
 
         calendarRef.current?.getApi().refetchEvents();
       } catch (caught) {
@@ -610,7 +611,7 @@ export function ProviderAppointments({
         setInteractionSaving(false);
       }
     },
-    [accessToken, copy.saveError, timeZone],
+    [accessToken, copy, timeZone],
   );
 
   async function saveSession(event: FormEvent<HTMLFormElement>) {
@@ -649,7 +650,7 @@ export function ProviderAppointments({
             }),
           },
         );
-        if (!response.ok) throw new Error(await responseError(response));
+        if (!response.ok) throw new Error(await responseError(response, copy));
 
         calendarRef.current?.getApi().refetchEvents();
         setDialogOpen(false);
@@ -673,8 +674,9 @@ export function ProviderAppointments({
             }),
           },
         );
-        if (!response.ok) throw new Error(await responseError(response));
+        if (!response.ok) throw new Error(await responseError(response, copy));
       } else {
+        if (startsAt <= new Date()) throw new Error(copy.pastSessionError);
         let providerStudentId = draft.studentId;
         if (providerStudentId === newStudentValue) {
           const studentResponse = await fetch("/api/provider/students", {
@@ -686,7 +688,7 @@ export function ProviderAppointments({
             }),
           });
           if (!studentResponse.ok) {
-            throw new Error(await responseError(studentResponse));
+            throw new Error(await responseError(studentResponse, copy));
           }
           const studentBody = (await studentResponse.json()) as {
             student: ProviderStudent;
@@ -713,7 +715,7 @@ export function ProviderAppointments({
             color: draft.color,
           }),
         });
-        if (!response.ok) throw new Error(await responseError(response));
+        if (!response.ok) throw new Error(await responseError(response, copy));
       }
 
       calendarRef.current?.getApi().refetchEvents();
@@ -761,7 +763,7 @@ export function ProviderAppointments({
           }),
         },
       );
-      if (!response.ok) throw new Error(await responseError(response));
+      if (!response.ok) throw new Error(await responseError(response, copy));
 
       calendarRef.current?.getApi().refetchEvents();
       setDialogOpen(false);
@@ -786,7 +788,7 @@ export function ProviderAppointments({
           headers: { Authorization: `Bearer ${accessToken}` },
         },
       );
-      if (!response.ok) throw new Error(await responseError(response));
+      if (!response.ok) throw new Error(await responseError(response, copy));
 
       calendarRef.current?.getApi().refetchEvents();
       setDialogOpen(false);
@@ -820,7 +822,7 @@ export function ProviderAppointments({
           }),
         },
       );
-      if (!response.ok) throw new Error(await responseError(response));
+      if (!response.ok) throw new Error(await responseError(response, copy));
       await loadStudents();
       calendarRef.current?.getApi().refetchEvents();
       setEditingStudentId(null);
@@ -845,7 +847,7 @@ export function ProviderAppointments({
       headers: { Authorization: `Bearer ${accessToken}` },
     });
     if (!response.ok) {
-      setError(await responseError(response));
+      setError(await responseError(response, copy));
       return;
     }
     await loadStudents();
@@ -1636,11 +1638,16 @@ function authenticatedJsonHeaders(accessToken: string) {
   };
 }
 
-async function responseError(response: Response) {
+async function responseError(
+  response: Response,
+  copy: ProviderAppointmentsCopy,
+) {
   const body = (await response.json().catch(() => null)) as {
     error?: string;
+    code?: string;
   } | null;
-  return body?.error ?? "Unable to save the session";
+  if (body?.code === "past") return copy.pastSessionError;
+  return body?.error ?? copy.saveError;
 }
 
 function nextRoundedHour(timeZone: string) {
