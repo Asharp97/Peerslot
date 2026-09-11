@@ -76,6 +76,7 @@ export class ProviderStudentNotFoundError extends Error {
 
 const appointmentSelection = {
   id: appointments.id,
+  studentId: appointments.studentId,
   slotId: availabilitySlots.id,
   windowId: availabilitySlots.availabilityWindowId,
   accountStudentName: user.name,
@@ -398,6 +399,7 @@ async function updateFutureAppointmentSeries(
   const appointmentValues = {
     id: appointmentId,
     providerStudentId: series.providerStudentId!,
+    studentId: series.studentId,
     slotId: targetSlotId,
     recurrence: "weekly" as const,
     comment: input.comment !== undefined ? input.comment : series.comment,
@@ -547,6 +549,7 @@ async function createAppointmentException(
 
   const appointmentId = await insertAppointment(providerId, {
     providerStudentId: series.providerStudentId!,
+    studentId: series.studentId ?? undefined,
     ...range,
     recurrence: "none",
     exceptionForAppointmentId: series.id,

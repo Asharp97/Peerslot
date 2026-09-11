@@ -184,7 +184,12 @@ describe("booking authentication", () => {
       });
       fireEvent.click(screen.getByRole("button", { name: copy.continue }));
       await screen.findByRole("heading", { name: copy.authTitle });
-      fireEvent.click(screen.getByRole("button", { name: copy.registerTab }));
+      expect(
+        screen.getByRole("button", { name: copy.registerAction }),
+      ).toBeTruthy();
+      expect(
+        screen.getByLabelText(copy.password).getAttribute("autocomplete"),
+      ).toBe("new-password");
       fireEvent.change(screen.getByLabelText(copy.password), {
         target: { value: "correct-horse-battery" },
       });

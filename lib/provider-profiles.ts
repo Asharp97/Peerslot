@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { user } from "@/db/auth-schema";
 import { bookingPages, providerProfiles } from "@/db/schema";
 import { withBookingSlugRetries } from "@/lib/booking-page";
+import { defaultBookingTitle } from "@/lib/booking-title";
 import { type ProviderOnboardingInput } from "@/lib/provider-onboarding";
 
 type ProviderProfile = typeof providerProfiles.$inferSelect;
@@ -63,21 +64,22 @@ export async function completeProviderOnboarding(
   userId: string,
   input: ProviderOnboardingInput,
 ) {
+  const { locale, ...profileInput } = input;
   return withBookingSlugRetries(async (slug) => {
     await db.batch([
       db
         .insert(providerProfiles)
-        .values({ userId, ...input })
+        .values({ userId, ...profileInput })
         .onConflictDoUpdate({
           target: providerProfiles.userId,
-          set: { ...input, updatedAt: new Date() },
+          set: { ...profileInput, updatedAt: new Date() },
         }),
       db
         .insert(bookingPages)
         .values({
           providerId: userId,
           slug,
-          title: `Book with ${input.displayName}`,
+          title: defaultBookingTitle(input.displayName, locale),
           timeZone: input.timeZone,
           appointmentDurationMinutes: input.defaultAppointmentDurationMinutes,
           bookingIntervalMinutes:

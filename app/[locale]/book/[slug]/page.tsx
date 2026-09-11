@@ -14,6 +14,7 @@ import { bookingPages, providerProfiles } from "@/db/schema";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { getAvailableTimesForPublishedBookingPage } from "@/lib/available-times";
+import { localizeBookingTitle } from "@/lib/booking-title";
 import { createLocalizedAlternates } from "@/lib/seo";
 
 type BookingPageProps = {
@@ -61,6 +62,12 @@ export default async function BookingPage({ params }: BookingPageProps) {
     .limit(1);
 
   if (!provider) notFound();
+
+  const bookingTitle = localizeBookingTitle(
+    provider.title,
+    provider.displayName,
+    locale,
+  );
 
   const rangeStartsAt = new Date();
   const availability = await getAvailableTimesForPublishedBookingPage(slug, {
@@ -115,7 +122,7 @@ export default async function BookingPage({ params }: BookingPageProps) {
               {t("availableTimes")}
             </p>
             <h2 className="font-display text-4xl tracking-[-0.03em]">
-              {provider.title}
+              {bookingTitle}
             </h2>
             <p className="mt-2 text-sm leading-6 text-[#62625a]">
               {t("availableTimesBody")}
@@ -124,7 +131,7 @@ export default async function BookingPage({ params }: BookingPageProps) {
             {slots.length ? (
               <BookingRequestPicker
                 bookingPageId={provider.bookingPageId}
-                bookingTitle={provider.title}
+                bookingTitle={bookingTitle}
                 copy={
                   {
                     morning: t("morning"),
@@ -151,7 +158,7 @@ export default async function BookingPage({ params }: BookingPageProps) {
                     privacyLink: t("privacyLink"),
                     consentJoin: t("consentJoin"),
                     verifyTitle: t("verifyTitle"),
-                    verifyBody: t("verifyBody"),
+                    verifyBody: t.raw("verifyBody"),
                     verifyAction: t("verifyAction"),
                     confirmTitle: t("confirmTitle"),
                     confirmBody: t("confirmBody"),

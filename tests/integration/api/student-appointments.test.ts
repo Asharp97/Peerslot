@@ -1,0 +1,114 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+const mocks = vi.hoisted(() => ({
+  user: vi.fn(),
+  list: vi.fn(),
+  times: vi.fn(),
+  change: vi.fn(),
+}));
+vi.mock("@/lib/current-user", () => ({ getCurrentUser: mocks.user }));
+vi.mock("@/lib/student-appointments", () => ({
+  listStudentAppointments: mocks.list,
+  getStudentRescheduleTimes: mocks.times,
+  changeStudentAppointment: mocks.change,
+}));
+import { GET as list } from "@/app/api/account/appointments/route";
+import { GET, PATCH } from "@/app/api/account/appointments/[id]/route";
+import { StudentAppointmentChangeError } from "@/lib/student-appointment-policy";
+const id = "550e8400-e29b-41d4-a716-446655440000";
+const context = { params: Promise.resolve({ id }) };
+const original = "2030-01-18T09:00:00Z";
+const url = `http://localhost/api/account/appointments/${id}`;
+function request(body: unknown, origin?: string) {
+  return new Request(url, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      ...(origin ? { Origin: origin } : {}),
+    },
+    body: JSON.stringify(body),
+  });
+}
+beforeEach(() => {
+  vi.clearAllMocks();
+  mocks.user.mockResolvedValue({ user: { id: "student-id" } });
+  mocks.list.mockResolvedValue([]);
+  mocks.times.mockResolvedValue([]);
+});
+describe("student appointment API", () => {
+  it("requires authentication for both reads and changes", async () => {
+    mocks.user.mockResolvedValue(null);
+    expect((await list(new Request(url))).status).toBe(401);
+    expect(
+      (
+        await PATCH(
+          request({ action: "cancel", occurrenceStartsAt: original }),
+          context,
+        )
+      ).status,
+    ).toBe(401);
+    expect(mocks.change).not.toHaveBeenCalled();
+  });
+  it("uses the authenticated account and forbids client-supplied student identities", async () => {
+    await list(new Request(url));
+    expect(mocks.list).toHaveBeenCalledWith("student-id");
+    const response = await PATCH(
+      request({
+        action: "cancel",
+        occurrenceStartsAt: original,
+        studentId: "other",
+      }),
+      context,
+    );
+    expect(response.status).toBe(400);
+    expect(mocks.change).not.toHaveBeenCalled();
+  });
+  it("blocks cross-origin writes", async () => {
+    expect(
+      (
+        await PATCH(
+          request(
+            { action: "cancel", occurrenceStartsAt: original },
+            "https://example.invalid",
+          ),
+          context,
+        )
+      ).status,
+    ).toBe(403);
+    expect(mocks.change).not.toHaveBeenCalled();
+  });
+  it.each([
+    ["notice", 403],
+    ["not_found", 404],
+    ["unavailable", 409],
+  ] as const)("returns %s failures", async (code, status) => {
+    mocks.change.mockRejectedValue(new StudentAppointmentChangeError(code));
+    expect(
+      (
+        await PATCH(
+          request({ action: "cancel", occurrenceStartsAt: original }),
+          context,
+        )
+      ).status,
+    ).toBe(status);
+  });
+  it("validates a bounded availability range and uses private responses", async () => {
+    const params = new URLSearchParams({
+      occurrenceStartsAt: original,
+      startsAt: "2030-01-15T09:00:00Z",
+      endsAt: "2030-02-15T09:00:00Z",
+    });
+    const response = await GET(new Request(`${url}?${params}`), context);
+    expect(response.status).toBe(200);
+    expect(response.headers.get("Cache-Control")).toBe("no-store");
+    expect(mocks.times).toHaveBeenCalledWith(
+      "student-id",
+      id,
+      new Date(original),
+      expect.anything(),
+    );
+    params.set("endsAt", "2031-01-01T09:00:00Z");
+    expect((await GET(new Request(`${url}?${params}`), context)).status).toBe(
+      400,
+    );
+  });
+});

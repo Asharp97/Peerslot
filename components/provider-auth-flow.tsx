@@ -255,11 +255,13 @@ export function ProviderAuthFlow({
     setError("");
 
     let jwt = accessToken;
-    let response = await submitProviderSettings(jwt, settings);
+    let response = await submitProviderSettings(jwt, settings, locale);
 
     if (response.status === 401) {
       jwt = (await fetchAccessToken()) ?? "";
-      response = jwt ? await submitProviderSettings(jwt, settings) : response;
+      response = jwt
+        ? await submitProviderSettings(jwt, settings, locale)
+        : response;
     }
 
     if (!response.ok) {
@@ -648,6 +650,7 @@ async function submitProviderSettings(
     minimumBookingNoticeMinutes: number;
     restBetweenSessionsMinutes: number;
   },
+  locale: string,
 ) {
   return fetch("/api/provider", {
     method: "POST",
@@ -655,6 +658,6 @@ async function submitProviderSettings(
       Authorization: `Bearer ${jwt}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(settings),
+    body: JSON.stringify({ ...settings, locale }),
   });
 }

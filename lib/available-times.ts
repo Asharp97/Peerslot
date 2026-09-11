@@ -1,13 +1,4 @@
-import {
-  and,
-  eq,
-  gte,
-  gt,
-  isNotNull,
-  isNull,
-  lt,
-  or,
-} from "drizzle-orm";
+import { and, eq, gte, gt, isNotNull, isNull, lt, or } from "drizzle-orm";
 
 import { db } from "@/db";
 import {
@@ -143,13 +134,21 @@ const postgresAvailableTimeRepository = {
       rows.map((row) => ({ ...row, studentName: "Student" })),
       appointmentRange,
       bookingPage[0]?.timeZone ?? "UTC",
-    ).map(({ startsAt, endsAt, status }) => ({ startsAt, endsAt, status }));
+    ).map(({ appointmentId, startsAt, endsAt, status }) => ({
+      appointmentId,
+      startsAt,
+      endsAt,
+      status,
+    }));
   },
 };
 
 export async function getAvailableTimesForBookingPage(
   bookingPage: AvailabilityBookingPage,
   range: AvailableTimeRange,
+  options: {
+    excludedOccurrence?: { appointmentId: string; startsAt: Date };
+  } = {},
 ) {
   const [windows, appointments] = await Promise.all([
     postgresAvailableTimeRepository.loadActiveWindows(
@@ -168,7 +167,13 @@ export async function getAvailableTimesForBookingPage(
     bookingPage,
     range,
     windows,
-    appointments: appointments as AppointmentForCalculation[],
+    appointments: appointments.filter(
+      (appointment) =>
+        appointment.appointmentId !==
+          options.excludedOccurrence?.appointmentId ||
+        appointment.startsAt.getTime() !==
+          options.excludedOccurrence.startsAt.getTime(),
+    ) as AppointmentForCalculation[],
     now: new Date(),
   });
 }

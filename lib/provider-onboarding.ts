@@ -9,6 +9,7 @@ import {
 const bookingNoticeOptions = [0, 60, 240, 720, 1440, 2880] as const;
 
 export const providerOnboardingSchema = z.object({
+  locale: z.enum(["en", "tr"]).default("en"),
   displayName: z.string().trim().min(2).max(80),
   professionalTitle: z.string().trim().min(2).max(80),
   timeZone: z.string().trim().refine(isValidTimeZone, "Invalid time zone"),

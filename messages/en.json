@@ -153,6 +153,32 @@
     }
   },
   "Account": {
+    "appointments": {
+      "title": "Your appointments",
+      "intro": "View and manage your bookings for the next 90 days.",
+      "empty": "You have no upcoming appointments.",
+      "loading": "Loading appointments…",
+      "reschedule": "Reschedule",
+      "cancel": "Cancel appointment",
+      "pending": "Awaiting confirmation",
+      "scheduled": "Confirmed",
+      "notice": "Changes require at least {hours} hours before this appointment starts.",
+      "locked": "This appointment is too close to change or cancel.",
+      "rescheduleTitle": "Reschedule appointment",
+      "rescheduleBody": "Choose an available time in the next 30 days. The notice period applies to your current appointment, so you can choose an earlier slot too.",
+      "cancelTitle": "Cancel appointment?",
+      "cancelBody": "Your reserved time will become available again.",
+      "chooseTime": "New appointment time",
+      "noTimes": "No available times were found in the next 30 days.",
+      "save": "Confirm new time",
+      "saving": "Saving…",
+      "confirmCancel": "Confirm cancellation",
+      "back": "Keep appointment",
+      "loadError": "Your appointments or available times could not be loaded. Please try again.",
+      "saveError": "This change could not be saved. The selected time may no longer be available.",
+      "noticeError": "Your current appointment is now inside the notice period and can no longer be changed or cancelled.",
+      "changedError": "This appointment has changed. Refresh the page and try again."
+    },
     "controls": {
       "eyebrow": "Account",
       "title": "Your PeerSlot data.",
@@ -461,7 +487,7 @@
     "shell": {
       "loading": "Opening your workspace…",
       "overview": "Overview",
-      "appointments": "Appointments",
+      "appointments": "Calendar",
       "requests": "Requests",
       "settings": "Settings",
       "workspace": "Provider workspace",
@@ -653,6 +679,7 @@
     }
   },
   "BookingPage": {
+    "defaultTitle": "Book with {name}",
     "eyebrow": "Book a meeting",
     "duration": "Duration",
     "timeZone": "Time zone",

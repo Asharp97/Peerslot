@@ -153,6 +153,32 @@
     }
   },
   "Account": {
+    "appointments": {
+      "title": "Randevularınız",
+      "intro": "Önümüzdeki 90 gün içindeki randevularınızı görüntüleyin ve yönetin.",
+      "empty": "Yaklaşan randevunuz yok.",
+      "loading": "Randevular yükleniyor…",
+      "reschedule": "Yeniden planla",
+      "cancel": "Randevuyu iptal et",
+      "pending": "Onay bekleniyor",
+      "scheduled": "Onaylandı",
+      "notice": "Değişiklikler, bu randevu başlamadan en az {hours} saat önce yapılmalıdır.",
+      "locked": "Bu randevuyu değiştirmek veya iptal etmek için çok geç.",
+      "rescheduleTitle": "Randevuyu yeniden planla",
+      "rescheduleBody": "Önümüzdeki 30 gün içinden uygun bir saat seçin. Bildirim süresi mevcut randevunuza uygulanır; daha yakın bir saat de seçebilirsiniz.",
+      "cancelTitle": "Randevu iptal edilsin mi?",
+      "cancelBody": "Ayırdığınız saat tekrar uygun hale gelecektir.",
+      "chooseTime": "Yeni randevu saati",
+      "noTimes": "Önümüzdeki 30 gün içinde uygun saat bulunamadı.",
+      "save": "Yeni saati onayla",
+      "saving": "Kaydediliyor…",
+      "confirmCancel": "İptali onayla",
+      "back": "Randevuyu koru",
+      "loadError": "Randevularınız veya uygun saatler yüklenemedi. Lütfen tekrar deneyin.",
+      "saveError": "Değişiklik kaydedilemedi. Seçilen saat artık uygun olmayabilir.",
+      "noticeError": "Mevcut randevunuz için bildirim süresi doldu; artık değiştirilemez veya iptal edilemez.",
+      "changedError": "Bu randevu değişti. Sayfayı yenileyip tekrar deneyin."
+    },
     "controls": {
       "eyebrow": "Hesap",
       "title": "PeerSlot verileriniz.",
@@ -461,7 +487,7 @@
     "shell": {
       "loading": "Çalışma alanınız açılıyor…",
       "overview": "Genel bakış",
-      "appointments": "Randevular",
+      "appointments": "Takvim",
       "requests": "Talepler",
       "settings": "Ayarlar",
       "workspace": "Sağlayıcı çalışma alanı",
@@ -653,6 +679,7 @@
     }
   },
   "BookingPage": {
+    "defaultTitle": "{name} ile randevu alın",
     "eyebrow": "Görüşme rezervasyonu",
     "duration": "Süre",
     "timeZone": "Saat dilimi",

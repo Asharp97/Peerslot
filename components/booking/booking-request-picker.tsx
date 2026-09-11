@@ -105,7 +105,7 @@ export function BookingRequestPicker({
   );
   const [selected, setSelected] = useState<PresentedBookingSlot | null>(null);
   const [phase, setPhase] = useState<BookingPhase>("checking");
-  const [authMode, setAuthMode] = useState<AuthMode>("sign-in");
+  const [authMode, setAuthMode] = useState<AuthMode>("register");
   const [sessionChecked, setSessionChecked] = useState(false);
   const [currentUser, setCurrentUser] = useState<AuthenticatedUser | null>(
     null,
@@ -219,7 +219,7 @@ export function BookingRequestPicker({
       setStudentEmail(user.email);
       setPhase("confirm");
     } else {
-      setAuthMode("sign-in");
+      setAuthMode("register");
       setPhase("auth");
     }
     setSaving(false);

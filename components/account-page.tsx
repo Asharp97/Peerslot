@@ -12,6 +12,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
+  StudentAppointments,
+  type StudentAppointmentsCopy,
+} from "@/components/student-appointments";
+import {
   createGoogleSignInUrl,
   fetchAccessToken,
   requestEmailSignIn,
@@ -35,9 +39,11 @@ export type AccountPageCopy = AccountDataCopy & {
 export function AccountPage({
   copy,
   locale,
+  appointmentsCopy,
 }: {
   copy: AccountPageCopy;
   locale: string;
+  appointmentsCopy: StudentAppointmentsCopy;
 }) {
   const [accessToken, setAccessToken] = useState<string | null | undefined>();
   const [email, setEmail] = useState("");
@@ -112,11 +118,18 @@ export function AccountPage({
             <LoaderCircle className="animate-spin" size={18} /> {copy.loading}
           </div>
         ) : accessToken ? (
-          <AccountDataControls
-            accessToken={accessToken}
-            className="mt-10"
-            copy={copy}
-          />
+          <>
+            <StudentAppointments
+              accessToken={accessToken}
+              locale={locale}
+              copy={appointmentsCopy}
+            />
+            <AccountDataControls
+              accessToken={accessToken}
+              className="mt-10"
+              copy={copy}
+            />
+          </>
         ) : (
           <section className="mt-10 max-w-xl rounded-[28px] border border-black/10 bg-white p-8">
             <h2 className="font-display text-3xl">{copy.signedOutTitle}</h2>
