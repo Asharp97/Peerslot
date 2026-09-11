@@ -16,6 +16,7 @@ import {
   readableTextColor,
   type ProviderAppointmentsCopy,
 } from "@/components/provider-workspace/provider-appointments";
+import { findAppointmentConflictInRows } from "@/lib/provider-appointment-occurrence";
 
 const calendar = vi.hoisted(() => ({
   props: null as Record<string, unknown> | null,
@@ -45,6 +46,124 @@ vi.mock("@/components/provider-workspace/provider-shell", () => ({
 }));
 
 describe("provider appointments calendar", () => {
+  it.each(["none", "weekly"] as const)(
+    "saves a %s session on the clicked day when the previous day has the same time",
+    async (recurrence) => {
+      HTMLElement.prototype.hasPointerCapture = () => false;
+      HTMLElement.prototype.setPointerCapture = () => undefined;
+      HTMLElement.prototype.releasePointerCapture = () => undefined;
+      HTMLElement.prototype.scrollIntoView = () => undefined;
+      const user = userEvent.setup();
+      const previousDay = {
+        id: "previous-day",
+        studentName: "Ada",
+        status: "scheduled" as const,
+        startsAt: new Date("2030-01-07T09:00:00Z"),
+        endsAt: new Date("2030-01-07T09:45:00Z"),
+        recurrence: "weekly" as const,
+        deletedAt: null,
+        recurrenceEndsAt: null,
+        exceptionForAppointmentId: null,
+        exceptionOriginalStartsAt: null,
+      };
+      const fetchMock = vi.fn(
+        async (input: RequestInfo | URL, init?: RequestInit) => {
+          if (String(input) === "/api/provider/students")
+            return Response.json({
+              students: [{ id: "student-id", displayName: "Ada", email: null }],
+            });
+          if (init?.method === "POST") {
+            const body = JSON.parse(String(init.body));
+            const conflict = findAppointmentConflictInRows(
+              [previousDay],
+              {
+                startsAt: new Date(body.startsAt),
+                endsAt: new Date(body.endsAt),
+                recurrence: body.recurrence,
+              },
+              "Europe/Istanbul",
+            );
+            return conflict
+              ? Response.json(
+                  { error: "Unexpected previous-day conflict" },
+                  { status: 409 },
+                )
+              : Response.json(
+                  { appointment: { id: "new-session" } },
+                  { status: 201 },
+                );
+          }
+          return Response.json({ appointments: [], windows: [] });
+        },
+      );
+      vi.stubGlobal("fetch", fetchMock);
+      render(<ProviderAppointments copy={copy} />);
+      await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+      act(() => {
+        const dateClick = calendar.props?.dateClick as (info: unknown) => void;
+        dateClick({ allDay: false, date: new Date("2030-01-08T12:00:00") });
+      });
+      if (recurrence === "none") {
+        await user.click(screen.getAllByRole("combobox")[2]);
+        await user.click(screen.getByRole("option", { name: copy.oneTime }));
+      }
+      await user.click(screen.getByRole("button", { name: copy.save }));
+      await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+      const request = fetchMock.mock.calls.find(
+        ([, init]) => init?.method === "POST",
+      );
+      expect(JSON.parse(String(request?.[1]?.body))).toMatchObject({
+        startsAt: "2030-01-08T09:00:00.000Z",
+        endsAt: "2030-01-08T09:45:00.000Z",
+        recurrence,
+      });
+    },
+  );
+
+  it("shows pending requests at their actual date and time so blocked slots are visible", async () => {
+    vi.stubGlobal(
+      "fetch",
+      calendarFetchMock({
+        appointments: [
+          {
+            id: "pending-id",
+            appointmentId: "pending-id",
+            occurrenceStartsAt: "2030-01-15T09:00:00Z",
+            startsAt: "2030-01-15T09:00:00Z",
+            endsAt: "2030-01-15T09:45:00Z",
+            status: "pending",
+            studentName: "Awaiting Student",
+            recurrence: "none",
+            color: "#f0d7ff",
+            isException: false,
+          },
+        ],
+      }),
+    );
+    render(<ProviderAppointments copy={copy} />);
+    let events: Array<{
+      start: string;
+      editable: boolean;
+      extendedProps: { recurrenceLabel: string };
+    }> = [];
+    await act(async () => {
+      const loadEvents = calendar.props?.events as (range: {
+        start: Date;
+        end: Date;
+      }) => Promise<typeof events>;
+      events = await loadEvents({
+        start: new Date("2030-01-14T00:00:00Z"),
+        end: new Date("2030-01-21T00:00:00Z"),
+      });
+    });
+    expect(events).toHaveLength(1);
+    expect(events[0]).toMatchObject({
+      start: "2030-01-15T12:00:00",
+      editable: false,
+      extendedProps: { recurrenceLabel: copy.pendingRequest },
+    });
+  });
+
   afterEach(() => {
     cleanup();
     vi.unstubAllGlobals();

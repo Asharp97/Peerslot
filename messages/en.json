@@ -602,6 +602,7 @@
       "repetition": "Repetition",
       "oneTime": "One-time exception",
       "everyWeek": "Every week",
+      "pendingRequest": "Awaiting confirmation",
       "editScope": "Apply changes to",
       "thisSessionOnly": "This session only",
       "thisAndFutureSessions": "This and all future sessions",

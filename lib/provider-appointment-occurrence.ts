@@ -167,10 +167,17 @@ export function findAppointmentConflictInRows<
           comparisonRange,
           timeZone,
         );
-        const rowOccurrences = expandAvailabilityRule(
-          { ...row, id: row.id, isActive: true },
+        const rowOccurrences = expandProviderAppointmentOccurrences(
+          rows.filter(
+            (entry) =>
+              entry.id === row.id || entry.exceptionForAppointmentId === row.id,
+          ),
           comparisonRange,
           timeZone,
+        ).filter(
+          (occurrence) =>
+            occurrence.status === "scheduled" ||
+            occurrence.status === "pending",
         );
         return candidateOccurrences.some((candidateOccurrence) =>
           rowOccurrences.some((rowOccurrence) =>

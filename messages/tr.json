@@ -602,6 +602,7 @@
       "repetition": "Tekrar",
       "oneTime": "Tek seferlik istisna",
       "everyWeek": "Her hafta",
+      "pendingRequest": "Onay bekliyor",
       "editScope": "Değişiklikleri uygula",
       "thisSessionOnly": "Yalnızca bu ders",
       "thisAndFutureSessions": "Bu ve gelecekteki tüm dersler",

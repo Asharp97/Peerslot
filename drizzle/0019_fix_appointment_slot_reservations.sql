@@ -1,0 +1,2 @@
+DROP INDEX "appointment_slot_unique";--> statement-breakpoint
+CREATE UNIQUE INDEX "appointment_slot_unique" ON "appointments" USING btree ("slot_id") WHERE "appointments"."status" in ('pending', 'scheduled') and "appointments"."deleted_at" is null and "appointments"."recurrence" = 'none';

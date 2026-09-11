@@ -6,7 +6,6 @@ import {
   eq,
   gte,
   gt,
-  inArray,
   isNotNull,
   isNull,
   lt,
@@ -393,7 +392,7 @@ async function updateFutureAppointmentSeries(
     { ...range, recurrence: "weekly" },
   );
 
-  const targetSlot = await findOpenSlot(providerId, range);
+  const targetSlot = await findSlotByRange(providerId, range);
   const targetSlotId = targetSlot?.id ?? randomUUID();
   const appointmentId = randomUUID();
   const appointmentValues = {
@@ -594,6 +593,19 @@ async function updateAppointmentRecord(
   };
 
   if (!timesChanged) {
+    if (
+      input.status === "scheduled" &&
+      current.status !== "scheduled" &&
+      current.status !== "pending"
+    ) {
+      await assertNoAppointmentOverlap(
+        providerId,
+        current,
+        current.recurrence === "weekly"
+          ? { excludedSeriesId: current.id }
+          : { excludedAppointmentId: current.id },
+      );
+    }
     await db
       .update(appointments)
       .set(appointmentUpdate)
@@ -610,7 +622,7 @@ async function updateAppointmentRecord(
       : { excludedAppointmentId: current.id },
   );
 
-  const targetSlot = await findOpenSlot(providerId, range);
+  const targetSlot = await findSlotByRange(providerId, range);
   const targetSlotId = targetSlot?.id ?? randomUUID();
   const shouldDeleteOldSlot = current.windowId === null;
 
@@ -621,7 +633,17 @@ async function updateAppointmentRecord(
       .where(eq(appointments.id, current.id));
     const deleteOldSlot = db
       .delete(availabilitySlots)
-      .where(eq(availabilitySlots.id, current.slotId));
+      .where(
+        and(
+          eq(availabilitySlots.id, current.slotId),
+          notExists(
+            db
+              .select({ id: appointments.id })
+              .from(appointments)
+              .where(eq(appointments.slotId, availabilitySlots.id)),
+          ),
+        ),
+      );
 
     if (targetSlot) {
       await db.batch(
@@ -671,7 +693,7 @@ async function insertAppointment(
   providerId: string,
   input: InsertAppointmentInput,
 ) {
-  const slot = await findOpenSlot(providerId, input);
+  const slot = await findSlotByRange(providerId, input);
   const appointmentId = randomUUID();
   const appointmentValues = {
     id: appointmentId,
@@ -882,10 +904,13 @@ async function assertNoAppointmentOverlapForSeriesSplit(
   }
 }
 
-async function findOpenSlot(
+async function findSlotByRange(
   providerId: string,
   range: { startsAt: Date; endsAt: Date },
 ) {
+  // A slot describes a time range, not whether it is occupied. The occurrence
+  // check handles occupancy, including deleted and moved recurring sessions.
+  // Reuse the row even when historical appointments still reference it.
   const [slot] = await db
     .select({ id: availabilitySlots.id })
     .from(availabilitySlots)
@@ -894,17 +919,6 @@ async function findOpenSlot(
         eq(availabilitySlots.teacherId, providerId),
         eq(availabilitySlots.startsAt, range.startsAt),
         eq(availabilitySlots.endsAt, range.endsAt),
-        notExists(
-          db
-            .select({ id: appointments.id })
-            .from(appointments)
-            .where(
-              and(
-                eq(appointments.slotId, availabilitySlots.id),
-                inArray(appointments.status, ["pending", "scheduled"]),
-              ),
-            ),
-        ),
       ),
     )
     .limit(1);

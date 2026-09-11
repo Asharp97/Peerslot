@@ -175,6 +175,7 @@ export type ProviderAppointmentsCopy = {
   repetition: string;
   oneTime: string;
   everyWeek: string;
+  pendingRequest: string;
   editScope: string;
   thisSessionOnly: string;
   thisAndFutureSessions: string;
@@ -295,12 +296,16 @@ export function ProviderAppointments({
           ),
           ...appointmentsBody.appointments
             .filter(
-              ({ status }) => status === "scheduled" || status === "cancelled",
+              ({ status }) =>
+                status === "scheduled" ||
+                status === "cancelled" ||
+                status === "pending",
             )
             .map((appointment) =>
               appointmentToCalendarEvent(appointment, timeZone, {
                 oneTime: copy.oneTime,
                 weekly: copy.everyWeek,
+                pending: copy.pendingRequest,
               }),
             ),
         ];
@@ -317,6 +322,7 @@ export function ProviderAppointments({
       copy.everyWeek,
       copy.loadError,
       copy.oneTime,
+      copy.pendingRequest,
       data.bookingPage.appointmentDurationMinutes,
       data.bookingPage.bookingIntervalMinutes,
       timeZone,
@@ -1511,7 +1517,7 @@ function renderSession(info: EventContentArg) {
 function appointmentToCalendarEvent(
   appointment: CalendarAppointment,
   timeZone: string,
-  labels: { oneTime: string; weekly: string },
+  labels: { oneTime: string; weekly: string; pending: string },
 ): EventInput {
   return {
     id: appointment.id,
@@ -1531,9 +1537,11 @@ function appointmentToCalendarEvent(
     extendedProps: {
       appointment,
       recurrenceLabel:
-        appointment.recurrence === "weekly" && !appointment.isException
-          ? labels.weekly
-          : labels.oneTime,
+        appointment.status === "pending"
+          ? labels.pending
+          : appointment.recurrence === "weekly" && !appointment.isException
+            ? labels.weekly
+            : labels.oneTime,
     },
   };
 }

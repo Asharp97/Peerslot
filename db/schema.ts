@@ -309,7 +309,12 @@ export const appointments = pgTable(
   (table) => [
     uniqueIndex("appointment_slot_unique")
       .on(table.slotId)
-      .where(sql`${table.status} in ('pending', 'scheduled')`),
+      // Weekly rows are recurrence templates; exceptions can free their seed
+      // time while the rest of the series continues. Reserve physical slots
+      // only for live one-time occurrences, including recurring exceptions.
+      .where(
+        sql`${table.status} in ('pending', 'scheduled') and ${table.deletedAt} is null and ${table.recurrence} = 'none'`,
+      ),
     index("appointments_student_idx").on(table.studentId),
     index("appointments_provider_student_idx").on(table.providerStudentId),
     index("appointments_exception_series_idx").on(
