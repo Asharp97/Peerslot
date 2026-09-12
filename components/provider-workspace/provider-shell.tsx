@@ -2,6 +2,8 @@
 
 import {
   CalendarDays,
+  Users,
+  Coffee,
   LayoutDashboard,
   LoaderCircle,
   LogOut,
@@ -28,6 +30,8 @@ export type ProviderShellCopy = {
   appointments: string;
   requests: string;
   settings: string;
+  students: string;
+  personalActivities: string;
   workspace: string;
   signOut: string;
   loadError: string;
@@ -45,8 +49,9 @@ type ProviderSetupResponse = {
   bookingPage: ProviderSetupData["bookingPage"] | null;
 };
 
-const ProviderWorkspaceContext =
-  createContext<ProviderWorkspaceState | null>(null);
+const ProviderWorkspaceContext = createContext<ProviderWorkspaceState | null>(
+  null,
+);
 
 export function ProviderShell({
   children,
@@ -76,11 +81,7 @@ export function ProviderShell({
       if (!response.ok) throw new Error("Unable to load provider setup");
 
       const setup = (await response.json()) as ProviderSetupResponse;
-      if (
-        setup.status !== "active" ||
-        !setup.profile ||
-        !setup.bookingPage
-      ) {
+      if (setup.status !== "active" || !setup.profile || !setup.bookingPage) {
         router.replace("/auth/provider");
         return;
       }
@@ -163,6 +164,12 @@ export function ProviderShell({
       icon: CalendarDays,
     },
     { href: "/provider/requests", label: copy.requests, icon: Inbox },
+    { href: "/provider/students", label: copy.students, icon: Users },
+    {
+      href: "/provider/personal-activities",
+      label: copy.personalActivities,
+      icon: Coffee,
+    },
     { href: "/provider/settings", label: copy.settings, icon: Settings },
   ] as const;
 

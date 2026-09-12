@@ -21,11 +21,10 @@ import {
   Copy,
   GripVertical,
   LoaderCircle,
-  Pencil,
   RotateCcw,
   Trash2,
   UserPlus,
-  Users,
+  Coffee,
 } from "lucide-react";
 import { useLocale } from "next-intl";
 import {
@@ -74,6 +73,14 @@ import {
   zonedLocalDateTimeToUtc,
 } from "@/lib/provider-availability";
 
+import {
+  personalActivityColor,
+  type PersonalActivityName,
+  type PersonalActivityOccurrence,
+} from "@/lib/personal-activity";
+
+import { personalActivityEndTime } from "@/lib/personal-activity-time";
+
 import { useProviderWorkspace } from "./provider-shell";
 
 type ProviderStudent = {
@@ -106,7 +113,13 @@ type AvailabilityWindow = {
 };
 
 type SessionDraft = {
-  entryType: "session" | "availability";
+  entryType: "session" | "availability" | "personal";
+  activityId?: string;
+  activityScheduleId?: string;
+  newActivityName?: string;
+  newActivityDuration?: string;
+  activityDurationMinutes?: number | null;
+  endDate?: string;
   appointmentId: string | null;
   availabilityWindowId: string | null;
   studentId: string;
@@ -136,6 +149,24 @@ export type ProviderAppointmentsCopy = {
   addType: string;
   studentSession: string;
   freeTimeWindow: string;
+  personalActivity: string;
+  activityName: string;
+  newActivity: string;
+  newActivityName: string;
+  activityDescription: string;
+  activityDurationLabel: string;
+  activityDurationHelp: string;
+  activityDurationApplied: string;
+  editActivity: string;
+  activitySeriesHelp: string;
+  saveActivity: string;
+  deleteActivity: string;
+  deleteActivityConfirm: string;
+  activityTimeError: string;
+  activityNameConflict: string;
+  activityNotFound: string;
+  activitySaveError: string;
+  endDate: string;
   availableSlot: string;
   freeTimeDescription: string;
   editFreeTime: string;
@@ -147,8 +178,6 @@ export type ProviderAppointmentsCopy = {
   freeTimePreview: string;
   generatedTimes: string;
   invalidFreeTime: string;
-  manageStudents: string;
-  manageStudentsDescription: string;
   editSession: string;
   addSessionDescription: string;
   editSessionDescription: string;
@@ -184,11 +213,6 @@ export type ProviderAppointmentsCopy = {
   deleteThisSessionConfirm: string;
   deleteThisAndFutureConfirm: string;
   sessionColor: string;
-  editStudent: string;
-  deleteStudent: string;
-  deleteStudentConfirm: string;
-  noStudents: string;
-  cancelEdit: string;
   exceptionHelp: string;
   seriesHelp: string;
   emptyStudents: string;
@@ -199,6 +223,7 @@ export type ProviderAppointmentsCopy = {
 };
 
 const newStudentValue = "__new_student__";
+const newActivityValue = "__new_activity__";
 const calendarPlugins = [timeGridPlugin, interactionPlugin];
 const calendarLocales = [trLocale];
 const calendarDayHeaderFormat = {
@@ -226,11 +251,9 @@ export function ProviderAppointments({
   const [students, setStudents] = useState<ProviderStudent[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [studentsDialogOpen, setStudentsDialogOpen] = useState(false);
-  const [editingStudentId, setEditingStudentId] = useState<string | null>(null);
-  const [studentName, setStudentName] = useState("");
-  const [studentEmail, setStudentEmail] = useState("");
-  const [studentSaving, setStudentSaving] = useState(false);
+  const [activityNames, setActivityNames] = useState<PersonalActivityName[]>(
+    [],
+  );
   const [saving, setSaving] = useState(false);
   const [calendarInteractionActive, setCalendarInteractionActive] =
     useState(false);
@@ -259,21 +282,33 @@ export function ProviderAppointments({
       try {
         const startsAt = new Date(fetchInfo.start.getTime() - 86_400_000);
         const endsAt = new Date(fetchInfo.end.getTime() + 86_400_000);
-        const [appointmentsResponse, windowsResponse] = await Promise.all([
-          fetch(
-            `/api/provider/appointments?startsAt=${encodeURIComponent(startsAt.toISOString())}&endsAt=${encodeURIComponent(endsAt.toISOString())}`,
-            {
+        const [appointmentsResponse, activitiesResponse, windowsResponse] =
+          await Promise.all([
+            fetch(
+              `/api/provider/appointments?startsAt=${encodeURIComponent(startsAt.toISOString())}&endsAt=${encodeURIComponent(endsAt.toISOString())}`,
+              {
+                headers: { Authorization: `Bearer ${accessToken}` },
+                cache: "no-store",
+              },
+            ),
+            fetch(
+              `/api/provider/personal-activities/schedules?startsAt=${encodeURIComponent(startsAt.toISOString())}&endsAt=${encodeURIComponent(endsAt.toISOString())}`,
+              {
+                headers: { Authorization: `Bearer ${accessToken}` },
+                cache: "no-store",
+              },
+            ),
+            fetch("/api/availability-windows", {
               headers: { Authorization: `Bearer ${accessToken}` },
               cache: "no-store",
-            },
-          ),
-          fetch("/api/availability-windows", {
-            headers: { Authorization: `Bearer ${accessToken}` },
-            cache: "no-store",
-          }),
-        ]);
+            }),
+          ]);
 
-        if (!appointmentsResponse.ok || !windowsResponse.ok) {
+        if (
+          !appointmentsResponse.ok ||
+          !windowsResponse.ok ||
+          !activitiesResponse.ok
+        ) {
           throw new Error(copy.loadError);
         }
         const appointmentsBody = (await appointmentsResponse.json()) as {
@@ -283,11 +318,33 @@ export function ProviderAppointments({
           windows: AvailabilityWindow[];
         };
 
+        const activitiesBody = (await activitiesResponse.json()) as {
+          activities: PersonalActivityOccurrence[];
+        };
         setError("");
         return [
+          ...activitiesBody.activities.map((activity) => ({
+            id: `personal:${activity.id}`,
+            title: activity.name,
+            start: formatInTimeZone(new Date(activity.startsAt), timeZone),
+            end: formatInTimeZone(new Date(activity.endsAt), timeZone),
+            editable: activity.recurrence === "none",
+            backgroundColor: personalActivityColor,
+            borderColor: "#b7791f",
+            textColor: "#633c0c",
+            classNames: ["provider-personal-activity"],
+            extendedProps: {
+              personalActivity: activity,
+              recurrenceLabel:
+                activity.recurrence === "weekly"
+                  ? copy.everyWeek
+                  : copy.oneTime,
+            },
+          })),
           ...availabilityToCalendarEvents(
             windowsBody.windows,
             appointmentsBody.appointments,
+            activitiesBody.activities,
             { startsAt, endsAt },
             timeZone,
             {
@@ -348,6 +405,43 @@ export function ProviderAppointments({
 
     void initializeStudents();
   }, [loadStudents]);
+
+  useEffect(() => {
+    if (!dialogOpen || draft?.entryType !== "personal") return;
+    let cancelled = false;
+    async function loadActivities() {
+      try {
+        const response = await fetch("/api/provider/personal-activities", {
+          headers: { Authorization: `Bearer ${accessToken}` },
+          cache: "no-store",
+        });
+        if (!response.ok) throw new Error(copy.loadError);
+        const body = (await response.json()) as {
+          activities: PersonalActivityName[];
+        };
+        if (cancelled) return;
+        setActivityNames(body.activities);
+        setDraft((current) =>
+          current?.entryType === "personal" && !current.activityId
+            ? withActivityDuration(
+                {
+                  ...current,
+                  activityId: body.activities[0]?.id ?? newActivityValue,
+                },
+                body.activities[0]?.defaultDurationMinutes,
+                timeZone,
+              )
+            : current,
+        );
+      } catch {
+        if (!cancelled) setError(copy.loadError);
+      }
+    }
+    void loadActivities();
+    return () => {
+      cancelled = true;
+    };
+  }, [accessToken, copy.loadError, dialogOpen, draft?.entryType, timeZone]);
 
   const openNewSession = useCallback(
     (date = nextRoundedHour(timeZone)) => {
@@ -490,6 +584,36 @@ export function ProviderAppointments({
 
   const handleEventClick = useCallback(
     (info: EventClickArg) => {
+      const activity = info.event.extendedProps.personalActivity as
+        PersonalActivityOccurrence | undefined;
+      if (activity) {
+        const start = splitProviderDateTime(activity.ruleStartsAt, timeZone);
+        const end = splitProviderDateTime(activity.ruleEndsAt, timeZone);
+        setDraft({
+          entryType: "personal",
+          activityId: activity.activityId,
+          activityScheduleId: activity.scheduleId,
+          appointmentId: null,
+          availabilityWindowId: null,
+          studentId: "",
+          studentName: "",
+          newStudentName: "",
+          newStudentEmail: "",
+          date: start.date,
+          startsAt: start.time,
+          endsAt: end.time,
+          endDate: end.date,
+          comment: "",
+          status: "scheduled",
+          recurrence: activity.recurrence,
+          editScope: "future",
+          occurrenceStartsAt: null,
+          color: personalActivityColor,
+        });
+        setError("");
+        setDialogOpen(true);
+        return;
+      }
       const availabilityWindow = info.event.extendedProps.availabilityWindow as
         AvailabilityWindow | undefined;
       const availabilityOccurrence = info.event.extendedProps
@@ -570,6 +694,38 @@ export function ProviderAppointments({
       const start = info.event.start;
       const end = info.event.end;
 
+      const activity = info.oldEvent.extendedProps.personalActivity as
+        PersonalActivityOccurrence | undefined;
+      if (activity && start && end && activity.recurrence === "none") {
+        setInteractionSaving(true);
+        setError("");
+        try {
+          const response = await fetch(
+            `/api/provider/personal-activities/schedules/${activity.scheduleId}`,
+            {
+              method: "PATCH",
+              headers: authenticatedJsonHeaders(accessToken),
+              body: JSON.stringify({
+                activityId: activity.activityId,
+                recurrence: "none",
+                startsAt: calendarWallTimeToUtc(start, timeZone).toISOString(),
+                endsAt: calendarWallTimeToUtc(end, timeZone).toISOString(),
+              }),
+            },
+          );
+          if (!response.ok)
+            throw new Error(await responseError(response, copy));
+          calendarRef.current?.getApi().refetchEvents();
+        } catch (caught) {
+          info.revert();
+          setError(
+            caught instanceof Error ? caught.message : copy.activitySaveError,
+          );
+        } finally {
+          setInteractionSaving(false);
+        }
+        return;
+      }
       if (
         !appointment ||
         appointment.status !== "scheduled" ||
@@ -615,6 +771,22 @@ export function ProviderAppointments({
     [accessToken, copy, timeZone],
   );
 
+  function updateStart(
+    changes: Partial<Pick<SessionDraft, "date" | "startsAt">>,
+  ) {
+    setDraft((current) => {
+      if (!current) return current;
+      const next = {
+        ...current,
+        ...changes,
+        ...(changes.date ? { endDate: changes.date } : {}),
+      };
+      return current.entryType === "personal"
+        ? withActivityDuration(next, current.activityDurationMinutes, timeZone)
+        : next;
+    });
+  }
+
   async function saveSession(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!draft) return;
@@ -627,11 +799,69 @@ export function ProviderAppointments({
         draft.startsAt,
         timeZone,
       );
-      const endsAt = zonedLocalDateTimeToUtc(
-        draft.date,
-        draft.endsAt,
-        timeZone,
-      );
+      // Keep elapsed duration exact when a DST change repeats a local hour.
+      const endsAt =
+        draft.entryType === "personal" && draft.activityDurationMinutes
+          ? new Date(
+              startsAt.getTime() + draft.activityDurationMinutes * 60_000,
+            )
+          : zonedLocalDateTimeToUtc(
+              draft.entryType === "personal"
+                ? (draft.endDate ?? draft.date)
+                : draft.date,
+              draft.endsAt,
+              timeZone,
+            );
+
+      if (draft.entryType === "personal") {
+        if (
+          endsAt <= startsAt ||
+          endsAt.getTime() - startsAt.getTime() > 86_400_000
+        )
+          throw new Error(copy.activityTimeError);
+        let activityId = draft.activityId;
+        if (!activityId || activityId === newActivityValue) {
+          const response = await fetch("/api/provider/personal-activities", {
+            method: "POST",
+            headers: authenticatedJsonHeaders(accessToken),
+            body: JSON.stringify({
+              name: draft.newActivityName ?? "",
+              defaultDurationMinutes: draft.newActivityDuration
+                ? Number(draft.newActivityDuration)
+                : null,
+            }),
+          });
+          if (!response.ok)
+            throw new Error(await responseError(response, copy));
+          const body = (await response.json()) as {
+            activity: PersonalActivityName;
+          };
+          activityId = body.activity.id;
+          setActivityNames((current) => [...current, body.activity]);
+          setDraft((current) =>
+            current ? { ...current, activityId } : current,
+          );
+        }
+        const response = await fetch(
+          draft.activityScheduleId
+            ? `/api/provider/personal-activities/schedules/${draft.activityScheduleId}`
+            : "/api/provider/personal-activities/schedules",
+          {
+            method: draft.activityScheduleId ? "PATCH" : "POST",
+            headers: authenticatedJsonHeaders(accessToken),
+            body: JSON.stringify({
+              activityId,
+              startsAt: startsAt.toISOString(),
+              endsAt: endsAt.toISOString(),
+              recurrence: draft.recurrence,
+            }),
+          },
+        );
+        if (!response.ok) throw new Error(await responseError(response, copy));
+        calendarRef.current?.getApi().refetchEvents();
+        setDialogOpen(false);
+        return;
+      }
 
       if (draft.entryType === "availability") {
         if (!freeTimePreview?.slots.length) {
@@ -800,60 +1030,32 @@ export function ProviderAppointments({
     }
   }
 
-  function beginStudentEdit(student: ProviderStudent) {
-    setEditingStudentId(student.id);
-    setStudentName(student.displayName);
-    setStudentEmail(student.email ?? "");
-  }
-
-  async function saveStudent(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!editingStudentId) return;
-    setStudentSaving(true);
+  async function deleteActivitySchedule() {
+    if (
+      !draft?.activityScheduleId ||
+      !window.confirm(copy.deleteActivityConfirm)
+    )
+      return;
+    setSaving(true);
     setError("");
     try {
       const response = await fetch(
-        `/api/provider/students/${editingStudentId}`,
+        `/api/provider/personal-activities/schedules/${draft.activityScheduleId}`,
         {
-          method: "PATCH",
-          headers: authenticatedJsonHeaders(accessToken),
-          body: JSON.stringify({
-            displayName: studentName,
-            email: studentEmail,
-          }),
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${accessToken}` },
         },
       );
       if (!response.ok) throw new Error(await responseError(response, copy));
-      await loadStudents();
       calendarRef.current?.getApi().refetchEvents();
-      setEditingStudentId(null);
+      setDialogOpen(false);
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : copy.saveError);
+      setError(
+        caught instanceof Error ? caught.message : copy.activitySaveError,
+      );
     } finally {
-      setStudentSaving(false);
+      setSaving(false);
     }
-  }
-
-  async function deleteStudent(student: ProviderStudent) {
-    if (
-      !window.confirm(
-        copy.deleteStudentConfirm.replace("{name}", student.displayName),
-      )
-    ) {
-      return;
-    }
-    setError("");
-    const response = await fetch(`/api/provider/students/${student.id}`, {
-      method: "DELETE",
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
-    if (!response.ok) {
-      setError(await responseError(response, copy));
-      return;
-    }
-    await loadStudents();
-    calendarRef.current?.getApi().refetchEvents();
-    if (editingStudentId === student.id) setEditingStudentId(null);
   }
 
   return (
@@ -866,7 +1068,7 @@ export function ProviderAppointments({
           <h1 className="mt-1 font-display text-4xl tracking-[-0.04em] sm:text-5xl">
             {copy.title.replace("{name}", data.profile.displayName)}
           </h1>
-          <div className="mt-2 flex gap-3 text-[10px] font-bold text-black/50">
+          <div className="mt-2 flex flex-wrap gap-3 text-[10px] font-bold text-black/50">
             <span className="flex items-center gap-1.5">
               <span className="size-2 rounded-full bg-[#56a46f]" />
               {copy.freeTimeWindow}
@@ -875,19 +1077,16 @@ export function ProviderAppointments({
               <span className="size-2 rounded-full bg-[#7859d6]" />
               {copy.studentSession}
             </span>
+            <span className="flex items-center gap-1.5">
+              <span className="size-2 rounded-full bg-[#b7791f]" />
+              {copy.personalActivity}
+            </span>
           </div>
           <p className="mt-2 max-w-2xl text-xs text-black/45">
             {copy.dragHint} {copy.copyPasteHint}
           </p>
         </div>
         <div className="flex flex-wrap justify-end gap-2">
-          <Button
-            className="min-h-11 rounded-full"
-            onClick={() => setStudentsDialogOpen(true)}
-            variant="outline"
-          >
-            <Users size={17} /> {copy.manageStudents}
-          </Button>
           <Button
             className="min-h-11 rounded-full bg-vast-ink px-5 font-bold text-white"
             onClick={() => openNewSession()}
@@ -1011,25 +1210,31 @@ export function ProviderAppointments({
             <form onSubmit={saveSession}>
               <DialogHeader>
                 <DialogTitle className="font-display text-3xl">
-                  {draft.availabilityWindowId
-                    ? copy.editFreeTime
-                    : draft.appointmentId
-                      ? copy.editSession
-                      : copy.addToTimetable}
+                  {draft.activityScheduleId
+                    ? copy.editActivity
+                    : draft.availabilityWindowId
+                      ? copy.editFreeTime
+                      : draft.appointmentId
+                        ? copy.editSession
+                        : copy.addToTimetable}
                 </DialogTitle>
                 <DialogDescription>
-                  {draft.availabilityWindowId
-                    ? copy.editFreeTimeDescription
-                    : draft.appointmentId
-                      ? copy.editSessionDescription
-                      : draft.entryType === "availability"
-                        ? copy.freeTimeDescription
-                        : copy.addSessionDescription}
+                  {draft.entryType === "personal"
+                    ? copy.activityDescription
+                    : draft.availabilityWindowId
+                      ? copy.editFreeTimeDescription
+                      : draft.appointmentId
+                        ? copy.editSessionDescription
+                        : draft.entryType === "availability"
+                          ? copy.freeTimeDescription
+                          : copy.addSessionDescription}
                 </DialogDescription>
               </DialogHeader>
 
               <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                {!draft.appointmentId && !draft.availabilityWindowId ? (
+                {!draft.appointmentId &&
+                !draft.availabilityWindowId &&
+                !draft.activityScheduleId ? (
                   <Field className="sm:col-span-2" label={copy.addType}>
                     <Select
                       onValueChange={(entryType) =>
@@ -1043,7 +1248,22 @@ export function ProviderAppointments({
                                   timeZone,
                                 ),
                               }
-                            : { ...draft, entryType: "session" },
+                            : entryType === "personal"
+                              ? {
+                                  ...draft,
+                                  entryType: "personal",
+                                  recurrence: "none",
+                                  activityId: undefined,
+                                  activityDurationMinutes: null,
+                                  newActivityDuration: "",
+                                  newActivityName: "",
+                                  ...personalActivityEndTime(
+                                    draft,
+                                    60,
+                                    timeZone,
+                                  ),
+                                }
+                              : { ...draft, entryType: "session" },
                         )
                       }
                       value={draft.entryType}
@@ -1055,12 +1275,133 @@ export function ProviderAppointments({
                         <SelectItem value="session">
                           {copy.studentSession}
                         </SelectItem>
+                        <SelectItem value="personal">
+                          {copy.personalActivity}
+                        </SelectItem>
                         <SelectItem value="availability">
                           {copy.freeTimeWindow}
                         </SelectItem>
                       </SelectContent>
                     </Select>
                   </Field>
+                ) : null}
+
+                {draft.entryType === "personal" ? (
+                  <>
+                    <Field className="sm:col-span-2" label={copy.activityName}>
+                      <Select
+                        value={draft.activityId || newActivityValue}
+                        onValueChange={(activityId) => {
+                          // Radix's native form control can emit an empty value
+                          // while asynchronously loaded options are registered.
+                          if (activityId)
+                            setDraft((current) =>
+                              current && current.activityId !== activityId
+                                ? withActivityDuration(
+                                    { ...current, activityId },
+                                    activityNames.find(
+                                      ({ id }) => id === activityId,
+                                    )?.defaultDurationMinutes,
+                                    timeZone,
+                                  )
+                                : current,
+                            );
+                        }}
+                      >
+                        <SelectTrigger
+                          aria-label={copy.activityName}
+                          className="min-h-11 w-full rounded-xl"
+                        >
+                          <SelectValue>
+                            {activityNames.find(
+                              ({ id }) => id === draft.activityId,
+                            )?.name ?? copy.newActivity}
+                          </SelectValue>
+                        </SelectTrigger>
+                        <SelectContent>
+                          {activityNames.map((activity) => (
+                            <SelectItem key={activity.id} value={activity.id}>
+                              {activity.name}
+                            </SelectItem>
+                          ))}
+                          <SelectItem value={newActivityValue}>
+                            {copy.newActivity}
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </Field>
+                    {!draft.activityId ||
+                    draft.activityId === newActivityValue ? (
+                      <Field
+                        className="sm:col-span-2"
+                        label={copy.newActivityName}
+                      >
+                        <Input
+                          aria-label={copy.newActivityName}
+                          required
+                          maxLength={100}
+                          value={draft.newActivityName ?? ""}
+                          onChange={(event) =>
+                            setDraft({
+                              ...draft,
+                              newActivityName: event.target.value,
+                              activityId: newActivityValue,
+                            })
+                          }
+                        />
+                      </Field>
+                    ) : null}
+                    {!draft.activityId ||
+                    draft.activityId === newActivityValue ? (
+                      <Field
+                        className="sm:col-span-2"
+                        label={copy.activityDurationLabel}
+                      >
+                        <Input
+                          aria-label={copy.activityDurationLabel}
+                          type="number"
+                          min={1}
+                          max={1440}
+                          step={1}
+                          aria-describedby="activity-duration-help"
+                          value={draft.newActivityDuration ?? ""}
+                          onChange={(event) => {
+                            const value = event.target.value;
+                            setDraft((current) =>
+                              current
+                                ? withActivityDuration(
+                                    {
+                                      ...current,
+                                      activityId: newActivityValue,
+                                      newActivityDuration: value,
+                                    },
+                                    value === "" ? null : Number(value),
+                                    timeZone,
+                                  )
+                                : current,
+                            );
+                          }}
+                        />
+                        <p
+                          id="activity-duration-help"
+                          className="mt-2 text-xs leading-5 text-black/50"
+                        >
+                          {copy.activityDurationHelp}
+                        </p>
+                      </Field>
+                    ) : null}
+                    {draft.activityDurationMinutes ? (
+                      <p
+                        role="status"
+                        className="sm:col-span-2 rounded-xl bg-[#fde7b0] px-4 py-3 text-xs leading-5"
+                      >
+                        {copy.activityDurationApplied.replace(
+                          "{minutes}",
+                          String(draft.activityDurationMinutes),
+                        )}
+                      </p>
+                    ) : null}
+                  </>
                 ) : null}
 
                 {draft.appointmentId ? (
@@ -1129,9 +1470,10 @@ export function ProviderAppointments({
 
                 <Field label={copy.date}>
                   <Input
+                    aria-label={copy.date}
                     className="min-h-11 rounded-xl"
                     onChange={(event) =>
-                      setDraft({ ...draft, date: event.target.value })
+                      updateStart({ date: event.target.value })
                     }
                     required
                     min={
@@ -1145,9 +1487,10 @@ export function ProviderAppointments({
                 </Field>
                 <Field label={copy.startsAt}>
                   <Input
+                    aria-label={copy.startsAt}
                     className="min-h-11 rounded-xl"
                     onChange={(event) =>
-                      setDraft({ ...draft, startsAt: event.target.value })
+                      updateStart({ startsAt: event.target.value })
                     }
                     required
                     min={
@@ -1160,11 +1503,35 @@ export function ProviderAppointments({
                     value={draft.startsAt}
                   />
                 </Field>
+                {draft.entryType === "personal" ? (
+                  <Field label={copy.endDate}>
+                    <Input
+                      aria-label={copy.endDate}
+                      className="min-h-11 rounded-xl"
+                      type="date"
+                      required
+                      min={draft.date}
+                      value={draft.endDate ?? draft.date}
+                      onChange={(event) =>
+                        setDraft({
+                          ...draft,
+                          endDate: event.target.value,
+                          activityDurationMinutes: null,
+                        })
+                      }
+                    />
+                  </Field>
+                ) : null}
                 <Field label={copy.endsAt}>
                   <Input
+                    aria-label={copy.endsAt}
                     className="min-h-11 rounded-xl"
                     onChange={(event) =>
-                      setDraft({ ...draft, endsAt: event.target.value })
+                      setDraft({
+                        ...draft,
+                        endsAt: event.target.value,
+                        activityDurationMinutes: null,
+                      })
                     }
                     required
                     type="time"
@@ -1271,6 +1638,13 @@ export function ProviderAppointments({
                 </div>
               ) : null}
 
+              {draft.entryType === "personal" &&
+              draft.activityScheduleId &&
+              draft.recurrence === "weekly" ? (
+                <p className="mt-4 rounded-xl bg-[#fde7b0] px-4 py-3 text-xs leading-5">
+                  {copy.activitySeriesHelp}
+                </p>
+              ) : null}
               {draft.appointmentId ? (
                 <p className="mt-4 rounded-xl bg-lavender-whisper px-4 py-3 text-xs leading-5">
                   {draft.editScope === "future"
@@ -1285,7 +1659,19 @@ export function ProviderAppointments({
               ) : null}
 
               <DialogFooter className="mt-6 -mx-4 -mb-4">
-                {draft.availabilityWindowId ? (
+                {draft.activityScheduleId ? (
+                  <div className="mr-auto">
+                    <Button
+                      disabled={saving}
+                      onClick={() => void deleteActivitySchedule()}
+                      type="button"
+                      variant="destructive"
+                    >
+                      <Trash2 size={15} />
+                      {copy.deleteActivity}
+                    </Button>
+                  </div>
+                ) : draft.availabilityWindowId ? (
                   <div className="mr-auto">
                     <Button
                       disabled={saving}
@@ -1330,6 +1716,8 @@ export function ProviderAppointments({
                 <Button disabled={saving} type="submit">
                   {saving ? (
                     <LoaderCircle className="animate-spin" size={16} />
+                  ) : draft.entryType === "personal" ? (
+                    <Coffee size={16} />
                   ) : draft.entryType === "availability" ? (
                     <Clock3 size={16} />
                   ) : draft.studentId === newStudentValue ? (
@@ -1339,116 +1727,16 @@ export function ProviderAppointments({
                   )}
                   {saving
                     ? copy.saving
-                    : draft.entryType === "availability"
-                      ? draft.availabilityWindowId
-                        ? copy.saveFreeTimeChanges
-                        : copy.saveFreeTime
-                      : copy.save}
+                    : draft.entryType === "personal"
+                      ? copy.saveActivity
+                      : draft.entryType === "availability"
+                        ? draft.availabilityWindowId
+                          ? copy.saveFreeTimeChanges
+                          : copy.saveFreeTime
+                        : copy.save}
                 </Button>
               </DialogFooter>
             </form>
-          ) : null}
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={studentsDialogOpen} onOpenChange={setStudentsDialogOpen}>
-        <DialogContent className="max-h-[88dvh] overflow-y-auto sm:max-w-xl">
-          <DialogHeader>
-            <DialogTitle className="font-display text-3xl">
-              {copy.manageStudents}
-            </DialogTitle>
-            <DialogDescription>
-              {copy.manageStudentsDescription}
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="mt-5 space-y-3">
-            {students.length ? (
-              students.map((student) =>
-                editingStudentId === student.id ? (
-                  <form
-                    className="rounded-2xl border border-black/10 bg-lavender-whisper/40 p-4"
-                    key={student.id}
-                    onSubmit={saveStudent}
-                  >
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <Field label={copy.studentName}>
-                        <Input
-                          onChange={(event) =>
-                            setStudentName(event.target.value)
-                          }
-                          required
-                          value={studentName}
-                        />
-                      </Field>
-                      <Field label={copy.studentEmail}>
-                        <Input
-                          onChange={(event) =>
-                            setStudentEmail(event.target.value)
-                          }
-                          type="email"
-                          value={studentEmail}
-                        />
-                      </Field>
-                    </div>
-                    <div className="mt-3 flex justify-end gap-2">
-                      <Button
-                        onClick={() => setEditingStudentId(null)}
-                        type="button"
-                        variant="outline"
-                      >
-                        {copy.cancelEdit}
-                      </Button>
-                      <Button disabled={studentSaving} type="submit">
-                        {studentSaving ? copy.saving : copy.save}
-                      </Button>
-                    </div>
-                  </form>
-                ) : (
-                  <div
-                    className="flex items-center gap-3 rounded-2xl border border-black/10 bg-white p-4"
-                    key={student.id}
-                  >
-                    <span className="grid size-10 shrink-0 place-items-center rounded-full bg-lavender-whisper font-bold">
-                      {student.displayName.slice(0, 1).toUpperCase()}
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-bold">
-                        {student.displayName}
-                      </p>
-                      <p className="truncate text-xs text-black/50">
-                        {student.email ?? "—"}
-                      </p>
-                    </div>
-                    <Button
-                      aria-label={copy.editStudent}
-                      onClick={() => beginStudentEdit(student)}
-                      size="icon"
-                      variant="outline"
-                    >
-                      <Pencil size={15} />
-                    </Button>
-                    <Button
-                      aria-label={copy.deleteStudent}
-                      onClick={() => void deleteStudent(student)}
-                      size="icon"
-                      variant="outline"
-                    >
-                      <Trash2 size={15} />
-                    </Button>
-                  </div>
-                ),
-              )
-            ) : (
-              <p className="rounded-2xl border border-dashed border-black/15 p-8 text-center text-sm text-black/45">
-                {copy.noStudents}
-              </p>
-            )}
-          </div>
-          {error ? (
-            <p className="mt-4 rounded-xl bg-ember-glow px-4 py-3 text-xs font-semibold">
-              {error}
-            </p>
           ) : null}
         </DialogContent>
       </Dialog>
@@ -1474,7 +1762,10 @@ function Field({
 }
 
 function renderSession(info: EventContentArg) {
-  if (info.event.extendedProps.availabilitySlot) {
+  if (
+    info.event.extendedProps.availabilitySlot ||
+    info.event.extendedProps.personalActivity
+  ) {
     return (
       <div className="overflow-hidden px-1 py-0.5 leading-tight">
         <p className="truncate text-[9px] font-bold opacity-75">
@@ -1552,6 +1843,7 @@ function appointmentToCalendarEvent(
 function availabilityToCalendarEvents(
   windows: AvailabilityWindow[],
   appointments: CalendarAppointment[],
+  activities: PersonalActivityOccurrence[],
   range: { startsAt: Date; endsAt: Date },
   timeZone: string,
   config: {
@@ -1580,6 +1872,11 @@ function availabilityToCalendarEvents(
       )
         .filter(
           (slot) =>
+            !activities.some(
+              (activity) =>
+                new Date(activity.startsAt) < slot.endsAt &&
+                new Date(activity.endsAt) > slot.startsAt,
+            ) &&
             !appointments.some(
               (appointment) =>
                 (appointment.status === "scheduled" ||
@@ -1652,7 +1949,30 @@ async function responseError(
     return copy.studentEmailConflict.replace("{name}", body.studentName);
   }
   if (body?.code === "past") return copy.pastSessionError;
+  if (body?.code === "activity_name_conflict") return copy.activityNameConflict;
+  if (body?.code === "activity_not_found") return copy.activityNotFound;
+  if (body?.code === "invalid_activity_time") return copy.activityTimeError;
+  if (body?.code === "invalid_activity") return copy.activitySaveError;
   return body?.error ?? copy.saveError;
+}
+
+function withActivityDuration(
+  draft: SessionDraft,
+  duration: number | null | undefined,
+  timeZone: string,
+): SessionDraft {
+  const validDuration =
+    duration != null &&
+    Number.isInteger(duration) &&
+    duration >= 1 &&
+    duration <= 1440
+      ? duration
+      : null;
+  return {
+    ...draft,
+    activityDurationMinutes: validDuration,
+    ...personalActivityEndTime(draft, validDuration, timeZone),
+  };
 }
 
 function nextRoundedHour(timeZone: string) {

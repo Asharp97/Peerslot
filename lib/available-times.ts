@@ -1,3 +1,4 @@
+import { loadPersonalActivityBusyTimes } from "@/lib/personal-activities";
 import { and, eq, gte, gt, isNotNull, isNull, lt, or } from "drizzle-orm";
 
 import { db } from "@/db";
@@ -150,7 +151,8 @@ export async function getAvailableTimesForBookingPage(
     excludedOccurrence?: { appointmentId: string; startsAt: Date };
   } = {},
 ) {
-  const [windows, appointments] = await Promise.all([
+  const [windows, appointments, personalActivities] = await Promise.all([
+    // Personal activities block only their exact range, with no session rest.
     postgresAvailableTimeRepository.loadActiveWindows(
       bookingPage.id,
       range,
@@ -161,12 +163,14 @@ export async function getAvailableTimesForBookingPage(
       range,
       bookingPage.restBetweenSessionsMinutes,
     ),
+    loadPersonalActivityBusyTimes(bookingPage.id, range),
   ]);
 
   return calculateAvailableTimes({
     bookingPage,
     range,
     windows,
+    personalActivities,
     appointments: appointments.filter(
       (appointment) =>
         appointment.appointmentId !==

@@ -1,0 +1,2 @@
+ALTER TABLE "personal_activities" ADD COLUMN "default_duration_minutes" integer;--> statement-breakpoint
+ALTER TABLE "personal_activities" ADD CONSTRAINT "personal_activity_duration_valid" CHECK ("personal_activities"."default_duration_minutes" is null or "personal_activities"."default_duration_minutes" between 1 and 1440);

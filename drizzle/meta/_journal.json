@@ -148,6 +148,20 @@
       "when": 1789156926373,
       "tag": "0020_active_provider_student_emails",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1789207472204,
+      "tag": "0021_personal_activities",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1789221136447,
+      "tag": "0022_personal_activity_default_duration",
+      "breakpoints": true
     }
   ]
 }

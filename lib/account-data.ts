@@ -8,6 +8,8 @@ import {
   availabilityWindows,
   bookingPages,
   profiles,
+  personalActivities,
+  personalActivitySchedules,
   providerProfiles,
   providerStudents,
 } from "@/db/schema";
@@ -42,6 +44,8 @@ export async function buildAccountExport(userId: string) {
     studentRows,
     hostedAppointments,
     requestedAppointments,
+    activityRows,
+    activityScheduleRows,
   ] = await Promise.all([
     db
       .select({
@@ -107,6 +111,18 @@ export async function buildAccountExport(userId: string) {
         eq(appointments.slotId, availabilitySlots.id),
       )
       .where(eq(appointments.studentId, userId)),
+    db
+      .select()
+      .from(personalActivities)
+      .where(eq(personalActivities.providerId, userId)),
+    db
+      .select({ schedule: personalActivitySchedules })
+      .from(personalActivitySchedules)
+      .innerJoin(
+        personalActivities,
+        eq(personalActivities.id, personalActivitySchedules.activityId),
+      )
+      .where(eq(personalActivities.providerId, userId)),
   ]);
 
   if (!identities[0]) return null;
@@ -120,6 +136,10 @@ export async function buildAccountExport(userId: string) {
     availabilityWindows: windowRows.map(({ window }) => window),
     availabilitySlots: slotRows,
     providerStudents: studentRows,
+    personalActivities: activityRows,
+    personalActivitySchedules: activityScheduleRows.map(
+      ({ schedule }) => schedule,
+    ),
     appointments: {
       hosted: hostedAppointments,
       requested: requestedAppointments,

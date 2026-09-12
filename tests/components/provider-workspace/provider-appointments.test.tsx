@@ -7,7 +7,6 @@ import {
   render,
   screen,
   waitFor,
-  within,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -17,6 +16,7 @@ import {
   readableTextColor,
   type ProviderAppointmentsCopy,
 } from "@/components/provider-workspace/provider-appointments";
+import { ProviderDirectory } from "@/components/provider-workspace/provider-directory";
 import en from "@/messages/en.json";
 import tr from "@/messages/tr.json";
 import { findAppointmentConflictInRows } from "@/lib/provider-appointment-occurrence";
@@ -30,6 +30,11 @@ vi.mock("@fullcalendar/react", () => ({
     calendar.props = props;
     return null;
   },
+}));
+vi.mock("@/i18n/navigation", () => ({
+  Link: ({ children }: { children: React.ReactNode }) => (
+    <span>{children}</span>
+  ),
 }));
 vi.mock("next-intl", () => ({ useLocale: () => "en" }));
 vi.mock("@/components/provider-workspace/provider-shell", () => ({
@@ -52,8 +57,7 @@ describe("provider appointments calendar", () => {
   it.each(["en", "tr"] as const)(
     "shows the conflicting student's name in %s while preserving the edit",
     async (locale) => {
-      const messages = (locale === "tr" ? tr : en).ProviderWorkspace
-        .appointments;
+      const messages = (locale === "tr" ? tr : en).ProviderWorkspace.students;
       const fetchMock = vi.fn(
         async (_url: RequestInfo | URL, init?: RequestInit) => {
           if (init?.method === "PATCH")
@@ -71,13 +75,10 @@ describe("provider appointments calendar", () => {
         },
       );
       vi.stubGlobal("fetch", fetchMock);
-      render(<ProviderAppointments copy={messages} />);
+      render(<ProviderDirectory kind="students" copy={messages} />);
       await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
       fireEvent.click(
-        screen.getByRole("button", { name: messages.manageStudents }),
-      );
-      fireEvent.click(
-        await screen.findByRole("button", { name: messages.editStudent }),
+        await screen.findByRole("button", { name: `${messages.edit}: Ada` }),
       );
       const fields = screen.getAllByRole("textbox");
       const emailInput = fields.find(
@@ -86,8 +87,8 @@ describe("provider appointments calendar", () => {
       fireEvent.change(emailInput, { target: { value: "ada@example.com" } });
       fireEvent.click(screen.getByRole("button", { name: messages.save }));
       expect(
-        await within(screen.getByRole("dialog")).findByText(
-          messages.studentEmailConflict.replace("{name}", "Existing Ada"),
+        await screen.findByText(
+          messages.emailConflict.replace("{name}", "Existing Ada"),
         ),
       ).toBeTruthy();
       expect((emailInput as HTMLInputElement).value).toBe("ada@example.com");
@@ -160,7 +161,11 @@ describe("provider appointments calendar", () => {
                   { status: 201 },
                 );
           }
-          return Response.json({ appointments: [], windows: [] });
+          return Response.json({
+            appointments: [],
+            windows: [],
+            activities: [],
+          });
         },
       );
       vi.stubGlobal("fetch", fetchMock);
@@ -247,6 +252,7 @@ describe("provider appointments calendar", () => {
         return Response.json({ windows: [] });
       }
       return Response.json({
+        activities: [],
         appointments: [
           {
             id: "occurrence-id",
@@ -368,7 +374,7 @@ describe("provider appointments calendar", () => {
           ],
         });
       }
-      return Response.json({ appointments: [] });
+      return Response.json({ appointments: [], activities: [] });
     });
     vi.stubGlobal("fetch", fetchMock);
     render(<ProviderAppointments copy={copy} />);
@@ -445,7 +451,7 @@ describe("provider appointments calendar", () => {
         if (url.includes("/api/availability-windows")) {
           return Response.json({ windows: [] });
         }
-        return Response.json({ appointments: [] });
+        return Response.json({ appointments: [], activities: [] });
       },
     );
     vi.stubGlobal("fetch", fetchMock);
@@ -496,7 +502,7 @@ describe("provider appointments calendar", () => {
         if (url.includes("/api/availability-windows")) {
           return Response.json({ windows: [availabilityWindow] });
         }
-        return Response.json({ appointments: [] });
+        return Response.json({ appointments: [], activities: [] });
       },
     );
     vi.stubGlobal("fetch", fetchMock);
@@ -563,7 +569,7 @@ describe("provider appointments calendar", () => {
         if (url.includes("/api/availability-windows")) {
           return Response.json({ windows: [availabilityWindow] });
         }
-        return Response.json({ appointments: [] });
+        return Response.json({ appointments: [], activities: [] });
       },
     );
     vi.stubGlobal("fetch", fetchMock);
@@ -617,15 +623,23 @@ describe("provider appointments calendar", () => {
       if (url.includes("/api/availability-windows")) {
         return Response.json({ windows: [] });
       }
-      return Response.json({ appointments: [] });
+      return Response.json({ appointments: [], activities: [] });
     });
     vi.stubGlobal("fetch", fetchMock);
     vi.stubGlobal("confirm", confirm);
-    render(<ProviderAppointments copy={copy} />);
+    render(
+      <ProviderDirectory
+        kind="students"
+        copy={en.ProviderWorkspace.students}
+      />,
+    );
 
-    await user.click(screen.getByRole("button", { name: "manageStudents" }));
     expect(await screen.findByText("Ada Student")).toBeTruthy();
-    await user.click(screen.getByRole("button", { name: "deleteStudent" }));
+    await user.click(
+      screen.getByRole("button", {
+        name: `${en.ProviderWorkspace.students.remove}: Ada Student`,
+      }),
+    );
 
     expect(confirm).toHaveBeenCalledWith(
       "Remove Ada Student from your active students? Existing and historical appointments will be preserved.",
@@ -662,7 +676,7 @@ describe("provider appointments calendar", () => {
       if (url.includes("/api/provider/appointments/appointment-id")) {
         return Response.json({ deleted: true, scope: "occurrence" });
       }
-      return Response.json({ appointments: [] });
+      return Response.json({ appointments: [], activities: [] });
     });
     vi.stubGlobal("fetch", fetchMock);
     vi.stubGlobal(
@@ -806,8 +820,6 @@ describe("session color contrast", () => {
 const copy = new Proxy(
   {
     title: "{name}’s sessions",
-    deleteStudentConfirm:
-      "Remove {name} from your active students? Existing and historical appointments will be preserved.",
   },
   {
     get: (target, property) =>
@@ -815,7 +827,7 @@ const copy = new Proxy(
         ? target[property as keyof typeof target]
         : String(property),
   },
-) as ProviderAppointmentsCopy;
+) as unknown as ProviderAppointmentsCopy;
 
 const availabilityWindow = {
   id: "window-id",
@@ -849,6 +861,8 @@ function calendarFetchMock({
 } = {}) {
   return vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = String(input);
+    if (url.includes("/api/provider/personal-activities"))
+      return Response.json({ activities: [] });
     if (url.includes("/api/provider/students")) {
       return Response.json({ students: [] });
     }
@@ -856,6 +870,6 @@ function calendarFetchMock({
       return Response.json({ windows: [] });
     }
     if (init?.method === "PATCH") return appointmentMutation.clone();
-    return Response.json({ appointments });
+    return Response.json({ appointments, activities: [] });
   });
 }

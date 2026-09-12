@@ -46,6 +46,7 @@ export function calculateAvailableTimes(input: {
   range: AvailableTimeRange;
   windows: AvailabilityWindowForCalculation[];
   appointments: AppointmentForCalculation[];
+  personalActivities?: AvailableTimeRange[];
   now: Date;
 }) {
   const { bookingPage, range, windows, appointments, now } = input;
@@ -87,6 +88,13 @@ export function calculateAvailableTimes(input: {
       ) {
         continue;
       }
+
+      if (
+        input.personalActivities?.some((activity) =>
+          occupiedRangesOverlap({ startsAt, endsAt }, activity, 0),
+        )
+      )
+        continue;
 
       candidates.set(startsAtMilliseconds, {
         startsAt,

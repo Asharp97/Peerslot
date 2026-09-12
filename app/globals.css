@@ -276,3 +276,21 @@ select:focus-visible,
     flex-wrap: wrap;
   }
 }
+
+.provider-calendar .provider-personal-activity {
+  border-left-width: 3px;
+}
+
+.provider-calendar .provider-personal-activity.fc-event-mirror {
+  border-color: #b7791f !important;
+  background: #fde7b0 !important;
+  color: #633c0c !important;
+  outline-color: #b7791f;
+  box-shadow: 0 0 0 6px rgb(253 231 176 / 45%) !important;
+}
+
+.provider-calendar .provider-personal-activity.fc-event-dragging,
+.provider-calendar .provider-personal-activity.fc-event-resizing {
+  outline-color: #b7791f;
+  box-shadow: 0 0 0 6px rgb(253 231 176 / 45%);
+}

@@ -350,3 +350,72 @@ export const appointments = pgTable(
     check("appointment_color_hex", sql`${table.color} ~ '^#[0-9A-Fa-f]{6}$'`),
   ],
 );
+
+export const personalActivities = pgTable(
+  "personal_activities",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    providerId: text("provider_id")
+      .notNull()
+      .references(() => providerProfiles.userId, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    defaultDurationMinutes: integer("default_duration_minutes"),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex("personal_activities_provider_name_unique").on(
+      table.providerId,
+      sql`lower(btrim(${table.name}))`,
+    ),
+    check(
+      "personal_activity_duration_valid",
+      sql`${table.defaultDurationMinutes} is null or ${table.defaultDurationMinutes} between 1 and 1440`,
+    ),
+    check(
+      "personal_activity_name_valid",
+      sql`char_length(btrim(${table.name})) between 1 and 100`,
+    ),
+  ],
+);
+
+export const personalActivitySchedules = pgTable(
+  "personal_activity_schedules",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    activityId: uuid("activity_id")
+      .notNull()
+      .references(() => personalActivities.id, { onDelete: "cascade" }),
+    startsAt: timestamp("starts_at", {
+      withTimezone: true,
+      mode: "date",
+    }).notNull(),
+    endsAt: timestamp("ends_at", {
+      withTimezone: true,
+      mode: "date",
+    }).notNull(),
+    recurrence: availabilityRecurrence("recurrence").default("none").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    index("personal_activity_schedules_activity_start_idx").on(
+      table.activityId,
+      table.startsAt,
+    ),
+    check(
+      "personal_activity_schedule_range_valid",
+      sql`${table.endsAt} > ${table.startsAt} and ${table.endsAt} <= ${table.startsAt} + interval '24 hours'`,
+    ),
+  ],
+);
