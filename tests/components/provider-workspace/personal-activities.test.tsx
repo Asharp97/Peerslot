@@ -249,13 +249,11 @@ describe("personal activities in the calendar", () => {
       ([, init]) => init?.method === "PATCH",
     )!;
     expect(mutation[0]).toBe(
-      "/api/provider/personal-activities/schedules/schedule-id",
+      "/api/provider/personal-activities/schedules/schedule-id/move",
     );
     expect(JSON.parse(String(mutation[1]?.body))).toEqual({
-      activityId: "activity-id",
-      recurrence: "none",
+      originalStartsAt: activity.startsAt,
       startsAt: "2030-01-15T10:07:00.000Z",
-      endsAt: "2030-01-15T10:24:00.000Z",
     });
   });
 
@@ -271,7 +269,7 @@ describe("personal activities in the calendar", () => {
     vi.stubGlobal("confirm", confirm);
     render(<ProviderAppointments copy={copy} />);
     const events = await loadEvents();
-    expect(events[0].editable).toBe(false);
+    expect(events[0].editable).toBe(true);
     await act(async () => {
       (calendar.props.eventClick as (arg: unknown) => void)({
         event: { extendedProps: { personalActivity: weekly } },
@@ -569,4 +567,211 @@ describe("personal activity default duration controls", () => {
       ).toEqual([60, 90, null]);
     },
   );
+});
+
+describe("calendar block drag interactions", () => {
+  it.each(["none", "weekly"] as const)(
+    "drags a %s personal activity by occurrence and retains the provider time zone",
+    async (recurrence) => {
+      const item = { ...activity, recurrence };
+      const fetchMock = mockCalendar([item]);
+      render(<ProviderAppointments copy={copy} />);
+      const events = await loadEvents();
+      expect(events[0].editable).toBe(true);
+      const revert = vi.fn();
+      await act(async () => {
+        await (calendar.props.eventDrop as (info: unknown) => Promise<void>)({
+          oldEvent: { extendedProps: events[0].extendedProps },
+          event: {
+            start: new Date("2030-01-16T13:10:00"),
+            end: new Date("2030-01-16T13:40:00"),
+          },
+          revert,
+        });
+      });
+      const mutations = fetchMock.mock.calls.filter(([, init]) => init?.method);
+      expect(mutations).toHaveLength(1);
+      expect(mutations[0][0]).toBe(
+        "/api/provider/personal-activities/schedules/schedule-id/move",
+      );
+      expect(JSON.parse(String(mutations[0][1]?.body))).toEqual({
+        originalStartsAt: activity.startsAt,
+        startsAt: "2030-01-16T10:10:00.000Z",
+      });
+      expect(revert).not.toHaveBeenCalled();
+    },
+  );
+  it("makes each green block draggable while keeping its fixed duration", async () => {
+    const fetchMock = mockCalendar([]);
+    render(<ProviderAppointments copy={copy} />);
+    const event = (await loadEvents()).find(
+      (item) => item.extendedProps?.availabilitySlot,
+    )!;
+    expect(event.editable).toBe(true);
+    expect(event.durationEditable).toBe(false);
+    const revert = vi.fn();
+    await act(async () => {
+      await (calendar.props.eventDrop as (info: unknown) => Promise<void>)({
+        oldEvent: { extendedProps: event.extendedProps },
+        event: {
+          start: new Date("2030-01-16T13:10:00"),
+          end: new Date("2030-01-16T13:55:00"),
+        },
+        revert,
+      });
+    });
+    const mutations = fetchMock.mock.calls.filter(([, init]) => init?.method);
+    expect(mutations[0][0]).toBe("/api/availability-windows/window/move");
+    expect(JSON.parse(String(mutations[0][1]?.body))).toEqual({
+      originalStartsAt: "2030-01-15T09:00:00.000Z",
+      startsAt: "2030-01-16T10:10:00.000Z",
+    });
+    expect(revert).not.toHaveBeenCalled();
+  });
+  it("reverts a rejected green-block drag and displays the specific error", async () => {
+    const fetchMock = mockCalendar([]);
+    render(<ProviderAppointments copy={copy} />);
+    const event = (await loadEvents()).find(
+      (item) => item.extendedProps?.availabilitySlot,
+    )!;
+    fetchMock.mockResolvedValueOnce(
+      Response.json({ code: "calendar_block_conflict" }, { status: 409 }),
+    );
+    const revert = vi.fn();
+    await act(async () => {
+      await (calendar.props.eventDrop as (info: unknown) => Promise<void>)({
+        oldEvent: { extendedProps: event.extendedProps },
+        event: {
+          start: new Date("2030-01-16T13:10:00"),
+          end: new Date("2030-01-16T13:55:00"),
+        },
+        revert,
+      });
+    });
+    expect(revert).toHaveBeenCalledOnce();
+    expect(screen.getByText(copy.calendarBlockConflict)).toBeTruthy();
+  });
+  it("editing and deleting a dragged weekly activity targets only the moved occurrence", async () => {
+    const moved = {
+      ...activity,
+      recurrence: "weekly" as const,
+      isMoved: true,
+      originalStartsAt: activity.startsAt,
+      startsAt: "2030-01-16T10:10:00Z",
+      endsAt: "2030-01-16T10:40:00Z",
+    };
+    const fetchMock = mockCalendar([moved]);
+    vi.stubGlobal(
+      "confirm",
+      vi.fn(() => true),
+    );
+    render(<ProviderAppointments copy={copy} />);
+    const click = async () =>
+      act(async () => {
+        (calendar.props.eventClick as (info: unknown) => void)({
+          event: { extendedProps: { personalActivity: moved } },
+        });
+      });
+    await click();
+    expect((screen.getByLabelText(copy.date) as HTMLInputElement).value).toBe(
+      "2030-01-16",
+    );
+    expect(screen.queryByText(copy.activitySeriesHelp)).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: copy.saveActivity }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    const patch = fetchMock.mock.calls.find(
+      ([, init]) => init?.method === "PATCH",
+    )!;
+    expect(patch[0]).toBe(
+      "/api/provider/personal-activities/schedules/schedule-id/move",
+    );
+    expect(JSON.parse(String(patch[1]?.body))).toEqual({
+      originalStartsAt: activity.startsAt,
+      startsAt: "2030-01-16T10:10:00.000Z",
+      endsAt: "2030-01-16T10:40:00.000Z",
+    });
+    await click();
+    fireEvent.click(
+      screen.getByRole("button", { name: copy.deleteMovedBlock }),
+    );
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    const deletion = fetchMock.mock.calls.find(
+      ([, init]) => init?.method === "DELETE",
+    )!;
+    expect(deletion[0]).toBe(patch[0]);
+    expect(JSON.parse(String(deletion[1]?.body))).toEqual({
+      originalStartsAt: activity.startsAt,
+    });
+  });
+});
+
+describe("editing moved availability", () => {
+  it("edits or deletes only the selected green block and keeps its duration fixed", async () => {
+    const fetchMock = mockCalendar([]);
+    vi.stubGlobal(
+      "confirm",
+      vi.fn(() => true),
+    );
+    render(<ProviderAppointments copy={copy} />);
+    const props = {
+      availabilityWindow: {
+        id: "window",
+        startsAt: "2030-01-15T09:00:00Z",
+        endsAt: "2030-01-15T12:00:00Z",
+        isActive: true,
+        recurrence: "weekly",
+      },
+      availabilityMoved: true,
+      availabilityOriginalStartsAt: "2030-01-15T09:00:00.000Z",
+      availabilityOccurrence: {
+        startsAt: "2030-01-16T09:00:00Z",
+        endsAt: "2030-01-16T09:45:00Z",
+      },
+    };
+    const click = async () =>
+      act(async () => {
+        (calendar.props.eventClick as (info: unknown) => void)({
+          event: { extendedProps: props },
+        });
+      });
+    await click();
+    expect((screen.getByLabelText(copy.date) as HTMLInputElement).value).toBe(
+      "2030-01-16",
+    );
+    expect(
+      (screen.getByLabelText(copy.endsAt) as HTMLInputElement).readOnly,
+    ).toBe(true);
+    expect(screen.queryByText(copy.repetition)).toBeNull();
+    fireEvent.change(screen.getByLabelText(copy.startsAt), {
+      target: { value: "15:10" },
+    });
+    expect((screen.getByLabelText(copy.endsAt) as HTMLInputElement).value).toBe(
+      "15:55",
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: copy.saveFreeTimeChanges }),
+    );
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    const patch = fetchMock.mock.calls.find(
+      ([, init]) => init?.method === "PATCH",
+    )!;
+    expect(patch[0]).toBe("/api/availability-windows/window/move");
+    expect(JSON.parse(String(patch[1]?.body))).toEqual({
+      originalStartsAt: props.availabilityOriginalStartsAt,
+      startsAt: "2030-01-16T12:10:00.000Z",
+      endsAt: "2030-01-16T12:55:00.000Z",
+    });
+    await click();
+    fireEvent.click(
+      screen.getByRole("button", { name: copy.deleteMovedBlock }),
+    );
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    const deletion = fetchMock.mock.calls.find(
+      ([, init]) => init?.method === "DELETE",
+    )!;
+    expect(deletion[0]).toBe(patch[0]);
+    expect(JSON.parse(String(deletion[1]?.body))).toEqual({
+      originalStartsAt: props.availabilityOriginalStartsAt,
+    });
+  });
 });

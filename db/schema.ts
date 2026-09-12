@@ -5,6 +5,7 @@ import {
   foreignKey,
   index,
   integer,
+  jsonb,
   pgEnum,
   pgTable,
   text,
@@ -12,6 +13,8 @@ import {
   uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
+
+import type { CalendarMoves } from "@/lib/calendar-moves";
 
 import { user } from "@/db/auth-schema";
 
@@ -161,6 +164,7 @@ export const availabilityWindows = pgTable(
       mode: "date",
     }).notNull(),
     isActive: boolean("is_active").default(true).notNull(),
+    moves: jsonb("moves").$type<CalendarMoves>().default({}).notNull(),
     recurrence: availabilityRecurrence("recurrence").default("none").notNull(),
     createdAt: timestamp("created_at", {
       withTimezone: true,
@@ -399,6 +403,7 @@ export const personalActivitySchedules = pgTable(
       withTimezone: true,
       mode: "date",
     }).notNull(),
+    moves: jsonb("moves").$type<CalendarMoves>().default({}).notNull(),
     recurrence: availabilityRecurrence("recurrence").default("none").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
       .defaultNow()

@@ -173,6 +173,7 @@ export async function updateAvailabilityWindow(
     .update(availabilityWindows)
     .set({
       ...(timesChanged ? range : {}),
+      ...(ruleChanged ? { moves: {} } : {}),
       isActive,
       recurrence,
       updatedAt: new Date(),

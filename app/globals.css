@@ -248,7 +248,7 @@ select:focus-visible,
   background: #dff3e4;
   color: #174b2a;
   opacity: 1;
-  cursor: pointer !important;
+  cursor: grab !important;
   transition:
     background-color 140ms ease,
     border-color 140ms ease,
@@ -293,4 +293,13 @@ select:focus-visible,
 .provider-calendar .provider-personal-activity.fc-event-resizing {
   outline-color: #b7791f;
   box-shadow: 0 0 0 6px rgb(253 231 176 / 45%);
+}
+.provider-calendar .provider-availability-window,
+.provider-calendar .provider-personal-activity { cursor: grab; }
+.provider-calendar .provider-availability-window.fc-event-dragging,
+.provider-calendar .provider-personal-activity.fc-event-dragging { cursor: grabbing; }
+.provider-calendar .provider-availability-window.fc-event-mirror {
+  background-color: #dff3e4 !important;
+  border-color: #56a46f !important;
+  color: #174b2a !important;
 }

@@ -64,6 +64,8 @@ export type PersonalActivityOccurrence = {
   name: string;
   startsAt: string;
   endsAt: string;
+  originalStartsAt?: string;
+  isMoved?: boolean;
   ruleStartsAt: string;
   ruleEndsAt: string;
   recurrence: "none" | "weekly";

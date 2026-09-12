@@ -62,11 +62,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { expandAvailableSlots, type CalendarMoves } from "@/lib/calendar-moves";
 import { expandAvailabilityRule } from "@/lib/availability-recurrence";
-import {
-  deriveAvailabilitySlots,
-  formatInTimeZone,
-} from "@/lib/availability-window";
+import { formatInTimeZone } from "@/lib/availability-window";
 import {
   earliestAvailabilityLocal,
   previewAvailabilityWindow,
@@ -105,6 +103,7 @@ type CalendarAppointment = {
 };
 
 type AvailabilityWindow = {
+  moves?: CalendarMoves;
   id: string;
   startsAt: string;
   endsAt: string;
@@ -113,6 +112,7 @@ type AvailabilityWindow = {
 };
 
 type SessionDraft = {
+  movedOriginalStartsAt?: string;
   entryType: "session" | "availability" | "personal";
   activityId?: string;
   activityScheduleId?: string;
@@ -194,6 +194,13 @@ export type ProviderAppointmentsCopy = {
   saving: string;
   updatingSession: string;
   dragHint: string;
+  movedOccurrenceHelp: string;
+  deleteMovedBlock: string;
+  deleteMovedBlockConfirm: string;
+  calendarBlockMissing: string;
+  calendarBlockConflict: string;
+  calendarBlockPast: string;
+  calendarBlockInvalid: string;
   copySession: string;
   pasteSession: string;
   copyPasteHint: string;
@@ -328,7 +335,7 @@ export function ProviderAppointments({
             title: activity.name,
             start: formatInTimeZone(new Date(activity.startsAt), timeZone),
             end: formatInTimeZone(new Date(activity.endsAt), timeZone),
-            editable: activity.recurrence === "none",
+            editable: true,
             backgroundColor: personalActivityColor,
             borderColor: "#b7791f",
             textColor: "#633c0c",
@@ -587,12 +594,21 @@ export function ProviderAppointments({
       const activity = info.event.extendedProps.personalActivity as
         PersonalActivityOccurrence | undefined;
       if (activity) {
-        const start = splitProviderDateTime(activity.ruleStartsAt, timeZone);
-        const end = splitProviderDateTime(activity.ruleEndsAt, timeZone);
+        const start = splitProviderDateTime(
+          activity.isMoved ? activity.startsAt : activity.ruleStartsAt,
+          timeZone,
+        );
+        const end = splitProviderDateTime(
+          activity.isMoved ? activity.endsAt : activity.ruleEndsAt,
+          timeZone,
+        );
         setDraft({
           entryType: "personal",
           activityId: activity.activityId,
           activityScheduleId: activity.scheduleId,
+          movedOriginalStartsAt: activity.isMoved
+            ? activity.originalStartsAt
+            : undefined,
           appointmentId: null,
           availabilityWindowId: null,
           studentId: "",
@@ -633,6 +649,10 @@ export function ProviderAppointments({
           entryType: "availability",
           appointmentId: null,
           availabilityWindowId: availabilityWindow.id,
+          movedOriginalStartsAt: info.event.extendedProps.availabilityMoved
+            ? info.event.extendedProps.availabilityOriginalStartsAt
+            : undefined,
+          endDate: endsAt.date,
           studentId: "",
           studentName: "",
           newStudentName: "",
@@ -688,7 +708,7 @@ export function ProviderAppointments({
   );
 
   const handleCalendarEventChange = useCallback(
-    async (info: EventDropArg | EventResizeDoneArg) => {
+    async (info: EventDropArg | EventResizeDoneArg, resize = false) => {
       const appointment = info.oldEvent.extendedProps.appointment as
         CalendarAppointment | undefined;
       const start = info.event.start;
@@ -696,20 +716,32 @@ export function ProviderAppointments({
 
       const activity = info.oldEvent.extendedProps.personalActivity as
         PersonalActivityOccurrence | undefined;
-      if (activity && start && end && activity.recurrence === "none") {
+      const available = info.oldEvent.extendedProps.availabilityWindow as
+        AvailabilityWindow | undefined;
+      if ((activity || available) && start && end) {
         setInteractionSaving(true);
         setError("");
         try {
           const response = await fetch(
-            `/api/provider/personal-activities/schedules/${activity.scheduleId}`,
+            activity
+              ? `/api/provider/personal-activities/schedules/${activity.scheduleId}/move`
+              : `/api/availability-windows/${available!.id}/move`,
             {
               method: "PATCH",
               headers: authenticatedJsonHeaders(accessToken),
               body: JSON.stringify({
-                activityId: activity.activityId,
-                recurrence: "none",
+                originalStartsAt: activity
+                  ? (activity.originalStartsAt ?? activity.startsAt)
+                  : info.oldEvent.extendedProps.availabilityOriginalStartsAt,
                 startsAt: calendarWallTimeToUtc(start, timeZone).toISOString(),
-                endsAt: calendarWallTimeToUtc(end, timeZone).toISOString(),
+                ...(resize
+                  ? {
+                      endsAt: calendarWallTimeToUtc(
+                        end,
+                        timeZone,
+                      ).toISOString(),
+                    }
+                  : {}),
               }),
             },
           );
@@ -781,6 +813,15 @@ export function ProviderAppointments({
         ...changes,
         ...(changes.date ? { endDate: changes.date } : {}),
       };
+      if (current.entryType === "availability" && current.movedOriginalStartsAt)
+        return {
+          ...next,
+          ...personalActivityEndTime(
+            next,
+            data.bookingPage.appointmentDurationMinutes,
+            timeZone,
+          ),
+        };
       return current.entryType === "personal"
         ? withActivityDuration(next, current.activityDurationMinutes, timeZone)
         : next;
@@ -801,17 +842,22 @@ export function ProviderAppointments({
       );
       // Keep elapsed duration exact when a DST change repeats a local hour.
       const endsAt =
-        draft.entryType === "personal" && draft.activityDurationMinutes
+        draft.entryType === "availability" && draft.movedOriginalStartsAt
           ? new Date(
-              startsAt.getTime() + draft.activityDurationMinutes * 60_000,
+              startsAt.getTime() +
+                data.bookingPage.appointmentDurationMinutes * 60_000,
             )
-          : zonedLocalDateTimeToUtc(
-              draft.entryType === "personal"
-                ? (draft.endDate ?? draft.date)
-                : draft.date,
-              draft.endsAt,
-              timeZone,
-            );
+          : draft.entryType === "personal" && draft.activityDurationMinutes
+            ? new Date(
+                startsAt.getTime() + draft.activityDurationMinutes * 60_000,
+              )
+            : zonedLocalDateTimeToUtc(
+                draft.entryType === "personal"
+                  ? (draft.endDate ?? draft.date)
+                  : draft.date,
+                draft.endsAt,
+                timeZone,
+              );
 
       if (draft.entryType === "personal") {
         if (
@@ -844,16 +890,17 @@ export function ProviderAppointments({
         }
         const response = await fetch(
           draft.activityScheduleId
-            ? `/api/provider/personal-activities/schedules/${draft.activityScheduleId}`
+            ? `/api/provider/personal-activities/schedules/${draft.activityScheduleId}${draft.movedOriginalStartsAt ? "/move" : ""}`
             : "/api/provider/personal-activities/schedules",
           {
             method: draft.activityScheduleId ? "PATCH" : "POST",
             headers: authenticatedJsonHeaders(accessToken),
             body: JSON.stringify({
-              activityId,
+              ...(draft.movedOriginalStartsAt
+                ? { originalStartsAt: draft.movedOriginalStartsAt }
+                : { activityId, recurrence: draft.recurrence }),
               startsAt: startsAt.toISOString(),
               endsAt: endsAt.toISOString(),
-              recurrence: draft.recurrence,
             }),
           },
         );
@@ -864,12 +911,12 @@ export function ProviderAppointments({
       }
 
       if (draft.entryType === "availability") {
-        if (!freeTimePreview?.slots.length) {
+        if (!draft.movedOriginalStartsAt && !freeTimePreview?.slots.length) {
           throw new Error(copy.invalidFreeTime);
         }
         const response = await fetch(
           draft.availabilityWindowId
-            ? `/api/availability-windows/${draft.availabilityWindowId}`
+            ? `/api/availability-windows/${draft.availabilityWindowId}${draft.movedOriginalStartsAt ? "/move" : ""}`
             : "/api/availability-windows",
           {
             method: draft.availabilityWindowId ? "PATCH" : "POST",
@@ -877,7 +924,9 @@ export function ProviderAppointments({
             body: JSON.stringify({
               startsAt: startsAt.toISOString(),
               endsAt: endsAt.toISOString(),
-              recurrence: draft.recurrence,
+              ...(draft.movedOriginalStartsAt
+                ? { originalStartsAt: draft.movedOriginalStartsAt }
+                : { recurrence: draft.recurrence }),
             }),
           },
         );
@@ -1007,16 +1056,30 @@ export function ProviderAppointments({
 
   async function deleteAvailableTime() {
     if (!draft?.availabilityWindowId) return;
-    if (!window.confirm(copy.deleteFreeTimeConfirm)) return;
+    if (
+      !window.confirm(
+        draft.movedOriginalStartsAt
+          ? copy.deleteMovedBlockConfirm
+          : copy.deleteFreeTimeConfirm,
+      )
+    )
+      return;
 
     setSaving(true);
     setError("");
     try {
       const response = await fetch(
-        `/api/availability-windows/${draft.availabilityWindowId}`,
+        `/api/availability-windows/${draft.availabilityWindowId}${draft.movedOriginalStartsAt ? "/move" : ""}`,
         {
           method: "DELETE",
-          headers: { Authorization: `Bearer ${accessToken}` },
+          headers: authenticatedJsonHeaders(accessToken),
+          ...(draft.movedOriginalStartsAt
+            ? {
+                body: JSON.stringify({
+                  originalStartsAt: draft.movedOriginalStartsAt,
+                }),
+              }
+            : {}),
         },
       );
       if (!response.ok) throw new Error(await responseError(response, copy));
@@ -1033,17 +1096,28 @@ export function ProviderAppointments({
   async function deleteActivitySchedule() {
     if (
       !draft?.activityScheduleId ||
-      !window.confirm(copy.deleteActivityConfirm)
+      !window.confirm(
+        draft.movedOriginalStartsAt
+          ? copy.deleteMovedBlockConfirm
+          : copy.deleteActivityConfirm,
+      )
     )
       return;
     setSaving(true);
     setError("");
     try {
       const response = await fetch(
-        `/api/provider/personal-activities/schedules/${draft.activityScheduleId}`,
+        `/api/provider/personal-activities/schedules/${draft.activityScheduleId}${draft.movedOriginalStartsAt ? "/move" : ""}`,
         {
           method: "DELETE",
-          headers: { Authorization: `Bearer ${accessToken}` },
+          headers: authenticatedJsonHeaders(accessToken),
+          ...(draft.movedOriginalStartsAt
+            ? {
+                body: JSON.stringify({
+                  originalStartsAt: draft.movedOriginalStartsAt,
+                }),
+              }
+            : {}),
         },
       );
       if (!response.ok) throw new Error(await responseError(response, copy));
@@ -1152,7 +1226,9 @@ export function ProviderAppointments({
                 eventDrop={handleCalendarEventChange}
                 eventResizeStart={() => setCalendarInteractionActive(true)}
                 eventResizeStop={() => setCalendarInteractionActive(false)}
-                eventResize={handleCalendarEventChange}
+                eventResize={(info) =>
+                  void handleCalendarEventChange(info, true)
+                }
                 eventAllow={() => !interactionSaving}
                 eventMinHeight={34}
                 eventTimeFormat={calendarEventTimeFormat}
@@ -1219,15 +1295,17 @@ export function ProviderAppointments({
                         : copy.addToTimetable}
                 </DialogTitle>
                 <DialogDescription>
-                  {draft.entryType === "personal"
-                    ? copy.activityDescription
-                    : draft.availabilityWindowId
-                      ? copy.editFreeTimeDescription
-                      : draft.appointmentId
-                        ? copy.editSessionDescription
-                        : draft.entryType === "availability"
-                          ? copy.freeTimeDescription
-                          : copy.addSessionDescription}
+                  {draft.movedOriginalStartsAt
+                    ? copy.movedOccurrenceHelp
+                    : draft.entryType === "personal"
+                      ? copy.activityDescription
+                      : draft.availabilityWindowId
+                        ? copy.editFreeTimeDescription
+                        : draft.appointmentId
+                          ? copy.editSessionDescription
+                          : draft.entryType === "availability"
+                            ? copy.freeTimeDescription
+                            : copy.addSessionDescription}
                 </DialogDescription>
               </DialogHeader>
 
@@ -1290,6 +1368,7 @@ export function ProviderAppointments({
                   <>
                     <Field className="sm:col-span-2" label={copy.activityName}>
                       <Select
+                        disabled={!!draft.movedOriginalStartsAt}
                         value={draft.activityId || newActivityValue}
                         onValueChange={(activityId) => {
                           // Radix's native form control can emit an empty value
@@ -1524,6 +1603,10 @@ export function ProviderAppointments({
                 ) : null}
                 <Field label={copy.endsAt}>
                   <Input
+                    readOnly={
+                      draft.entryType === "availability" &&
+                      !!draft.movedOriginalStartsAt
+                    }
                     aria-label={copy.endsAt}
                     className="min-h-11 rounded-xl"
                     onChange={(event) =>
@@ -1538,7 +1621,7 @@ export function ProviderAppointments({
                     value={draft.endsAt}
                   />
                 </Field>
-                {!draft.appointmentId ? (
+                {!draft.appointmentId && !draft.movedOriginalStartsAt ? (
                   <Field label={copy.repetition}>
                     <Select
                       onValueChange={(recurrence) =>
@@ -1558,7 +1641,7 @@ export function ProviderAppointments({
                       </SelectContent>
                     </Select>
                   </Field>
-                ) : draft.recurrence === "weekly" ? (
+                ) : draft.appointmentId && draft.recurrence === "weekly" ? (
                   <Field label={copy.editScope}>
                     <Select
                       onValueChange={(editScope) =>
@@ -1615,7 +1698,8 @@ export function ProviderAppointments({
                 ) : null}
               </div>
 
-              {draft.entryType === "availability" ? (
+              {draft.entryType === "availability" &&
+              !draft.movedOriginalStartsAt ? (
                 <div className="mt-4 rounded-xl bg-[#dff3e4] px-4 py-3 text-xs text-[#245e37]">
                   <p className="font-bold">{copy.freeTimePreview}</p>
                   {freeTimePreview?.slots.length ? (
@@ -1639,6 +1723,7 @@ export function ProviderAppointments({
               ) : null}
 
               {draft.entryType === "personal" &&
+              !draft.movedOriginalStartsAt &&
               draft.activityScheduleId &&
               draft.recurrence === "weekly" ? (
                 <p className="mt-4 rounded-xl bg-[#fde7b0] px-4 py-3 text-xs leading-5">
@@ -1668,7 +1753,9 @@ export function ProviderAppointments({
                       variant="destructive"
                     >
                       <Trash2 size={15} />
-                      {copy.deleteActivity}
+                      {draft.movedOriginalStartsAt
+                        ? copy.deleteMovedBlock
+                        : copy.deleteActivity}
                     </Button>
                   </div>
                 ) : draft.availabilityWindowId ? (
@@ -1680,7 +1767,9 @@ export function ProviderAppointments({
                       variant="destructive"
                     >
                       <Trash2 size={15} />
-                      {copy.deleteFreeTime}
+                      {draft.movedOriginalStartsAt
+                        ? copy.deleteMovedBlock
+                        : copy.deleteFreeTime}
                     </Button>
                   </div>
                 ) : draft.appointmentId ? (
@@ -1767,13 +1856,19 @@ function renderSession(info: EventContentArg) {
     info.event.extendedProps.personalActivity
   ) {
     return (
-      <div className="overflow-hidden px-1 py-0.5 leading-tight">
-        <p className="truncate text-[9px] font-bold opacity-75">
-          {info.timeText}
-        </p>
-        <p className="truncate text-[11px] font-extrabold">
-          {info.event.title}
-        </p>
+      <div className="flex min-w-0 items-start gap-0.5 overflow-hidden px-1 py-0.5 leading-tight">
+        <GripVertical
+          aria-hidden="true"
+          className="provider-session-drag-handle mt-0.5 size-3 shrink-0 opacity-55"
+        />
+        <div className="min-w-0 flex-1 overflow-hidden">
+          <p className="truncate text-[9px] font-bold opacity-75">
+            {info.timeText}
+          </p>
+          <p className="truncate text-[11px] font-extrabold">
+            {info.event.title}
+          </p>
+        </div>
       </div>
     );
   }
@@ -1852,45 +1947,52 @@ function availabilityToCalendarEvents(
     title: string;
   },
 ): EventInput[] {
-  return windows.flatMap((window) =>
-    expandAvailabilityRule(
-      {
-        ...window,
-        startsAt: new Date(window.startsAt),
-        endsAt: new Date(window.endsAt),
-        isActive: window.isActive,
-      },
+  return windows.flatMap((window) => {
+    const rule = {
+      ...window,
+      startsAt: new Date(window.startsAt),
+      endsAt: new Date(window.endsAt),
+    };
+    return expandAvailableSlots(
+      rule,
       range,
       timeZone,
-    ).flatMap((occurrence) => {
-      let slotIndex = 0;
-      return deriveAvailabilitySlots(
-        occurrence,
-        config.durationMinutes,
-        config.intervalMinutes,
-        () => `${occurrence.id}:${slotIndex++}`,
+      config.durationMinutes,
+      config.intervalMinutes,
+    )
+      .filter(
+        (slot) =>
+          !activities.some(
+            (activity) =>
+              new Date(activity.startsAt) < slot.endsAt &&
+              new Date(activity.endsAt) > slot.startsAt,
+          ) &&
+          !appointments.some(
+            (appointment) =>
+              (appointment.status === "scheduled" ||
+                appointment.status === "pending") &&
+              new Date(appointment.startsAt) < slot.endsAt &&
+              new Date(appointment.endsAt) > slot.startsAt,
+          ),
       )
-        .filter(
-          (slot) =>
-            !activities.some(
-              (activity) =>
-                new Date(activity.startsAt) < slot.endsAt &&
-                new Date(activity.endsAt) > slot.startsAt,
-            ) &&
-            !appointments.some(
-              (appointment) =>
-                (appointment.status === "scheduled" ||
-                  appointment.status === "pending") &&
-                new Date(appointment.startsAt) < slot.endsAt &&
-                new Date(appointment.endsAt) > slot.startsAt,
-            ),
-        )
-        .map((slot) => ({
+      .map((slot) => {
+        const occurrence = slot.moved
+          ? slot
+          : expandAvailabilityRule(
+              rule,
+              {
+                startsAt: slot.originalStartsAt,
+                endsAt: new Date(slot.originalStartsAt.getTime() + 1),
+              },
+              timeZone,
+            )[0];
+        return {
           id: `availability:${slot.id}`,
           title: config.title,
           start: formatInTimeZone(slot.startsAt, timeZone),
           end: formatInTimeZone(slot.endsAt, timeZone),
-          editable: false,
+          editable: true,
+          durationEditable: false,
           backgroundColor: "#dff3e4",
           borderColor: "#56a46f",
           textColor: "#174b2a",
@@ -1899,14 +2001,16 @@ function availabilityToCalendarEvents(
             availabilityWindowId: window.id,
             availabilitySlot: true,
             availabilityWindow: window,
+            availabilityOriginalStartsAt: slot.originalStartsAt.toISOString(),
+            availabilityMoved: slot.moved,
             availabilityOccurrence: {
               startsAt: occurrence.startsAt.toISOString(),
               endsAt: occurrence.endsAt.toISOString(),
             },
           },
-        }));
-    }),
-  );
+        };
+      });
+  });
 }
 
 export function readableTextColor(background: string) {
@@ -1948,6 +2052,13 @@ async function responseError(
   if (body?.code === "student_email_conflict" && body.studentName) {
     return copy.studentEmailConflict.replace("{name}", body.studentName);
   }
+  const moveErrors: Record<string, string> = {
+    calendar_block_missing: copy.calendarBlockMissing,
+    calendar_block_conflict: copy.calendarBlockConflict,
+    calendar_block_past: copy.calendarBlockPast,
+    calendar_block_invalid: copy.calendarBlockInvalid,
+  };
+  if (body?.code && moveErrors[body.code]) return moveErrors[body.code];
   if (body?.code === "past") return copy.pastSessionError;
   if (body?.code === "activity_name_conflict") return copy.activityNameConflict;
   if (body?.code === "activity_not_found") return copy.activityNotFound;

@@ -162,6 +162,13 @@
       "when": 1789221136447,
       "tag": "0022_personal_activity_default_duration",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1789223355153,
+      "tag": "0023_calendar_block_moves",
+      "breakpoints": true
     }
   ]
 }

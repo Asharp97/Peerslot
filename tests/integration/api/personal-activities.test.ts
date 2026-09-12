@@ -1,3 +1,11 @@
+import {
+  PATCH as moveAvailable,
+  DELETE as deleteMovedAvailable,
+} from "@/app/api/availability-windows/[id]/move/route";
+import {
+  PATCH as movePersonal,
+  DELETE as deleteMovedPersonal,
+} from "@/app/api/provider/personal-activities/schedules/[id]/move/route";
 import type { PGlite } from "@electric-sql/pglite";
 import { eq, sql } from "drizzle-orm";
 import type { PgliteDatabase } from "drizzle-orm/pglite";
@@ -494,6 +502,471 @@ describe("optional personal activity defaults", () => {
           .from(personalActivities)
           .where(eq(personalActivities.id, activityId))
       )[0].defaultDurationMinutes,
+    ).toBeNull();
+  });
+});
+
+async function calendarWindow(recurrence: "none" | "weekly" = "none") {
+  const [window] = await testDb
+    .insert(availabilityWindows)
+    .values({
+      bookingPageId: pageId,
+      startsAt: new Date(start),
+      endsAt: new Date("2030-01-15T12:00:00Z"),
+      recurrence,
+    })
+    .returning();
+  return window;
+}
+async function publicStarts(
+  from = "2030-01-15T00:00:00Z",
+  to = "2030-01-24T00:00:00Z",
+) {
+  const result = await getAvailableTimesForPublishedBookingPage("testpage", {
+    startsAt: new Date(from),
+    endsAt: new Date(to),
+  });
+  return result!.availableTimes.map((slot) => slot.startsAt.toISOString());
+}
+async function bookedTime(startsAt: string, windowId?: string) {
+  const [student] = await testDb
+    .insert(providerStudents)
+    .values({ providerId: provider, displayName: "Ada" })
+    .returning();
+  const [slot] = await testDb
+    .insert(availabilitySlots)
+    .values({
+      teacherId: provider,
+      availabilityWindowId: windowId,
+      startsAt: new Date(startsAt),
+      endsAt: new Date(new Date(startsAt).getTime() + 30 * 60_000),
+    })
+    .returning();
+  const [appointment] = await testDb
+    .insert(appointments)
+    .values({
+      providerStudentId: student.id,
+      slotId: slot.id,
+      status: "scheduled",
+    })
+    .returning();
+  return { slot, appointment };
+}
+describe("dragging individual calendar blocks", () => {
+  it.each(["none", "weekly"] as const)(
+    "moves one available block in a %s window, preserving neighbors and other weeks",
+    async (recurrence) => {
+      const window = await calendarWindow(recurrence);
+      const before = await publicStarts();
+      const originalStartsAt = "2030-01-15T10:00:00.000Z",
+        startsAt = "2030-01-16T13:10:00.000Z";
+      const response = await moveAvailable(
+        request({ originalStartsAt, startsAt }, "PATCH"),
+        context(window.id),
+      );
+      expect(response.status).toBe(200);
+      expect(await response.json()).toMatchObject({
+        startsAt,
+        endsAt: "2030-01-16T13:40:00.000Z",
+      });
+      expect(await publicStarts()).toEqual(
+        [
+          ...before.filter((time) => time !== originalStartsAt),
+          startsAt,
+        ].sort(),
+      );
+      const [saved] = await testDb.select().from(availabilityWindows);
+      expect(saved.startsAt).toEqual(window.startsAt);
+      expect(saved.endsAt).toEqual(window.endsAt);
+      expect(saved.recurrence).toBe(recurrence);
+      expect(await testDb.select().from(appointments)).toEqual([]);
+    },
+  );
+
+  it("moves a free block even when another block in that window is booked, preserving the appointment", async () => {
+    const window = await calendarWindow("weekly");
+    const booked = await bookedTime(start, window.id);
+    const response = await moveAvailable(
+      request(
+        {
+          originalStartsAt: "2030-01-15T11:00:00Z",
+          startsAt: "2030-01-16T14:00:00Z",
+        },
+        "PATCH",
+      ),
+      context(window.id),
+    );
+    expect(response.status).toBe(200);
+    expect(await testDb.select().from(appointments)).toEqual([
+      booked.appointment,
+    ]);
+    expect(await testDb.select().from(availabilitySlots)).toEqual([
+      booked.slot,
+    ]);
+  });
+
+  it("keeps a move visible before its source window and permits moving it again without resurrecting its original time", async () => {
+    const window = await calendarWindow();
+    const originalStartsAt = start;
+    for (const startsAt of [
+      "2030-01-12T09:00:00.000Z",
+      "2030-02-18T09:10:00.000Z",
+    ]) {
+      const response = await moveAvailable(
+        request({ originalStartsAt, startsAt }, "PATCH"),
+        context(window.id),
+      );
+      expect(response.status).toBe(200);
+      expect(
+        await publicStarts(
+          startsAt,
+          new Date(new Date(startsAt).getTime() + 30 * 60_000).toISOString(),
+        ),
+      ).toEqual([startsAt]);
+    }
+    expect(
+      await publicStarts("2030-01-12T00:00:00Z", "2030-01-13T00:00:00Z"),
+    ).toEqual([]);
+    expect(await publicStarts()).not.toContain(start);
+    expect(
+      (
+        await deleteMovedAvailable(
+          request({ originalStartsAt }, "DELETE"),
+          context(window.id),
+        )
+      ).status,
+    ).toBe(200);
+    expect(
+      await publicStarts("2030-02-18T00:00:00Z", "2030-02-19T00:00:00Z"),
+    ).toEqual([]);
+    expect(await publicStarts()).not.toContain(start);
+    expect(await publicStarts()).toContain("2030-01-15T10:00:00.000Z");
+  });
+
+  it.each([
+    "booked source",
+    "booked destination",
+    "personal activity",
+    "available block",
+  ])(
+    "rejects a move conflicting with %s without changing availability",
+    async (kind) => {
+      const window = await calendarWindow();
+      const originalStartsAt = start,
+        startsAt =
+          kind === "available block"
+            ? "2030-01-15T10:00:00Z"
+            : "2030-01-16T09:00:00Z";
+      if (kind === "booked source") await bookedTime(start, window.id);
+      if (kind === "booked destination") await bookedTime(startsAt);
+      if (kind === "personal activity")
+        await schedule({
+          ...payload(),
+          startsAt,
+          endsAt: "2030-01-16T09:07:00Z",
+        });
+      const response = await moveAvailable(
+        request({ originalStartsAt, startsAt }, "PATCH"),
+        context(window.id),
+      );
+      expect(response.status).toBe(409);
+      expect(await response.json()).toMatchObject({
+        code: "calendar_block_conflict",
+      });
+      expect(
+        (await testDb.select().from(availabilityWindows))[0].moves,
+      ).toEqual({});
+    },
+  );
+
+  it("cannot remove a moved available block after a student books it", async () => {
+    const window = await calendarWindow();
+    const startsAt = "2030-01-16T09:00:00Z";
+    expect(
+      (
+        await moveAvailable(
+          request({ originalStartsAt: start, startsAt }, "PATCH"),
+          context(window.id),
+        )
+      ).status,
+    ).toBe(200);
+    await bookedTime(startsAt);
+    expect(
+      (
+        await deleteMovedAvailable(
+          request({ originalStartsAt: start }, "DELETE"),
+          context(window.id),
+        )
+      ).status,
+    ).toBe(409);
+  });
+
+  it("moves only one weekly personal occurrence, releases its old booking time, and blocks only its new duration", async () => {
+    await calendarWindow("weekly");
+    const saved = await schedule({ ...payload(), recurrence: "weekly" });
+    const originalStartsAt = "2030-01-22T09:00:00.000Z",
+      startsAt = "2030-01-22T10:00:00.000Z";
+    const response = await movePersonal(
+      request({ originalStartsAt, startsAt }, "PATCH"),
+      context(saved.id),
+    );
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({
+      startsAt,
+      endsAt: "2030-01-22T10:07:00.000Z",
+    });
+    const activities = (
+      await (
+        await listSchedules(
+          rangeRequest("2030-01-15T00:00:00Z", "2030-01-31T00:00:00Z"),
+        )
+      ).json()
+    ).activities;
+    expect(
+      activities.map((item: { startsAt: string }) => item.startsAt).sort(),
+    ).toEqual([start, startsAt, "2030-01-29T09:00:00.000Z"]);
+    expect(
+      activities.find((item: { isMoved: boolean }) => item.isMoved),
+    ).toMatchObject({ originalStartsAt, startsAt });
+    const available = await publicStarts();
+    expect(available).not.toContain(start);
+    expect(available).toContain(originalStartsAt);
+    expect(available).not.toContain(startsAt);
+    expect(available).toContain("2030-01-22T11:00:00.000Z");
+    expect(
+      (
+        await deleteMovedPersonal(
+          request({ originalStartsAt }, "DELETE"),
+          context(saved.id),
+        )
+      ).status,
+    ).toBe(200);
+    expect(
+      (
+        await (
+          await listSchedules(
+            rangeRequest("2030-01-22T00:00:00Z", "2030-01-23T00:00:00Z"),
+          )
+        ).json()
+      ).activities,
+    ).toEqual([]);
+    expect(
+      (await testDb.select().from(personalActivitySchedules))[0].recurrence,
+    ).toBe("weekly");
+  });
+
+  it("finds a personal activity moved to a different month and preserves its independent duration when dragged again", async () => {
+    const saved = await schedule();
+    for (const startsAt of ["2030-02-12T23:59:00Z", "2030-02-14T08:00:00Z"]) {
+      expect(
+        (
+          await movePersonal(
+            request({ originalStartsAt: start, startsAt }, "PATCH"),
+            context(saved.id),
+          )
+        ).status,
+      ).toBe(200);
+    }
+    const activities = (
+      await (
+        await listSchedules(
+          rangeRequest("2030-02-01T00:00:00Z", "2030-02-28T00:00:00Z"),
+        )
+      ).json()
+    ).activities;
+    expect(activities).toHaveLength(1);
+    expect(activities[0]).toMatchObject({
+      startsAt: "2030-02-14T08:00:00.000Z",
+      endsAt: "2030-02-14T08:07:00.000Z",
+      originalStartsAt: start,
+    });
+    expect(
+      (await (await listSchedules(rangeRequest())).json()).activities,
+    ).toEqual([]);
+  });
+
+  it("protects move and occurrence-delete routes with authentication and ownership", async () => {
+    const window = await calendarWindow();
+    const saved = await schedule();
+    const operations = () => [
+      moveAvailable(
+        request(
+          { originalStartsAt: start, startsAt: "2030-02-15T09:00:00Z" },
+          "PATCH",
+        ),
+        context(window.id),
+      ),
+      movePersonal(
+        request(
+          { originalStartsAt: start, startsAt: "2030-02-15T09:00:00Z" },
+          "PATCH",
+        ),
+        context(saved.id),
+      ),
+      deleteMovedAvailable(
+        request({ originalStartsAt: start }, "DELETE"),
+        context(window.id),
+      ),
+      deleteMovedPersonal(
+        request({ originalStartsAt: start }, "DELETE"),
+        context(saved.id),
+      ),
+    ];
+    for (const status of [401, 403, 404]) {
+      if (status === 401) vi.mocked(getCurrentUser).mockResolvedValue(null);
+      else if (status === 403) signIn(provider, false);
+      else signIn(other);
+      expect(
+        (await Promise.all(operations())).map((response) => response.status),
+      ).toEqual(Array(4).fill(status));
+    }
+  });
+
+  it("reports past, missing and invalid times separately from conflicts", async () => {
+    const window = await calendarWindow();
+    for (const [body, status, code] of [
+      [
+        { originalStartsAt: start, startsAt: "2020-01-01T09:00:00Z" },
+        400,
+        "calendar_block_past",
+      ],
+      [
+        {
+          originalStartsAt: "2030-01-15T09:10:00Z",
+          startsAt: "2030-02-01T09:00:00Z",
+        },
+        404,
+        "calendar_block_missing",
+      ],
+      [
+        { originalStartsAt: start, startsAt: "invalid" },
+        400,
+        "calendar_block_invalid",
+      ],
+      [
+        {
+          originalStartsAt: start,
+          startsAt: "2030-02-01T09:00:00Z",
+          endsAt: "2030-02-01T10:00:00Z",
+        },
+        400,
+        "calendar_block_invalid",
+      ],
+    ] as const) {
+      const response = await moveAvailable(
+        request(body, "PATCH"),
+        context(window.id),
+      );
+      expect(response.status).toBe(status);
+      expect(await response.json()).toMatchObject({ code });
+    }
+    expect((await testDb.select().from(availabilityWindows))[0].moves).toEqual(
+      {},
+    );
+  });
+});
+
+describe("calendar move edge cases", () => {
+  it("keeps moved blocks editable after appointment duration and interval settings change", async () => {
+    const window = await calendarWindow();
+    const originalStartsAt = "2030-01-15T10:00:00Z";
+    expect(
+      (
+        await moveAvailable(
+          request(
+            { originalStartsAt, startsAt: "2030-01-16T09:00:00Z" },
+            "PATCH",
+          ),
+          context(window.id),
+        )
+      ).status,
+    ).toBe(200);
+    await testDb
+      .update(bookingPages)
+      .set({ appointmentDurationMinutes: 45, bookingIntervalMinutes: 75 })
+      .where(eq(bookingPages.id, pageId));
+    const response = await moveAvailable(
+      request({ originalStartsAt, startsAt: "2030-01-16T10:10:00Z" }, "PATCH"),
+      context(window.id),
+    );
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({
+      startsAt: "2030-01-16T10:10:00.000Z",
+      endsAt: "2030-01-16T10:55:00.000Z",
+    });
+  });
+  it("honors session rest at the destination and accepts its exact boundary", async () => {
+    const window = await calendarWindow();
+    await bookedTime("2030-01-16T09:00:00Z");
+    expect(
+      (
+        await moveAvailable(
+          request(
+            { originalStartsAt: start, startsAt: "2030-01-16T09:50:00Z" },
+            "PATCH",
+          ),
+          context(window.id),
+        )
+      ).status,
+    ).toBe(409);
+    expect(
+      (
+        await moveAvailable(
+          request(
+            { originalStartsAt: start, startsAt: "2030-01-16T10:00:00Z" },
+            "PATCH",
+          ),
+          context(window.id),
+        )
+      ).status,
+    ).toBe(200);
+  });
+  it("preserves other moved blocks when saving another exception", async () => {
+    const window = await calendarWindow();
+    for (const [originalStartsAt, startsAt] of [
+      [start, "2030-01-16T09:00:00Z"],
+      ["2030-01-15T10:00:00Z", "2030-01-16T10:00:00Z"],
+    ]) {
+      expect(
+        (
+          await moveAvailable(
+            request({ originalStartsAt, startsAt }, "PATCH"),
+            context(window.id),
+          )
+        ).status,
+      ).toBe(200);
+    }
+    expect(await publicStarts()).toEqual([
+      "2030-01-15T11:00:00.000Z",
+      "2030-01-16T09:00:00.000Z",
+      "2030-01-16T10:00:00.000Z",
+    ]);
+  });
+  it("resizes one weekly personal occurrence without changing its series or default duration", async () => {
+    const saved = await schedule({ ...payload(), recurrence: "weekly" });
+    const originalStartsAt = "2030-01-22T09:00:00Z";
+    expect(
+      (
+        await movePersonal(
+          request(
+            {
+              originalStartsAt,
+              startsAt: originalStartsAt,
+              endsAt: "2030-01-22T09:19:00Z",
+            },
+            "PATCH",
+          ),
+          context(saved.id),
+        )
+      ).status,
+    ).toBe(200);
+    const [stored] = await testDb.select().from(personalActivitySchedules);
+    expect(stored.startsAt.toISOString()).toBe(start);
+    expect(stored.endsAt.toISOString()).toBe(end);
+    expect(stored.recurrence).toBe("weekly");
+    expect(
+      (await testDb.select().from(personalActivities))[0]
+        .defaultDurationMinutes,
     ).toBeNull();
   });
 });

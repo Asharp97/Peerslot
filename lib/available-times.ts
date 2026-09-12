@@ -1,5 +1,5 @@
 import { loadPersonalActivityBusyTimes } from "@/lib/personal-activities";
-import { and, eq, gte, gt, isNotNull, isNull, lt, or } from "drizzle-orm";
+import { and, eq, gte, gt, isNotNull, isNull, lt, or, sql } from "drizzle-orm";
 
 import { db } from "@/db";
 import {
@@ -9,7 +9,7 @@ import {
   bookingPages,
   providerProfiles,
 } from "@/db/schema";
-import { expandAvailabilityRule } from "@/lib/availability-recurrence";
+import { expandAvailableSlots } from "@/lib/calendar-moves";
 import { expandProviderAppointmentOccurrences } from "@/lib/provider-appointment-occurrence";
 import {
   calculateAvailableTimes,
@@ -23,6 +23,8 @@ const postgresAvailableTimeRepository = {
     bookingPageId: string,
     range: AvailableTimeRange,
     timeZone: string,
+    duration: number,
+    interval: number,
   ) {
     const windows = await db
       .select({
@@ -31,6 +33,7 @@ const postgresAvailableTimeRepository = {
         endsAt: availabilityWindows.endsAt,
         isActive: availabilityWindows.isActive,
         recurrence: availabilityWindows.recurrence,
+        moves: availabilityWindows.moves,
       })
       .from(availabilityWindows)
       .where(
@@ -38,6 +41,7 @@ const postgresAvailableTimeRepository = {
           eq(availabilityWindows.bookingPageId, bookingPageId),
           eq(availabilityWindows.isActive, true),
           or(
+            sql`${availabilityWindows.moves} <> '{}'::jsonb`,
             and(
               eq(availabilityWindows.recurrence, "weekly"),
               lt(availabilityWindows.startsAt, range.endsAt),
@@ -52,7 +56,9 @@ const postgresAvailableTimeRepository = {
       );
 
     return windows.flatMap((window) =>
-      expandAvailabilityRule(window, range, timeZone),
+      expandAvailableSlots(window, range, timeZone, duration, interval).map(
+        (slot) => ({ ...slot, isActive: true }),
+      ),
     );
   },
 
@@ -157,6 +163,8 @@ export async function getAvailableTimesForBookingPage(
       bookingPage.id,
       range,
       bookingPage.timeZone,
+      bookingPage.appointmentDurationMinutes,
+      bookingPage.bookingIntervalMinutes,
     ),
     postgresAvailableTimeRepository.loadAppointments(
       bookingPage.id,

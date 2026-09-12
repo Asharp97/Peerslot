@@ -1,0 +1,2 @@
+ALTER TABLE "availability_windows" ADD COLUMN "moves" jsonb DEFAULT '{}'::jsonb NOT NULL;--> statement-breakpoint
+ALTER TABLE "personal_activity_schedules" ADD COLUMN "moves" jsonb DEFAULT '{}'::jsonb NOT NULL;

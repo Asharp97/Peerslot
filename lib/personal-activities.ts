@@ -1,11 +1,11 @@
-import { and, asc, eq, gt, inArray, lt, or } from "drizzle-orm";
+import { and, asc, eq, gt, inArray, lt, or, sql } from "drizzle-orm";
 import { db } from "@/db";
 import {
   bookingPages,
   personalActivities,
   personalActivitySchedules,
 } from "@/db/schema";
-import { expandAvailabilityRule } from "@/lib/availability-recurrence";
+import { expandPersonalActivityTimes } from "@/lib/calendar-moves";
 import {
   PersonalActivityError,
   type PersonalActivityScheduleInput,
@@ -130,7 +130,7 @@ export async function savePersonalActivitySchedule(
   const [schedule] = id
     ? await db
         .update(personalActivitySchedules)
-        .set({ ...input, updatedAt: new Date() })
+        .set({ ...input, moves: {}, updatedAt: new Date() })
         .where(
           and(
             eq(personalActivitySchedules.id, id),
@@ -188,16 +188,21 @@ export async function listPersonalActivityOccurrences(
       .where(
         and(
           eq(personalActivities.providerId, providerId),
-          lt(personalActivitySchedules.startsAt, range.endsAt),
           or(
-            eq(personalActivitySchedules.recurrence, "weekly"),
-            gt(personalActivitySchedules.endsAt, range.startsAt),
+            sql`${personalActivitySchedules.moves} <> '{}'::jsonb`,
+            and(
+              lt(personalActivitySchedules.startsAt, range.endsAt),
+              or(
+                eq(personalActivitySchedules.recurrence, "weekly"),
+                gt(personalActivitySchedules.endsAt, range.startsAt),
+              ),
+            ),
           ),
         ),
       ),
   ]);
   return rows.flatMap(({ schedule, name }) =>
-    expandAvailabilityRule(
+    expandPersonalActivityTimes(
       { ...schedule, isActive: true },
       range,
       pages[0]?.timeZone ?? "UTC",
@@ -206,6 +211,8 @@ export async function listPersonalActivityOccurrences(
       scheduleId: schedule.id,
       activityId: schedule.activityId,
       name,
+      originalStartsAt: occurrence.originalStartsAt.toISOString(),
+      isMoved: occurrence.moved,
       startsAt: occurrence.startsAt.toISOString(),
       endsAt: occurrence.endsAt.toISOString(),
       ruleStartsAt: schedule.startsAt.toISOString(),
