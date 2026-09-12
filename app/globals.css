@@ -162,6 +162,16 @@ select:focus-visible,
   color: var(--color-vast-ink);
 }
 
+/* Keep navigation within the screen while the timetable scrolls independently. */
+.provider-calendar .fc .fc-view-harness {
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.provider-calendar .fc .fc-view {
+  min-width: 47.5rem;
+}
+
 .provider-calendar .fc .fc-toolbar {
   gap: 0.75rem;
   margin-bottom: 0.8rem;
@@ -272,8 +282,20 @@ select:focus-visible,
 
 @media (max-width: 640px) {
   .provider-calendar .fc .fc-toolbar {
-    align-items: flex-start;
+    align-items: center;
     flex-wrap: wrap;
+  }
+
+  .provider-calendar .fc .fc-toolbar-chunk {
+    min-width: 0;
+  }
+
+  .provider-calendar .fc .fc-toolbar-chunk:empty {
+    display: none;
+  }
+
+  .provider-calendar .fc .fc-toolbar-title {
+    overflow-wrap: anywhere;
   }
 }
 

@@ -1185,7 +1185,7 @@ export function ProviderAppointments({
       <ContextMenu modal={false}>
         <section
           aria-busy={loading || interactionSaving}
-          className={`provider-calendar relative min-h-0 flex-1 overflow-x-auto rounded-[24px] border border-black/10 bg-[#fbfaf4] p-3 shadow-sm sm:p-4 ${calendarInteractionActive ? "provider-calendar-interacting" : ""}`}
+          className={`provider-calendar relative min-h-0 min-w-0 flex-1 overflow-hidden rounded-[24px] border border-black/10 bg-[#fbfaf4] p-3 shadow-sm sm:p-4 ${calendarInteractionActive ? "provider-calendar-interacting" : ""}`}
         >
           {loading || interactionSaving ? (
             <span
@@ -1205,7 +1205,7 @@ export function ProviderAppointments({
             disabled={loading || saving || interactionSaving}
           >
             <div
-              className="h-full min-w-190"
+              className="h-full min-w-0"
               onContextMenuCapture={handleCalendarContextMenu}
               onPointerDownCapture={(event) => {
                 if (event.pointerType === "touch")
