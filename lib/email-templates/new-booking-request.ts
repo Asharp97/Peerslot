@@ -29,6 +29,7 @@ export function newBookingRequestTemplate(
   );
   const copy = input.locale === "tr" ? turkishCopy : englishCopy;
   const layout = {
+    locale: input.locale,
     eyebrow: copy.eyebrow,
     title: copy.title,
     greeting: copy.greeting(input.providerName),
@@ -38,7 +39,9 @@ export function newBookingRequestTemplate(
       { label: copy.email, value: input.studentEmail },
       { label: copy.date, value: date },
       { label: copy.time, value: `${time} · ${input.timeZone}` },
-      ...(input.comment ? [{ label: copy.comment, value: input.comment }] : []),
+      ...(input.comment
+        ? [{ label: copy.comment, value: copy.commentNotice }]
+        : []),
     ],
     notice: copy.notice,
     cta: { label: copy.cta, url: input.reviewUrl },
@@ -46,7 +49,7 @@ export function newBookingRequestTemplate(
   };
 
   return {
-    subject: copy.subject(input.studentName),
+    subject: copy.subject,
     html: renderPeerSlotEmail(layout),
     text: emailText(layout),
   };
@@ -54,7 +57,7 @@ export function newBookingRequestTemplate(
 
 const englishCopy = {
   eyebrow: "New request",
-  title: "A student chose one of your times.",
+  title: "New appointment request",
   greeting: (name: string) => `Hello ${name},`,
   intro: (name: string) =>
     `${name} sent a new appointment request. Review the details and accept or decline it from your dashboard.`,
@@ -62,17 +65,19 @@ const englishCopy = {
   email: "Email",
   date: "Date",
   time: "Time",
-  comment: "Comment",
+  comment: "Student note",
+  commentNotice:
+    "A note is included in the request. Read it in your dashboard.",
   notice: "This time remains pending until you make a decision.",
   cta: "Review request",
   footer:
     "You received this because this request was made through your PeerSlot booking page.",
-  subject: (name: string) => `New booking request from ${name}`,
+  subject: "PeerSlot: New appointment request",
 };
 
 const turkishCopy = {
   eyebrow: "Yeni talep",
-  title: "Bir öğrenci uygun saatlerinizden birini seçti.",
+  title: "Yeni randevu talebi",
   greeting: (name: string) => `Merhaba ${name},`,
   intro: (name: string) =>
     `${name} yeni bir randevu talebi gönderdi. Ayrıntıları inceleyip panelinizden kabul veya reddedebilirsiniz.`,
@@ -80,10 +85,11 @@ const turkishCopy = {
   email: "E-posta",
   date: "Tarih",
   time: "Saat",
-  comment: "Not",
+  comment: "Öğrenci notu",
+  commentNotice: "Talepte bir not bulunuyor. Panelinizden okuyabilirsiniz.",
   notice: "Siz karar verene kadar bu saat beklemede kalır.",
   cta: "Talebi incele",
   footer:
     "Bu iletiyi, talep PeerSlot rezervasyon sayfanız üzerinden gönderildiği için aldınız.",
-  subject: (name: string) => `${name} adlı öğrenciden yeni randevu talebi`,
+  subject: "PeerSlot: Yeni randevu talebi",
 };

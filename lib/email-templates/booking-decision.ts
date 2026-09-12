@@ -28,6 +28,7 @@ export function bookingDecisionTemplate(
   );
   const copy = copies[input.locale][input.decision];
   const layout = {
+    locale: input.locale,
     eyebrow: copy.eyebrow,
     title: copy.title,
     greeting: copy.greeting(input.studentName),
@@ -44,7 +45,7 @@ export function bookingDecisionTemplate(
   };
 
   return {
-    subject: copy.subject(input.providerName),
+    subject: copy.subject,
     html: renderPeerSlotEmail(layout),
     text: emailText(layout),
   };
@@ -65,28 +66,27 @@ const copies = {
       statusValue: "Confirmed",
       notice:
         "Please arrive on time. Keep this email for your appointment details.",
-      cta: "Open PeerSlot",
+      cta: "View my appointments",
       footer:
         "This confirmation was sent because you requested an appointment through PeerSlot.",
-      subject: (provider: string) => `Appointment confirmed with ${provider}`,
+      subject: "PeerSlot: Your appointment is confirmed",
     },
     decline: {
       eyebrow: "Request update",
       title: "Your appointment request was declined.",
       greeting: (name: string) => `Hello ${name},`,
       intro: (provider: string) =>
-        `${provider} could not accept this appointment request. You can return to PeerSlot and choose another available time.`,
+        `${provider} could not accept this appointment request. Contact your provider if you need to arrange another time.`,
       provider: "Provider",
       date: "Requested date",
       time: "Requested time",
       status: "Status",
       statusValue: "Declined",
       notice: "No appointment was created for this time.",
-      cta: "Choose another time",
+      cta: "Open PeerSlot",
       footer:
         "This update was sent because you requested an appointment through PeerSlot.",
-      subject: (provider: string) =>
-        `Update about your request with ${provider}`,
+      subject: "PeerSlot: Your appointment request was declined",
     },
   },
   tr: {
@@ -103,28 +103,27 @@ const copies = {
       statusValue: "Onaylandı",
       notice:
         "Lütfen zamanında hazır olun. Randevu ayrıntıları için bu e-postayı saklayın.",
-      cta: "PeerSlot'u aç",
+      cta: "Randevularımı görüntüle",
       footer:
         "Bu onay, PeerSlot üzerinden randevu talep ettiğiniz için gönderildi.",
-      subject: (provider: string) => `${provider} ile randevunuz onaylandı`,
+      subject: "PeerSlot: Randevunuz onaylandı",
     },
     decline: {
       eyebrow: "Talep güncellemesi",
       title: "Randevu talebiniz reddedildi.",
       greeting: (name: string) => `Merhaba ${name},`,
       intro: (provider: string) =>
-        `${provider} bu randevu talebini kabul edemedi. PeerSlot'a dönerek başka bir uygun saat seçebilirsiniz.`,
+        `${provider} bu randevu talebini kabul edemedi. Başka bir saat ayarlamak için sağlayıcınızla iletişime geçebilirsiniz.`,
       provider: "Sağlayıcı",
       date: "Talep edilen tarih",
       time: "Talep edilen saat",
       status: "Durum",
       statusValue: "Reddedildi",
       notice: "Bu saat için randevu oluşturulmadı.",
-      cta: "Başka bir saat seç",
+      cta: "PeerSlot’u aç",
       footer:
         "Bu güncelleme, PeerSlot üzerinden randevu talep ettiğiniz için gönderildi.",
-      subject: (provider: string) =>
-        `${provider} ile talebiniz hakkında güncelleme`,
+      subject: "PeerSlot: Randevu talebiniz reddedildi",
     },
   },
 } as const;

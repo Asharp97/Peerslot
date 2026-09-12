@@ -32,13 +32,10 @@ function getResendClient() {
 }
 
 export async function sendEmail(input: SendEmailInput) {
-  const from = input.from?.trim() || process.env.EMAIL_FROM?.trim();
-
-  if (!from) {
-    throw new EmailDeliveryError(
-      "An email sender is required through input.from or EMAIL_FROM",
-    );
-  }
+  const from =
+    input.from?.trim() ||
+    process.env.EMAIL_FROM?.trim() ||
+    "PeerSlot <notifications@peerslot.com>";
 
   const replyTo =
     input.replyTo ?? process.env.EMAIL_REPLY_TO?.trim() ?? undefined;
@@ -46,6 +43,7 @@ export async function sendEmail(input: SendEmailInput) {
     from,
     to: input.to,
     subject: input.subject,
+    headers: { "Auto-Submitted": "auto-generated" },
     ...(replyTo ? { replyTo } : {}),
   };
   let message: CreateEmailOptions;

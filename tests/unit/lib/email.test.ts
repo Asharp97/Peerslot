@@ -35,11 +35,33 @@ describe("sendEmail", () => {
     expect(sendMock).toHaveBeenCalledWith(
       {
         from: "PeerSlot <notifications@peerslot.com>",
+        headers: { "Auto-Submitted": "auto-generated" },
         to: "student@example.com",
         subject: "Booking accepted",
         text: "Your booking was accepted.",
       },
       { idempotencyKey: "booking-accepted/appointment-id" },
+    );
+  });
+
+  it("includes the configured reply mailbox and both body formats", async () => {
+    vi.stubEnv("EMAIL_FROM", "PeerSlot <accounts@peerslot.com>");
+    vi.stubEnv("EMAIL_REPLY_TO", "help@peerslot.com");
+    sendMock.mockResolvedValue({ data: { id: "email-id" }, error: null });
+    await sendEmail({
+      to: "student@example.com",
+      subject: "PeerSlot verification",
+      html: "<p>Verify your address</p>",
+      text: "Verify your address",
+    });
+    expect(sendMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        from: "PeerSlot <accounts@peerslot.com>",
+        replyTo: "help@peerslot.com",
+        html: "<p>Verify your address</p>",
+        text: "Verify your address",
+      }),
+      undefined,
     );
   });
 

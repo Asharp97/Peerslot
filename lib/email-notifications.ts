@@ -1,5 +1,4 @@
 import { createHash } from "node:crypto";
-
 import {
   bookingDecisionTemplate,
   type EmailLocale,
@@ -7,8 +6,7 @@ import {
   verifyEmailTemplate,
 } from "@/lib/email-templates";
 import { sendEmail, type SendEmailInput } from "@/lib/email";
-
-const notificationSender = "PeerSlot <notifications@peerslot.com>";
+import { emailApplicationUrl } from "@/lib/email-urls";
 
 type AppointmentEmailDetails = {
   appointmentId: string;
@@ -27,25 +25,22 @@ export async function notifyProviderOfBookingRequest(
     studentEmail: string;
   },
 ) {
-  const template = newBookingRequestTemplate({
-    comment: input.comment,
-    endsAt: input.endsAt,
-    locale: input.locale,
-    providerName: input.providerName,
-    reviewUrl: applicationUrl(`/${input.locale}/provider/requests`),
-    startsAt: input.startsAt,
-    studentEmail: input.studentEmail,
-    studentName: input.studentName,
-    timeZone: input.timeZone,
-  });
-
   return deliverEmail(
-    {
-      ...template,
-      from: notificationSender,
+    () => ({
+      ...newBookingRequestTemplate({
+        comment: input.comment,
+        endsAt: input.endsAt,
+        locale: input.locale,
+        providerName: input.providerName,
+        reviewUrl: emailApplicationUrl(`/${input.locale}/provider/requests`),
+        startsAt: input.startsAt,
+        studentEmail: input.studentEmail,
+        studentName: input.studentName,
+        timeZone: input.timeZone,
+      }),
       to: input.providerEmail,
       idempotencyKey: `booking-request/${input.appointmentId}`,
-    },
+    }),
     { event: "booking_request", entityId: input.appointmentId },
   );
 }
@@ -56,26 +51,25 @@ export async function notifyStudentOfBookingDecision(
     studentEmail: string | null;
   },
 ) {
-  if (!input.studentEmail) return null;
-
-  const template = bookingDecisionTemplate({
-    decision: input.decision,
-    endsAt: input.endsAt,
-    locale: input.locale,
-    providerName: input.providerName,
-    startsAt: input.startsAt,
-    studentName: input.studentName,
-    timeZone: input.timeZone,
-    viewUrl: applicationUrl(`/${input.locale}`),
-  });
-
+  const studentEmail = input.studentEmail;
+  if (!studentEmail) return null;
   return deliverEmail(
-    {
-      ...template,
-      from: notificationSender,
-      to: input.studentEmail,
+    () => ({
+      ...bookingDecisionTemplate({
+        decision: input.decision,
+        endsAt: input.endsAt,
+        locale: input.locale,
+        providerName: input.providerName,
+        startsAt: input.startsAt,
+        studentName: input.studentName,
+        timeZone: input.timeZone,
+        viewUrl: emailApplicationUrl(
+          `/${input.locale}${input.decision === "accept" ? "/account" : ""}`,
+        ),
+      }),
+      to: studentEmail,
       idempotencyKey: `booking-${input.decision}/${input.appointmentId}`,
-    },
+    }),
     { event: `booking_${input.decision}`, entityId: input.appointmentId },
   );
 }
@@ -87,19 +81,16 @@ export async function sendVerificationEmail(input: {
   token: string;
   verificationUrl: string;
 }) {
-  const template = verifyEmailTemplate(input);
   const tokenFingerprint = createHash("sha256")
     .update(input.token)
     .digest("hex")
     .slice(0, 24);
-
   return deliverEmail(
-    {
-      ...template,
-      from: notificationSender,
+    () => ({
+      ...verifyEmailTemplate(input),
       to: input.email,
       idempotencyKey: `email-verification/${tokenFingerprint}`,
-    },
+    }),
     { event: "email_verification", entityId: tokenFingerprint },
   );
 }
@@ -110,11 +101,12 @@ export function emailLocaleFromRequest(request?: Request | null): EmailLocale {
 }
 
 async function deliverEmail(
-  input: SendEmailInput,
+  buildMessage: () => SendEmailInput,
   context: { entityId: string; event: string },
 ) {
   try {
-    return await sendEmail(input);
+    // Template/configuration failures must not turn a saved booking into an API error.
+    return await sendEmail(buildMessage());
   } catch (error) {
     console.error("transactional_email_failed", {
       entityId: context.entityId,
@@ -123,9 +115,4 @@ async function deliverEmail(
     });
     return null;
   }
-}
-
-function applicationUrl(path: string) {
-  const baseUrl = process.env.BETTER_AUTH_URL ?? "http://localhost:3000";
-  return new URL(path, baseUrl).toString();
 }
