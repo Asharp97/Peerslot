@@ -79,6 +79,12 @@ import {
 
 import { personalActivityEndTime } from "@/lib/personal-activity-time";
 
+import {
+  CalendarCreatePopover,
+  type CalendarCreateAnchor,
+  type CalendarCreatePopoverCopy,
+} from "./calendar-create-popover";
+
 import { useProviderWorkspace } from "./provider-shell";
 
 type ProviderStudent = {
@@ -142,7 +148,7 @@ type CalendarContextTarget = {
   date: Date;
 };
 
-export type ProviderAppointmentsCopy = {
+export type ProviderAppointmentsCopy = CalendarCreatePopoverCopy & {
   eyebrow: string;
   title: string;
   addToTimetable: string;
@@ -258,6 +264,11 @@ export function ProviderAppointments({
   const [students, setStudents] = useState<ProviderStudent[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [quickCreate, setQuickCreate] = useState<
+    (CalendarCreateAnchor & { id: number }) | null
+  >(null);
+  const [quickCreating, setQuickCreating] = useState(false);
+  const quickCreateId = useRef(0);
   const [activityNames, setActivityNames] = useState<PersonalActivityName[]>(
     [],
   );
@@ -410,8 +421,8 @@ export function ProviderAppointments({
       await loadStudents();
     }
 
-    void initializeStudents();
-  }, [loadStudents]);
+    void initializeStudents().catch(() => setError(copy.loadError));
+  }, [loadStudents, copy.loadError]);
 
   useEffect(() => {
     if (!dialogOpen || draft?.entryType !== "personal") return;
@@ -452,6 +463,7 @@ export function ProviderAppointments({
 
   const openNewSession = useCallback(
     (date = nextRoundedHour(timeZone)) => {
+      setQuickCreate(null);
       const local = localDateTime(date);
       const end = new Date(
         date.getTime() + data.bookingPage.appointmentDurationMinutes * 60_000,
@@ -501,9 +513,18 @@ export function ProviderAppointments({
 
   const handleDateClick = useCallback(
     (info: DateClickArg) => {
-      if (!info.allDay) openNewSession(info.date);
+      if (info.allDay || saving || interactionSaving || quickCreating) return;
+      const rect = info.dayEl?.getBoundingClientRect();
+      setDialogOpen(false);
+      setError("");
+      setQuickCreate({
+        id: ++quickCreateId.current,
+        startsAt: calendarWallTimeToUtc(info.date, timeZone),
+        x: info.jsEvent?.clientX ?? rect?.left ?? window.innerWidth / 2,
+        y: info.jsEvent?.clientY ?? rect?.top ?? window.innerHeight / 3,
+      });
     },
-    [openNewSession],
+    [timeZone, saving, interactionSaving, quickCreating],
   );
 
   function handleCalendarContextMenu(event: MouseEvent<HTMLDivElement>) {
@@ -591,6 +612,8 @@ export function ProviderAppointments({
 
   const handleEventClick = useCallback(
     (info: EventClickArg) => {
+      if (quickCreating) return;
+      setQuickCreate(null);
       const activity = info.event.extendedProps.personalActivity as
         PersonalActivityOccurrence | undefined;
       if (activity) {
@@ -704,7 +727,7 @@ export function ProviderAppointments({
       setError("");
       setDialogOpen(true);
     },
-    [timeZone],
+    [timeZone, quickCreating],
   );
 
   const handleCalendarEventChange = useCallback(
@@ -1163,6 +1186,7 @@ export function ProviderAppointments({
         <div className="flex flex-wrap justify-end gap-2">
           <Button
             className="min-h-11 rounded-full bg-vast-ink px-5 font-bold text-white"
+            disabled={quickCreating}
             onClick={() => openNewSession()}
           >
             <CalendarPlus size={17} /> {copy.addToTimetable}
@@ -1170,7 +1194,7 @@ export function ProviderAppointments({
         </div>
       </header>
 
-      {error && !dialogOpen ? (
+      {error && !dialogOpen && !quickCreate ? (
         <p className="mb-3 rounded-xl bg-ember-glow px-4 py-3 text-sm font-semibold">
           {error}
         </p>
@@ -1229,7 +1253,7 @@ export function ProviderAppointments({
                 eventResize={(info) =>
                   void handleCalendarEventChange(info, true)
                 }
-                eventAllow={() => !interactionSaving}
+                eventAllow={() => !interactionSaving && !quickCreating}
                 eventMinHeight={34}
                 eventTimeFormat={calendarEventTimeFormat}
                 events={loadCalendarEvents}
@@ -1279,6 +1303,32 @@ export function ProviderAppointments({
           </ContextMenuItem>
         </ContextMenuContent>
       </ContextMenu>
+
+      {quickCreate ? (
+        <CalendarCreatePopover
+          key={quickCreate.id}
+          anchor={quickCreate}
+          accessToken={accessToken}
+          timeZone={timeZone}
+          locale={locale}
+          sessionDuration={data.bookingPage.appointmentDurationMinutes}
+          copy={copy}
+          onClose={() => setQuickCreate(null)}
+          onSaved={() => {
+            setQuickCreate(null);
+            calendarRef.current?.getApi().refetchEvents();
+          }}
+          onSavingChange={setQuickCreating}
+          onStudentCreated={(student) =>
+            setStudents((current) =>
+              current.some(({ id }) => id === student.id)
+                ? current
+                : [...current, student],
+            )
+          }
+          readError={(response) => responseError(response, copy)}
+        />
+      ) : null}
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-h-[92dvh] overflow-y-auto sm:max-w-xl">

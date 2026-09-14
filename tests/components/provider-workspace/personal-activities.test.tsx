@@ -118,11 +118,12 @@ function mockCalendar(
 async function openPersonal(date = "2030-01-15T12:00:00") {
   const user = userEvent.setup();
   render(<ProviderAppointments copy={copy} />);
-  await act(async () => {
-    (calendar.props.dateClick as (arg: unknown) => void)({
-      allDay: false,
-      date: new Date(date),
-    });
+  await user.click(screen.getByRole("button", { name: copy.addToTimetable }));
+  fireEvent.change(screen.getByLabelText(copy.date), {
+    target: { value: date.slice(0, 10) },
+  });
+  fireEvent.change(screen.getByLabelText(copy.startsAt), {
+    target: { value: date.slice(11, 16) },
   });
   await user.click(screen.getAllByRole("combobox")[0]);
   await user.click(screen.getByRole("option", { name: copy.personalActivity }));

@@ -9,7 +9,7 @@ import {
   waitFor,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   ProviderAppointments,
@@ -52,6 +52,18 @@ vi.mock("@/components/provider-workspace/provider-shell", () => ({
     },
   }),
 }));
+
+beforeEach(() => {
+  vi.stubGlobal(
+    "ResizeObserver",
+    class {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    },
+  );
+  HTMLElement.prototype.scrollIntoView = () => undefined;
+});
 
 describe("provider appointments calendar", () => {
   it.each(["en", "tr"] as const)(
@@ -105,9 +117,13 @@ describe("provider appointments calendar", () => {
       const dateClick = calendar.props?.dateClick as (info: unknown) => void;
       dateClick({ allDay: false, date: new Date("2020-01-08T12:00:00") });
     });
-    fireEvent.submit(
-      screen.getByRole("button", { name: copy.save }).closest("form")!,
+    const user = userEvent.setup();
+    await user.type(
+      screen.getByRole("combobox", { name: copy.quickSearchStudent }),
+      "New Student",
     );
+    await screen.findByRole("option", { name: copy.quickCreate });
+    await user.keyboard("{Enter}");
     expect(await screen.findByText(copy.pastSessionError)).toBeTruthy();
     expect(
       fetchMock.mock.calls.some(([, init]) => init?.method === "POST"),
@@ -175,11 +191,14 @@ describe("provider appointments calendar", () => {
         const dateClick = calendar.props?.dateClick as (info: unknown) => void;
         dateClick({ allDay: false, date: new Date("2030-01-08T12:00:00") });
       });
-      if (recurrence === "none") {
-        await user.click(screen.getAllByRole("combobox")[2]);
-        await user.click(screen.getByRole("option", { name: copy.oneTime }));
+      if (recurrence === "weekly") {
+        await user.click(screen.getByText(new RegExp(copy.quickOptions)));
+        await user.selectOptions(
+          screen.getByLabelText(copy.repetition),
+          "weekly",
+        );
       }
-      await user.click(screen.getByRole("button", { name: copy.save }));
+      await user.click(await screen.findByRole("option", { name: /Ada/ }));
       await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
       const request = fetchMock.mock.calls.find(
         ([, init]) => init?.method === "POST",
