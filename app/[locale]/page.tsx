@@ -17,7 +17,7 @@ import {
 import { PublicSiteLayout } from "@/components/public-site-layout";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
-import { createLocalizedAlternates } from "@/lib/seo";
+import { createLocalizedAlternates, resolveSiteUrl } from "@/lib/seo";
 
 const stepToneClasses = {
   cream: "bg-lumen-cream text-vast-ink",
@@ -261,9 +261,23 @@ export default async function Home({ params }: HomeProps) {
   const comparisonMessages = t.raw(
     "comparison.messages",
   ) as ComparisonMessage[];
+  const siteUrl = resolveSiteUrl();
+  const websiteStructuredData = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "PeerSlot",
+    alternateName: siteUrl.hostname.replace(/^www\./, ""),
+    url: siteUrl.toString(),
+  };
 
   return (
     <PublicSiteLayout>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(websiteStructuredData).replace(/</g, "\\u003c"),
+        }}
+      />
       <main id="main-content">
         <section className="relative mx-auto flex min-h-172.5 w-full max-w-310 flex-col items-center px-5 pt-28 pb-26 text-center max-md:min-h-[640px] max-md:pt-[92px] max-sm:min-h-[650px] max-sm:px-3.5 max-sm:pt-20 max-sm:pb-20">
           <span
