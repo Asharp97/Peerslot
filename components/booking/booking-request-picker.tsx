@@ -238,13 +238,42 @@ export function BookingRequestPicker({
     setSaving(true);
     setError("");
 
-    if (authMode === "register") {
+    try {
       const returnPath = await createBookingAuthIntent();
       if (!returnPath) {
         setError(copy.intentError);
-        setSaving(false);
         return;
       }
+
+      // A duplicate signup returns a synthetic, unverified user even when the
+      // real account is verified. Authenticate first, regardless of the tab.
+      const signIn = await requestEmailSignIn(
+        studentEmail,
+        password,
+        returnPath,
+      );
+      if (signIn.ok) {
+        await continueAfterAuthentication();
+        return;
+      }
+
+      const failure = (await signIn.json().catch(() => null)) as {
+        code?: string;
+        message?: string;
+      } | null;
+      if (signIn.status === 403 && failure?.code === "EMAIL_NOT_VERIFIED") {
+        setPhase("verify-email");
+        return;
+      }
+      if (
+        authMode !== "register" ||
+        signIn.status !== 401 ||
+        failure?.code !== "INVALID_EMAIL_OR_PASSWORD"
+      ) {
+        setError(failure?.message || copy.authError);
+        return;
+      }
+
       const registration = await fetch("/api/auth/sign-up/email", {
         method: "POST",
         credentials: "include",
@@ -259,23 +288,15 @@ export function BookingRequestPicker({
       });
       if (!registration.ok) {
         setError(await readAuthError(registration, copy.authError));
-        setSaving(false);
         return;
       }
 
       setPhase("verify-email");
+    } catch {
+      setError(copy.authError);
+    } finally {
       setSaving(false);
-      return;
     }
-
-    const signIn = await requestEmailSignIn(studentEmail, password);
-    if (!signIn.ok) {
-      setError(await readAuthError(signIn, copy.authError));
-      setSaving(false);
-      return;
-    }
-
-    await continueAfterAuthentication();
   }
 
   async function handleSocialAuth() {

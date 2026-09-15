@@ -9,12 +9,16 @@ export async function fetchAccessToken() {
   return ((await response.json()) as { token?: string }).token ?? null;
 }
 
-export function requestEmailSignIn(email: string, password: string) {
+export function requestEmailSignIn(
+  email: string,
+  password: string,
+  callbackURL?: string,
+) {
   return fetch("/api/auth/sign-in/email", {
     method: "POST",
     credentials: "include",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password, rememberMe: true }),
+    body: JSON.stringify({ email, password, rememberMe: true, callbackURL }),
   });
 }
 

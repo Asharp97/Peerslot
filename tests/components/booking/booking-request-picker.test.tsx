@@ -147,6 +147,12 @@ describe("booking authentication", () => {
               returnPath: "/en/book/ABCDEFGH?booking=1",
             });
           }
+          if (url === "/api/auth/sign-in/email") {
+            return Response.json(
+              { code: "INVALID_EMAIL_OR_PASSWORD" },
+              { status: 401 },
+            );
+          }
           if (url === "/api/auth/sign-up/email") {
             return Response.json({ user: { id: "student-id" } });
           }
@@ -242,9 +248,224 @@ describe("booking authentication", () => {
         fetchMock.mock.calls.some(
           ([url]) => String(url) === "/api/auth/sign-in/email",
         ),
-      ).toBe(false);
+      ).toBe(true);
     },
   );
+});
+
+describe("existing accounts booking with another teacher", () => {
+  const teacher = {
+    id: "teacher-user-id",
+    name: "Ada Teacher",
+    email: "teacher@example.com",
+    emailVerified: true,
+  };
+
+  function mockBookingAuth({
+    signedIn = false,
+    failure,
+  }: {
+    signedIn?: boolean;
+    failure?: { status: number; code: string } | "network";
+  } = {}) {
+    const fetchMock = vi.fn(
+      async (input: RequestInfo | URL, _init?: RequestInit) => {
+        void _init;
+        switch (String(input)) {
+          case "/api/auth/get-session":
+            return Response.json(signedIn ? { user: teacher } : null);
+          case "/api/booking-intent":
+            return Response.json({ returnPath: "/en/book/ABCDEFGH?booking=1" });
+          case "/api/auth/sign-in/email":
+            if (failure === "network") throw new TypeError("Failed to fetch");
+            if (failure)
+              return Response.json(
+                { code: failure.code },
+                { status: failure.status },
+              );
+            signedIn = true;
+            return Response.json({ user: teacher, token: "test-session" });
+          case "/api/auth/sign-up/email":
+            // Better Auth returns this same synthetic success for a duplicate email.
+            // It neither authenticates the teacher nor sends a verification email.
+            return Response.json({
+              token: null,
+              user: { ...teacher, id: "synthetic-id", emailVerified: false },
+            });
+          case "/api/booking-pages/ABCDEFGH/appointments":
+            return Response.json(
+              { appointment: { id: "appointment-id", status: "pending" } },
+              { status: 201 },
+            );
+          default:
+            throw new Error(`Unexpected request: ${input}`);
+        }
+      },
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    return fetchMock;
+  }
+
+  async function chooseAppointment() {
+    render(
+      <BookingRequestPicker
+        bookingPageId="33ead7c8-d327-4e79-9624-f405a834f14f"
+        bookingTitle="Another teacher's lesson"
+        copy={copy}
+        locale="en"
+        slug="ABCDEFGH"
+        slots={[{ startsAt: "2030-01-15T09:00:00.000Z" }]}
+        timeZone="Europe/Istanbul"
+      />,
+    );
+    const slot = screen.getByRole("button", { name: /12:00 PM/ });
+    await waitFor(() =>
+      expect((slot as HTMLButtonElement).disabled).toBe(false),
+    );
+    fireEvent.click(slot);
+  }
+
+  async function authenticate(mode: "register" | "sign-in" = "register") {
+    await chooseAppointment();
+    fireEvent.change(screen.getByLabelText(copy.name), {
+      target: { value: "Typed name" },
+    });
+    fireEvent.change(screen.getByLabelText(copy.email), {
+      target: { value: teacher.email },
+    });
+    fireEvent.change(screen.getByLabelText(copy.comment), {
+      target: { value: "Keep this booking note" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: copy.continue }));
+    await screen.findByRole("heading", { name: copy.authTitle });
+    if (mode === "sign-in")
+      fireEvent.click(screen.getByRole("button", { name: copy.signInTab }));
+    fireEvent.change(screen.getByLabelText(copy.password), {
+      target: { value: "correct-horse-battery" },
+    });
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: mode === "register" ? copy.registerAction : copy.signInAction,
+      }),
+    );
+  }
+
+  it.each(["register", "sign-in"] as const)(
+    "continues a verified teacher to confirmation from %s without asking for verification",
+    async (mode) => {
+      const fetchMock = mockBookingAuth();
+      await authenticate(mode);
+      await screen.findByRole("heading", { name: copy.confirmTitle });
+      expect(
+        screen.queryByRole("heading", { name: copy.verifyTitle }),
+      ).toBeNull();
+      expect(screen.getByText(teacher.name)).toBeTruthy();
+      expect(screen.getByText(teacher.email)).toBeTruthy();
+      expect(
+        fetchMock.mock.calls.some(
+          ([url]) => String(url) === "/api/auth/sign-up/email",
+        ),
+      ).toBe(false);
+      const signIn = fetchMock.mock.calls.find(
+        ([url]) => String(url) === "/api/auth/sign-in/email",
+      );
+      expect(JSON.parse(String(signIn?.[1]?.body))).toMatchObject({
+        email: teacher.email,
+        password: "correct-horse-battery",
+        callbackURL: "/en/book/ABCDEFGH?booking=1",
+      });
+      fireEvent.click(
+        screen.getByRole("button", { name: copy.confirmRequest }),
+      );
+      await screen.findByRole("heading", { name: copy.requestedTitle });
+      const booking = fetchMock.mock.calls.find(([url]) =>
+        String(url).endsWith("/appointments"),
+      );
+      expect(JSON.parse(String(booking?.[1]?.body))).toEqual({
+        startsAt: "2030-01-15T09:00:00.000Z",
+        comment: "Keep this booking note",
+      });
+    },
+  );
+
+  it("uses an already signed-in teacher's account without any new authentication", async () => {
+    const fetchMock = mockBookingAuth({ signedIn: true });
+    await chooseAppointment();
+    await screen.findByRole("heading", { name: copy.confirmTitle });
+    expect(screen.getByText(teacher.email)).toBeTruthy();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it.each(["register", "sign-in"] as const)(
+    "keeps an unverified account in verification from %s and preserves the booking callback",
+    async (mode) => {
+      const fetchMock = mockBookingAuth({
+        failure: { status: 403, code: "EMAIL_NOT_VERIFIED" },
+      });
+      await authenticate(mode);
+      await screen.findByRole("heading", { name: copy.verifyTitle });
+      expect(
+        screen.queryByRole("heading", { name: copy.confirmTitle }),
+      ).toBeNull();
+      expect(
+        fetchMock.mock.calls.some(
+          ([url]) => String(url) === "/api/auth/sign-up/email",
+        ),
+      ).toBe(false);
+      const signIn = fetchMock.mock.calls.find(
+        ([url]) => String(url) === "/api/auth/sign-in/email",
+      );
+      expect(JSON.parse(String(signIn?.[1]?.body))).toMatchObject({
+        callbackURL: "/en/book/ABCDEFGH?booking=1",
+      });
+    },
+  );
+
+  it.each([
+    { status: 429, code: "TOO_MANY_REQUESTS" },
+    { status: 500, code: "INTERNAL_SERVER_ERROR" },
+    "network",
+  ] as const)(
+    "allows retry after authentication fails (%j), without creating an account",
+    async (failure) => {
+      const fetchMock = mockBookingAuth({ failure });
+      await authenticate();
+      await screen.findByText(copy.authError);
+      expect(
+        (
+          screen.getByRole("button", {
+            name: copy.registerAction,
+          }) as HTMLButtonElement
+        ).disabled,
+      ).toBe(false);
+      expect(
+        fetchMock.mock.calls.some(
+          ([url]) => String(url) === "/api/auth/sign-up/email",
+        ),
+      ).toBe(false);
+      expect(
+        screen.queryByRole("heading", { name: copy.verifyTitle }),
+      ).toBeNull();
+    },
+  );
+
+  it("does not treat the synthetic duplicate-email signup response as authentication", async () => {
+    const fetchMock = mockBookingAuth({
+      failure: { status: 401, code: "INVALID_EMAIL_OR_PASSWORD" },
+    });
+    await authenticate();
+    await screen.findByRole("heading", { name: copy.verifyTitle });
+    expect(
+      screen.queryByRole("button", { name: copy.confirmRequest }),
+    ).toBeNull();
+    expect(
+      fetchMock.mock.calls.some(([url]) =>
+        String(url).endsWith("/appointments"),
+      ),
+    ).toBe(false);
+    fireEvent.click(screen.getByRole("button", { name: copy.verifyAction }));
+    await screen.findByRole("button", { name: copy.signInAction });
+  });
 });
 
 const copy = new Proxy(

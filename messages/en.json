@@ -796,7 +796,7 @@
     "privacyLink": "Privacy Policy",
     "consentJoin": "and acknowledge the",
     "verifyTitle": "Check your inbox",
-    "verifyBody": "We sent a verification link to {email}. Open it to verify your address and return to your selected appointment.",
+    "verifyBody": "If {email} needs verification, open the link in your inbox to return to your selected appointment. If you already have a verified account, go back and sign in with your existing password or Google.",
     "verifyAction": "Back to sign in",
     "confirmTitle": "Confirm your request",
     "confirmBody": "Review the details before sending this appointment request.",

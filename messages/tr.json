@@ -796,7 +796,7 @@
     "privacyLink": "Gizlilik Politikası",
     "consentJoin": "ve şunu okuduğunuzu onaylarsınız:",
     "verifyTitle": "Gelen kutunuzu kontrol edin",
-    "verifyBody": "{email} adresine bir doğrulama bağlantısı gönderdik. Adresinizi doğrulamak ve seçtiğiniz randevuya dönmek için bağlantıyı açın.",
+    "verifyBody": "{email} adresinizin doğrulanması gerekiyorsa seçtiğiniz randevuya dönmek için gelen kutunuzdaki bağlantıyı açın. Zaten doğrulanmış bir hesabınız varsa geri dönüp mevcut şifrenizle veya Google ile giriş yapın.",
     "verifyAction": "Girişe dön",
     "confirmTitle": "Talebinizi onaylayın",
     "confirmBody": "Randevu talebini göndermeden önce ayrıntıları gözden geçirin.",

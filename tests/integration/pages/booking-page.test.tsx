@@ -80,11 +80,11 @@ describe("booking page verification copy", () => {
   it.each([
     [
       "en",
-      "We sent a verification link to ada@example.com. Open it to verify your address and return to your selected appointment.",
+      "If ada@example.com needs verification, open the link in your inbox to return to your selected appointment. If you already have a verified account, go back and sign in with your existing password or Google.",
     ],
     [
       "tr",
-      "ada@example.com adresine bir doğrulama bağlantısı gönderdik. Adresinizi doğrulamak ve seçtiğiniz randevuya dönmek için bağlantıyı açın.",
+      "ada@example.com adresinizin doğrulanması gerekiyorsa seçtiğiniz randevuya dönmek için gelen kutunuzdaki bağlantıyı açın. Zaten doğrulanmış bir hesabınız varsa geri dönüp mevcut şifrenizle veya Google ile giriş yapın.",
     ],
   ])(
     "renders the actual %s verification message after sign-up",
@@ -100,6 +100,11 @@ describe("booking page verification copy", () => {
             });
           case "/api/auth/sign-up/email":
             return Response.json({ user: { id: "student-id" } });
+          case "/api/auth/sign-in/email":
+            return Response.json(
+              { code: "INVALID_EMAIL_OR_PASSWORD" },
+              { status: 401 },
+            );
           default:
             throw new Error(`Unexpected request: ${input}`);
         }
