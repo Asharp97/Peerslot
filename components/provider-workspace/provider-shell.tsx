@@ -32,6 +32,7 @@ export type ProviderShellCopy = {
   settings: string;
   students: string;
   personalActivities: string;
+  myAppointments: string;
   workspace: string;
   signOut: string;
   loadError: string;
@@ -171,6 +172,7 @@ export function ProviderShell({
       icon: Coffee,
     },
     { href: "/provider/settings", label: copy.settings, icon: Settings },
+    { href: "/account", label: copy.myAppointments, icon: CalendarDays },
   ] as const;
 
   return (

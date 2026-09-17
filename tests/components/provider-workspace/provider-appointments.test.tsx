@@ -66,6 +66,115 @@ beforeEach(() => {
 });
 
 describe("provider appointments calendar", () => {
+  it.each(["pending", "scheduled"] as const)(
+    "shows lessons attended with another teacher as %s alongside teaching sessions",
+    async (status) => {
+      const attending = {
+        id: "ceyda-session",
+        occurrenceStartsAt: "2030-01-16T09:00:00Z",
+        startsAt: "2030-01-16T09:00:00Z",
+        endsAt: "2030-01-16T09:30:00Z",
+        providerName: "Ceyda",
+        timeZone: "UTC",
+        status,
+        canChange: true,
+        canReschedule: true,
+        minimumNoticeHours: 24,
+      };
+      const baseFetch = calendarFetchMock();
+      const fetchMock = vi.fn((input: RequestInfo | URL, init?: RequestInit) =>
+        String(input).includes("/api/account/appointments")
+          ? Promise.resolve(Response.json({ appointments: [attending] }))
+          : baseFetch(input, init),
+      );
+      vi.stubGlobal("fetch", fetchMock);
+      const realCopy = en.ProviderWorkspace.appointments;
+      render(<ProviderAppointments copy={realCopy} />);
+      let events: Array<Record<string, unknown>> = [];
+      await act(async () => {
+        events = await (
+          calendar.props!.events as (range: {
+            start: Date;
+            end: Date;
+          }) => Promise<typeof events>
+        )({
+          start: new Date("2030-01-14T00:00:00Z"),
+          end: new Date("2030-01-21T00:00:00Z"),
+        });
+      });
+      expect(events).toHaveLength(2);
+      const event = events.find((item) =>
+        String(item.id).startsWith("attending:"),
+      )!;
+      expect(event).toMatchObject({
+        start: "2030-01-16T12:00:00",
+        end: "2030-01-16T12:30:00",
+        editable: false,
+        startEditable: false,
+        durationEditable: false,
+        borderColor: "#2563eb",
+      });
+      expect(event.title).toBe(
+        `Lesson with Ceyda · ${status === "pending" ? realCopy.pendingRequest : realCopy.attendingConfirmed}`,
+      );
+      expect(
+        events.find((item) => item.id === scheduledAppointment.id),
+      ).toMatchObject({ editable: true });
+      act(() =>
+        (calendar.props!.eventClick as (info: { event: unknown }) => void)({
+          event,
+        }),
+      );
+      expect(
+        screen.getByRole("heading", { name: realCopy.attendingSession }),
+      ).toBeTruthy();
+      expect(
+        screen.queryByRole("heading", { name: realCopy.editSession }),
+      ).toBeNull();
+      expect(
+        screen
+          .getByRole("link", { name: realCopy.manageAttending })
+          .getAttribute("href"),
+      ).toBe("/en/account");
+      const revert = vi.fn();
+      await act(async () => {
+        await (calendar.props!.eventDrop as (info: unknown) => Promise<void>)({
+          oldEvent: event,
+          event,
+          revert,
+        });
+      });
+      expect(revert).toHaveBeenCalledOnce();
+      expect(
+        fetchMock.mock.calls.some(([, init]) => init?.method === "PATCH"),
+      ).toBe(false);
+    },
+  );
+  it("keeps teaching sessions visible if the attendee calendar fails", async () => {
+    const baseFetch = calendarFetchMock();
+    vi.stubGlobal("fetch", (input: RequestInfo | URL, init?: RequestInit) =>
+      String(input).includes("/api/account/appointments")
+        ? Promise.reject(new TypeError("offline"))
+        : baseFetch(input, init),
+    );
+    render(<ProviderAppointments copy={en.ProviderWorkspace.appointments} />);
+    let events: unknown[] = [];
+    await act(async () => {
+      events = await (
+        calendar.props!.events as (range: {
+          start: Date;
+          end: Date;
+        }) => Promise<unknown[]>
+      )({
+        start: new Date("2030-01-14T00:00:00Z"),
+        end: new Date("2030-01-21T00:00:00Z"),
+      });
+    });
+    expect(events).toHaveLength(1);
+    expect(screen.getByRole("alert").textContent).toBe(
+      en.ProviderWorkspace.appointments.attendingLoadError,
+    );
+  });
   it.each(["en", "tr"] as const)(
     "shows the conflicting student's name in %s while preserving the edit",
     async (locale) => {
@@ -264,6 +373,8 @@ describe("provider appointments calendar", () => {
   it("loads the visible range through an event source without a datesSet state loop", async () => {
     const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input);
+      if (url.includes("/api/account/appointments"))
+        return Response.json({ appointments: [] });
       if (url.includes("/api/provider/students")) {
         return Response.json({ students: [] });
       }
@@ -377,6 +488,8 @@ describe("provider appointments calendar", () => {
   it("renders a weekly free-time window as bordered, labeled slots", async () => {
     const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input);
+      if (url.includes("/api/account/appointments"))
+        return Response.json({ appointments: [] });
       if (url.includes("/api/provider/students")) {
         return Response.json({ students: [] });
       }
@@ -455,6 +568,8 @@ describe("provider appointments calendar", () => {
     const fetchMock = vi.fn(
       async (input: RequestInfo | URL, init?: RequestInit) => {
         const url = String(input);
+        if (url.includes("/api/account/appointments"))
+          return Response.json({ appointments: [] });
         if (url.includes("/api/provider/students")) {
           return Response.json({ students: [] });
         }
@@ -509,6 +624,8 @@ describe("provider appointments calendar", () => {
     const fetchMock = vi.fn(
       async (input: RequestInfo | URL, init?: RequestInit) => {
         const url = String(input);
+        if (url.includes("/api/account/appointments"))
+          return Response.json({ appointments: [] });
         if (url.includes("/api/provider/students")) {
           return Response.json({ students: [] });
         }
@@ -576,6 +693,8 @@ describe("provider appointments calendar", () => {
     const fetchMock = vi.fn(
       async (input: RequestInfo | URL, init?: RequestInit) => {
         const url = String(input);
+        if (url.includes("/api/account/appointments"))
+          return Response.json({ appointments: [] });
         if (url.includes("/api/provider/students")) {
           return Response.json({ students: [] });
         }
@@ -628,6 +747,8 @@ describe("provider appointments calendar", () => {
     const confirm = vi.fn(() => false);
     const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input);
+      if (url.includes("/api/account/appointments"))
+        return Response.json({ appointments: [] });
       if (url.includes("/api/provider/students")) {
         return Response.json({
           students: [
@@ -686,6 +807,8 @@ describe("provider appointments calendar", () => {
     };
     const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input);
+      if (url.includes("/api/account/appointments"))
+        return Response.json({ appointments: [] });
       if (url.includes("/api/provider/students")) {
         return Response.json({ students: [] });
       }
@@ -880,6 +1003,8 @@ function calendarFetchMock({
 } = {}) {
   return vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = String(input);
+    if (url.includes("/api/account/appointments"))
+      return Response.json({ appointments: [] });
     if (url.includes("/api/provider/personal-activities"))
       return Response.json({ activities: [] });
     if (url.includes("/api/provider/students")) {

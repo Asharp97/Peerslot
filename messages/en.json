@@ -12,7 +12,8 @@
       { "label": "Product", "href": "/#product" },
       { "label": "How it works", "href": "/#how-it-works" },
       { "label": "Guardrails", "href": "/#guardrails" },
-      { "label": "For teachers", "href": "/#for-teachers" }
+      { "label": "For teachers", "href": "/#for-teachers" },
+      { "label": "My dashboard", "href": "/account" }
     ],
     "languageSwitcher": {
       "label": "Choose language",
@@ -147,7 +148,7 @@
         { "label": "Privacy", "href": "/policy/privacy" },
         { "label": "Terms", "href": "/policy/terms-agreements" },
         { "label": "Cookies", "href": "/policy/cookies" },
-        { "label": "Manage account", "href": "/account" }
+        { "label": "My dashboard", "href": "/account" }
       ],
       "copyright": "© {year} PeerSlot"
     }
@@ -155,15 +156,15 @@
   "Account": {
     "appointments": {
       "title": "Your appointments",
-      "intro": "View and manage your bookings for the next 90 days.",
-      "empty": "You have no upcoming appointments.",
+      "intro": "Your bookings and sessions assigned to your verified email appear here, including weekly lessons.",
+      "empty": "No appointments in this week.",
       "loading": "Loading appointments…",
       "reschedule": "Reschedule",
       "cancel": "Cancel appointment",
       "pending": "Awaiting confirmation",
       "scheduled": "Confirmed",
       "notice": "Changes require at least {hours} hours before this appointment starts.",
-      "locked": "This appointment is too close to change or cancel.",
+      "locked": "This appointment has started or is inside the notice period and cannot be changed or cancelled.",
       "rescheduleTitle": "Reschedule appointment",
       "rescheduleBody": "Choose an available time in the next 30 days. The notice period applies to your current appointment, so you can choose an earlier slot too.",
       "cancelTitle": "Cancel appointment?",
@@ -177,15 +178,22 @@
       "loadError": "Your appointments or available times could not be loaded. Please try again.",
       "saveError": "This change could not be saved. The selected time may no longer be available.",
       "noticeError": "Your current appointment is now inside the notice period and can no longer be changed or cancelled.",
-      "changedError": "This appointment has changed. Refresh the page and try again."
+      "changedError": "This appointment has changed. Refresh the page and try again.",
+      "calendarTitle": "Your appointment calendar",
+      "calendarTimeZone": "Calendar times shown in {timeZone}",
+      "withTeacher": "Lesson with {name}",
+      "weekAppointments": "Appointments this week",
+      "refresh": "Refresh",
+      "detailsTitle": "Appointment details",
+      "detailsBody": "Review your lesson and manage it according to your teacher’s notice period."
     },
     "controls": {
-      "eyebrow": "Account",
-      "title": "Your PeerSlot data.",
-      "intro": "Review your data choices in one place. Downloads are generated directly for your signed-in account.",
+      "eyebrow": "My dashboard",
+      "title": "Your PeerSlot calendar.",
+      "intro": "See your lessons, manage appointments, and access your account settings.",
       "loading": "Checking your account…",
-      "signedOutTitle": "Sign in to manage your data.",
-      "signedOutBody": "For security, PeerSlot only allows an authenticated account owner to export or delete account data.",
+      "signedOutTitle": "Sign in to your dashboard.",
+      "signedOutBody": "Use the same account and verified email you use with your teachers to see your bookings and assigned sessions.",
       "signInAction": "Sign in",
       "emailLabel": "Email",
       "passwordLabel": "Password",
@@ -494,7 +502,8 @@
       "signOut": "Sign out",
       "loadError": "We couldn't load your workspace. Please refresh and try again.",
       "students": "Manage students",
-      "personalActivities": "Personal activities"
+      "personalActivities": "Personal activities",
+      "myAppointments": "My appointments"
     },
     "overview": {
       "eyebrow": "Your week at a glance",
@@ -658,7 +667,14 @@
       "endDate": "End date",
       "activityDurationLabel": "Default duration (minutes, optional)",
       "activityDurationHelp": "Leave blank to choose times manually. A default calculates the end from your start time; existing schedules stay unchanged.",
-      "activityDurationApplied": "Default: {minutes} minutes. The end follows your start time; you can adjust it for this schedule."
+      "activityDurationApplied": "Default: {minutes} minutes. The end follows your start time; you can adjust it for this schedule.",
+      "attendingSession": "Lessons I attend",
+      "attendingWith": "Lesson with {name}",
+      "attendingDescription": "This lesson is hosted by another teacher. Manage your attendance from your dashboard.",
+      "attendingConfirmed": "Confirmed",
+      "attendingLoadError": "Your lessons with other teachers could not be loaded. Refresh the calendar to try again.",
+      "manageAttending": "Manage my appointments",
+      "refreshCalendar": "Refresh"
     },
     "requests": {
       "eyebrow": "Appointment requests",

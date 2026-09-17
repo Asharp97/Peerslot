@@ -137,6 +137,8 @@ function setup({
   const fetchMock = vi.fn(
     async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input);
+      if (url.includes("/api/account/appointments"))
+        return Response.json({ appointments: [] });
       if (url.includes("/api/provider/personal-activities"))
         return Response.json({ activities: [] });
       if (url === "/api/provider/students") return Response.json({ students });

@@ -12,7 +12,10 @@ vi.mock("@/db", () => ({
       const query = {
         from: () => query,
         innerJoin: () => query,
-        where: mocks.rows,
+        leftJoin: () => query,
+        where: () => query,
+        then: (resolve: (value: unknown) => unknown) =>
+          mocks.rows().then(resolve),
       };
       return query;
     },
@@ -36,6 +39,7 @@ const oldStart = new Date("2030-01-18T09:00:00Z");
 const nearStart = new Date("2030-01-15T10:00:00Z");
 function row(startsAt = oldStart) {
   return {
+    owned: true,
     appointment: {
       id: "appointment-id",
       studentId: "student-id",

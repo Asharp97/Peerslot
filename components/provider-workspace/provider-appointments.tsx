@@ -86,6 +86,10 @@ import {
 } from "./calendar-create-popover";
 
 import { useProviderWorkspace } from "./provider-shell";
+import {
+  attendingAppointmentToEvent,
+  type AttendingAppointment,
+} from "@/lib/attending-appointment";
 
 type ProviderStudent = {
   id: string;
@@ -149,6 +153,13 @@ type CalendarContextTarget = {
 };
 
 export type ProviderAppointmentsCopy = CalendarCreatePopoverCopy & {
+  attendingSession: string;
+  attendingWith: string;
+  attendingDescription: string;
+  attendingConfirmed: string;
+  attendingLoadError: string;
+  manageAttending: string;
+  refreshCalendar: string;
   eyebrow: string;
   title: string;
   addToTimetable: string;
@@ -277,6 +288,9 @@ export function ProviderAppointments({
     useState(false);
   const [interactionSaving, setInteractionSaving] = useState(false);
   const [error, setError] = useState("");
+  const [attendingError, setAttendingError] = useState("");
+  const [attendingSelection, setAttendingSelection] =
+    useState<AttendingAppointment | null>(null);
   const [draft, setDraft] = useState<SessionDraft | null>(null);
   const [contextTarget, setContextTarget] =
     useState<CalendarContextTarget | null>(null);
@@ -284,6 +298,11 @@ export function ProviderAppointments({
     useState<CalendarAppointment | null>(null);
   const calendarRef = useRef<FullCalendar>(null);
   const timeZone = data.bookingPage.timeZone;
+  useEffect(() => {
+    const refresh = () => calendarRef.current?.getApi().refetchEvents();
+    window.addEventListener("focus", refresh);
+    return () => window.removeEventListener("focus", refresh);
+  }, []);
   const earliestAvailability = useMemo(
     () =>
       earliestAvailabilityLocal({
@@ -300,27 +319,38 @@ export function ProviderAppointments({
       try {
         const startsAt = new Date(fetchInfo.start.getTime() - 86_400_000);
         const endsAt = new Date(fetchInfo.end.getTime() + 86_400_000);
-        const [appointmentsResponse, activitiesResponse, windowsResponse] =
-          await Promise.all([
-            fetch(
-              `/api/provider/appointments?startsAt=${encodeURIComponent(startsAt.toISOString())}&endsAt=${encodeURIComponent(endsAt.toISOString())}`,
-              {
-                headers: { Authorization: `Bearer ${accessToken}` },
-                cache: "no-store",
-              },
-            ),
-            fetch(
-              `/api/provider/personal-activities/schedules?startsAt=${encodeURIComponent(startsAt.toISOString())}&endsAt=${encodeURIComponent(endsAt.toISOString())}`,
-              {
-                headers: { Authorization: `Bearer ${accessToken}` },
-                cache: "no-store",
-              },
-            ),
-            fetch("/api/availability-windows", {
+        const [
+          appointmentsResponse,
+          activitiesResponse,
+          windowsResponse,
+          attendingResponse,
+        ] = await Promise.all([
+          fetch(
+            `/api/provider/appointments?startsAt=${encodeURIComponent(startsAt.toISOString())}&endsAt=${encodeURIComponent(endsAt.toISOString())}`,
+            {
               headers: { Authorization: `Bearer ${accessToken}` },
               cache: "no-store",
-            }),
-          ]);
+            },
+          ),
+          fetch(
+            `/api/provider/personal-activities/schedules?startsAt=${encodeURIComponent(startsAt.toISOString())}&endsAt=${encodeURIComponent(endsAt.toISOString())}`,
+            {
+              headers: { Authorization: `Bearer ${accessToken}` },
+              cache: "no-store",
+            },
+          ),
+          fetch("/api/availability-windows", {
+            headers: { Authorization: `Bearer ${accessToken}` },
+            cache: "no-store",
+          }),
+          fetch(
+            `/api/account/appointments?${new URLSearchParams({ startsAt: startsAt.toISOString(), endsAt: endsAt.toISOString() })}`,
+            {
+              headers: { Authorization: `Bearer ${accessToken}` },
+              cache: "no-store",
+            },
+          ).catch(() => null),
+        ]);
 
         if (
           !appointmentsResponse.ok ||
@@ -339,8 +369,37 @@ export function ProviderAppointments({
         const activitiesBody = (await activitiesResponse.json()) as {
           activities: PersonalActivityOccurrence[];
         };
+        const attendingBody = attendingResponse?.ok
+          ? ((await attendingResponse.json().catch(() => null)) as {
+              appointments?: AttendingAppointment[];
+            } | null)
+          : null;
+        setAttendingError(
+          Array.isArray(attendingBody?.appointments)
+            ? ""
+            : copy.attendingLoadError,
+        );
+        const attendingAppointments = Array.isArray(attendingBody?.appointments)
+          ? attendingBody.appointments.filter(
+              (appointment) =>
+                !appointmentsBody.appointments.some(
+                  (hosted) => hosted.appointmentId === appointment.id,
+                ),
+            )
+          : [];
         setError("");
         return [
+          ...attendingAppointments.map((appointment) =>
+            attendingAppointmentToEvent(
+              appointment,
+              {
+                withTeacher: copy.attendingWith,
+                pending: copy.pendingRequest,
+                scheduled: copy.attendingConfirmed,
+              },
+              timeZone,
+            ),
+          ),
           ...activitiesBody.activities.map((activity) => ({
             id: `personal:${activity.id}`,
             title: activity.name,
@@ -400,6 +459,9 @@ export function ProviderAppointments({
       copy.loadError,
       copy.oneTime,
       copy.pendingRequest,
+      copy.attendingWith,
+      copy.attendingConfirmed,
+      copy.attendingLoadError,
       data.bookingPage.appointmentDurationMinutes,
       data.bookingPage.bookingIntervalMinutes,
       timeZone,
@@ -537,6 +599,10 @@ export function ProviderAppointments({
           ?.getApi()
           .getEventById(eventElement.dataset.calendarEventId!)
       : null;
+    if (calendarEvent?.extendedProps.attendingAppointment) {
+      setContextTarget(null);
+      return;
+    }
     const appointment = calendarEvent?.extendedProps.appointment as
       CalendarAppointment | undefined;
     const date =
@@ -616,6 +682,13 @@ export function ProviderAppointments({
       setQuickCreate(null);
       const activity = info.event.extendedProps.personalActivity as
         PersonalActivityOccurrence | undefined;
+      const attending = info.event.extendedProps.attendingAppointment as
+        AttendingAppointment | undefined;
+      if (attending) {
+        setDialogOpen(false);
+        setAttendingSelection(attending);
+        return;
+      }
       if (activity) {
         const start = splitProviderDateTime(
           activity.isMoved ? activity.startsAt : activity.ruleStartsAt,
@@ -732,6 +805,10 @@ export function ProviderAppointments({
 
   const handleCalendarEventChange = useCallback(
     async (info: EventDropArg | EventResizeDoneArg, resize = false) => {
+      if (info.oldEvent.extendedProps.attendingAppointment) {
+        info.revert();
+        return;
+      }
       const appointment = info.oldEvent.extendedProps.appointment as
         CalendarAppointment | undefined;
       const start = info.event.start;
@@ -1178,12 +1255,23 @@ export function ProviderAppointments({
               <span className="size-2 rounded-full bg-[#b7791f]" />
               {copy.personalActivity}
             </span>
+            <span className="flex items-center gap-1.5">
+              <span className="size-2 rounded-full bg-[#2563eb]" />
+              {copy.attendingSession}
+            </span>
           </div>
           <p className="mt-2 max-w-2xl text-xs text-black/45">
             {copy.dragHint} {copy.copyPasteHint}
           </p>
         </div>
         <div className="flex flex-wrap justify-end gap-2">
+          <Button
+            variant="outline"
+            disabled={loading || saving || interactionSaving || quickCreating}
+            onClick={() => calendarRef.current?.getApi().refetchEvents()}
+          >
+            {copy.refreshCalendar}
+          </Button>
           <Button
             className="min-h-11 rounded-full bg-vast-ink px-5 font-bold text-white"
             disabled={quickCreating}
@@ -1205,6 +1293,63 @@ export function ProviderAppointments({
           {copy.sessionCopied.replace("{name}", copiedAppointment.studentName)}
         </p>
       ) : null}
+
+      {attendingError ? (
+        <p
+          role="alert"
+          className="mb-3 rounded-xl bg-amber-50 px-4 py-3 text-sm"
+        >
+          {attendingError}
+        </p>
+      ) : null}
+
+      <Dialog
+        open={!!attendingSelection}
+        onOpenChange={(open) => {
+          if (!open) setAttendingSelection(null);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{copy.attendingSession}</DialogTitle>
+            <DialogDescription>{copy.attendingDescription}</DialogDescription>
+          </DialogHeader>
+          {attendingSelection ? (
+            <>
+              <p className="font-semibold">
+                {copy.attendingWith.replace(
+                  "{name}",
+                  attendingSelection.providerName,
+                )}
+              </p>
+              <p className="text-sm">
+                {new Intl.DateTimeFormat(locale, {
+                  timeZone: attendingSelection.timeZone,
+                  dateStyle: "medium",
+                  timeStyle: "short",
+                }).format(new Date(attendingSelection.startsAt))}{" "}
+                –{" "}
+                {new Intl.DateTimeFormat(locale, {
+                  timeZone: attendingSelection.timeZone,
+                  timeStyle: "short",
+                }).format(new Date(attendingSelection.endsAt))}
+              </p>
+              <p className="text-xs text-black/55">
+                {attendingSelection.timeZone} ·{" "}
+                {attendingSelection.status === "pending"
+                  ? copy.pendingRequest
+                  : copy.attendingConfirmed}
+              </p>
+              <a
+                className="text-sm font-semibold underline"
+                href={`/${locale}/account`}
+              >
+                {copy.manageAttending}
+              </a>
+            </>
+          ) : null}
+        </DialogContent>
+      </Dialog>
 
       <ContextMenu modal={false}>
         <section
@@ -1253,7 +1398,11 @@ export function ProviderAppointments({
                 eventResize={(info) =>
                   void handleCalendarEventChange(info, true)
                 }
-                eventAllow={() => !interactionSaving && !quickCreating}
+                eventAllow={(_drop, event) =>
+                  !event?.extendedProps.attendingAppointment &&
+                  !interactionSaving &&
+                  !quickCreating
+                }
                 eventMinHeight={34}
                 eventTimeFormat={calendarEventTimeFormat}
                 events={loadCalendarEvents}
@@ -1901,6 +2050,16 @@ function Field({
 }
 
 function renderSession(info: EventContentArg) {
+  if (info.event.extendedProps.attendingAppointment) {
+    return (
+      <div className="min-w-0 overflow-hidden px-1 py-0.5 leading-tight">
+        <p className="truncate text-[9px] font-bold opacity-75">
+          {info.timeText}
+        </p>
+        <p className="text-[11px] font-bold">{info.event.title}</p>
+      </div>
+    );
+  }
   if (
     info.event.extendedProps.availabilitySlot ||
     info.event.extendedProps.personalActivity

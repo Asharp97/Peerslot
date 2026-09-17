@@ -35,6 +35,41 @@ beforeEach(() => {
   mocks.times.mockResolvedValue([]);
 });
 describe("student appointment API", () => {
+  it.each([false, true])(
+    "serves the authenticated attendee's calendar regardless of provider capability: %s",
+    async (canProvide) => {
+      mocks.user.mockResolvedValue({
+        user: { id: "attendee" },
+        capabilities: { canProvide },
+      });
+      const response = await list(
+        new Request(
+          "http://localhost/api/account/appointments?startsAt=2030-01-14T00:00:00Z&endsAt=2030-01-21T00:00:00Z&studentId=other&email=other@example.com",
+        ),
+      );
+      expect(response.status).toBe(200);
+      expect(response.headers.get("Cache-Control")).toBe("no-store");
+      expect(mocks.list).toHaveBeenCalledWith("attendee", expect.any(Date), {
+        startsAt: new Date("2030-01-14T00:00:00Z"),
+        endsAt: new Date("2030-01-21T00:00:00Z"),
+      });
+    },
+  );
+  it.each([
+    "startsAt=invalid&endsAt=2030-01-21T00:00:00Z",
+    "startsAt=2030-01-21T00:00:00Z",
+    "startsAt=2030-01-21T00:00:00Z&endsAt=2030-01-14T00:00:00Z",
+    "startsAt=2030-01-01T00:00:00Z&endsAt=2031-01-01T00:00:00Z",
+  ])("rejects invalid or excessive calendar ranges: %s", async (query) => {
+    expect(
+      (
+        await list(
+          new Request(`http://localhost/api/account/appointments?${query}`),
+        )
+      ).status,
+    ).toBe(400);
+    expect(mocks.list).not.toHaveBeenCalled();
+  });
   it("requires authentication for both reads and changes", async () => {
     mocks.user.mockResolvedValue(null);
     expect((await list(new Request(url))).status).toBe(401);

@@ -12,7 +12,8 @@
       { "label": "Ürün", "href": "/#product" },
       { "label": "Nasıl çalışır?", "href": "/#how-it-works" },
       { "label": "Kurallar", "href": "/#guardrails" },
-      { "label": "Öğretmenler için", "href": "/#for-teachers" }
+      { "label": "Öğretmenler için", "href": "/#for-teachers" },
+      { "label": "Panelim", "href": "/account" }
     ],
     "languageSwitcher": {
       "label": "Dil seçin",
@@ -147,7 +148,7 @@
         { "label": "Gizlilik", "href": "/policy/privacy" },
         { "label": "Koşullar", "href": "/policy/terms-agreements" },
         { "label": "Çerezler", "href": "/policy/cookies" },
-        { "label": "Hesabı yönet", "href": "/account" }
+        { "label": "Panelim", "href": "/account" }
       ],
       "copyright": "© {year} PeerSlot"
     }
@@ -155,15 +156,15 @@
   "Account": {
     "appointments": {
       "title": "Randevularınız",
-      "intro": "Önümüzdeki 90 gün içindeki randevularınızı görüntüleyin ve yönetin.",
-      "empty": "Yaklaşan randevunuz yok.",
+      "intro": "Rezervasyonlarınız ve doğrulanmış e-posta adresinize atanan dersler, haftalık dersler dahil burada görünür.",
+      "empty": "Bu hafta randevunuz yok.",
       "loading": "Randevular yükleniyor…",
       "reschedule": "Yeniden planla",
       "cancel": "Randevuyu iptal et",
       "pending": "Onay bekleniyor",
       "scheduled": "Onaylandı",
       "notice": "Değişiklikler, bu randevu başlamadan en az {hours} saat önce yapılmalıdır.",
-      "locked": "Bu randevuyu değiştirmek veya iptal etmek için çok geç.",
+      "locked": "Bu randevu başlamış veya bildirim süresi içine girmiş; değiştirilemez ya da iptal edilemez.",
       "rescheduleTitle": "Randevuyu yeniden planla",
       "rescheduleBody": "Önümüzdeki 30 gün içinden uygun bir saat seçin. Bildirim süresi mevcut randevunuza uygulanır; daha yakın bir saat de seçebilirsiniz.",
       "cancelTitle": "Randevu iptal edilsin mi?",
@@ -177,15 +178,22 @@
       "loadError": "Randevularınız veya uygun saatler yüklenemedi. Lütfen tekrar deneyin.",
       "saveError": "Değişiklik kaydedilemedi. Seçilen saat artık uygun olmayabilir.",
       "noticeError": "Mevcut randevunuz için bildirim süresi doldu; artık değiştirilemez veya iptal edilemez.",
-      "changedError": "Bu randevu değişti. Sayfayı yenileyip tekrar deneyin."
+      "changedError": "Bu randevu değişti. Sayfayı yenileyip tekrar deneyin.",
+      "calendarTitle": "Randevu takviminiz",
+      "calendarTimeZone": "Takvim saatleri {timeZone} saat diliminde gösterilir",
+      "withTeacher": "{name} ile ders",
+      "weekAppointments": "Bu haftaki randevular",
+      "refresh": "Yenile",
+      "detailsTitle": "Randevu ayrıntıları",
+      "detailsBody": "Dersinizi inceleyin ve öğretmeninizin bildirim süresine göre yönetin."
     },
     "controls": {
-      "eyebrow": "Hesap",
-      "title": "PeerSlot verileriniz.",
-      "intro": "Veri seçeneklerinizi tek bir yerden yönetin. İndirmeler doğrudan giriş yaptığınız hesap için oluşturulur.",
+      "eyebrow": "Panelim",
+      "title": "PeerSlot takviminiz.",
+      "intro": "Derslerinizi görün, randevularınızı yönetin ve hesap ayarlarınıza erişin.",
       "loading": "Hesabınız kontrol ediliyor…",
-      "signedOutTitle": "Verilerinizi yönetmek için giriş yapın.",
-      "signedOutBody": "Güvenlik nedeniyle PeerSlot, hesap verilerini yalnızca kimliği doğrulanmış hesap sahibinin dışa aktarmasına veya silmesine izin verir.",
+      "signedOutTitle": "Panelinize giriş yapın.",
+      "signedOutBody": "Rezervasyonlarınızı ve size atanan dersleri görmek için öğretmenlerinizle kullandığınız aynı hesap ve doğrulanmış e-posta adresiyle giriş yapın.",
       "signInAction": "Giriş yap",
       "emailLabel": "E-posta",
       "passwordLabel": "Parola",
@@ -494,7 +502,8 @@
       "signOut": "Çıkış yap",
       "loadError": "Çalışma alanınız yüklenemedi. Lütfen sayfayı yenileyip tekrar deneyin.",
       "students": "Öğrencileri yönet",
-      "personalActivities": "Kişisel aktiviteler"
+      "personalActivities": "Kişisel aktiviteler",
+      "myAppointments": "Randevularım"
     },
     "overview": {
       "eyebrow": "Haftanıza genel bakış",
@@ -658,7 +667,14 @@
       "endDate": "Bitiş tarihi",
       "activityDurationLabel": "Varsayılan süre (dakika, isteğe bağlı)",
       "activityDurationHelp": "Boş bırakırsanız saatleri kendiniz seçebilirsiniz. Varsayılan süre, başlangıç saatinden bitişi hesaplar; mevcut planlamalar değişmez.",
-      "activityDurationApplied": "Varsayılan süre: {minutes} dakika. Bitiş, başlangıç saatine göre hesaplanır; bu planlama için değiştirebilirsiniz."
+      "activityDurationApplied": "Varsayılan süre: {minutes} dakika. Bitiş, başlangıç saatine göre hesaplanır; bu planlama için değiştirebilirsiniz.",
+      "attendingSession": "Katıldığım dersler",
+      "attendingWith": "{name} ile ders",
+      "attendingDescription": "Bu dersi başka bir öğretmen veriyor. Katılımınızı kendi panelinizden yönetin.",
+      "attendingConfirmed": "Onaylandı",
+      "attendingLoadError": "Diğer öğretmenlerle olan dersleriniz yüklenemedi. Tekrar denemek için takvimi yenileyin.",
+      "manageAttending": "Randevularımı yönet",
+      "refreshCalendar": "Yenile"
     },
     "requests": {
       "eyebrow": "Randevu talepleri",

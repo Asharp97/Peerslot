@@ -1,6 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import FullCalendar from "@fullcalendar/react";
+import timeGridPlugin from "@fullcalendar/timegrid";
+import trLocale from "@fullcalendar/core/locales/tr";
+import {
+  attendingAppointmentToEvent,
+  type AttendingAppointment as StudentAppointment,
+} from "@/lib/attending-appointment";
 import { LoaderCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,6 +28,13 @@ import {
 } from "@/components/ui/select";
 
 export type StudentAppointmentsCopy = {
+  calendarTitle: string;
+  calendarTimeZone: string;
+  withTeacher: string;
+  weekAppointments: string;
+  refresh: string;
+  detailsTitle: string;
+  detailsBody: string;
   title: string;
   intro: string;
   empty: string;
@@ -47,18 +61,8 @@ export type StudentAppointmentsCopy = {
   changedError: string;
 };
 
-type StudentAppointment = {
-  id: string;
-  occurrenceStartsAt: string;
-  startsAt: string;
-  endsAt: string;
-  providerName: string;
-  timeZone: string;
-  status: "pending" | "scheduled";
-  minimumNoticeHours: number;
-  canChange: boolean;
-  canReschedule: boolean;
-};
+const calendarPlugins = [timeGridPlugin];
+const calendarLocales = [trLocale];
 
 export function StudentAppointments({
   accessToken,
@@ -71,6 +75,13 @@ export function StudentAppointments({
 }) {
   const [appointments, setAppointments] = useState<StudentAppointment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [calendarRange, setCalendarRange] = useState<{
+    startsAt: string;
+    endsAt: string;
+  } | null>(null);
+  const [timeZone, setTimeZone] = useState("");
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [viewing, setViewing] = useState<StudentAppointment | null>(null);
   const [selection, setSelection] = useState<{
     appointment: StudentAppointment;
     action: "reschedule" | "cancel";
@@ -84,7 +95,10 @@ export function StudentAppointments({
   const [error, setError] = useState("");
 
   const loadAppointments = useCallback(async () => {
-    const response = await fetch("/api/account/appointments", {
+    const params = calendarRange
+      ? `?${new URLSearchParams(calendarRange)}`
+      : "";
+    const response = await fetch(`/api/account/appointments${params}`, {
       headers: { Authorization: `Bearer ${accessToken}` },
       cache: "no-store",
     });
@@ -93,16 +107,37 @@ export function StudentAppointments({
       appointments: StudentAppointment[];
     };
     return body.appointments;
-  }, [accessToken, copy.loadError]);
+  }, [accessToken, copy.loadError, calendarRange]);
+
+  useEffect(() => {
+    const refresh = () => setRefreshKey((value) => value + 1);
+    window.addEventListener("focus", refresh);
+    return () => window.removeEventListener("focus", refresh);
+  }, []);
+
+  const calendarEvents = useMemo(
+    () =>
+      appointments.map((appointment) =>
+        attendingAppointmentToEvent(appointment, copy),
+      ),
+    [appointments, copy],
+  );
 
   useEffect(() => {
     let cancelled = false;
     async function initialize() {
+      setLoading(true);
       try {
         const result = await loadAppointments();
-        if (!cancelled) setAppointments(result);
+        if (!cancelled) {
+          setAppointments(result);
+          setError("");
+        }
       } catch {
-        if (!cancelled) setError(copy.loadError);
+        if (!cancelled) {
+          setAppointments([]);
+          setError(copy.loadError);
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -111,7 +146,7 @@ export function StudentAppointments({
     return () => {
       cancelled = true;
     };
-  }, [loadAppointments, copy.loadError]);
+  }, [loadAppointments, copy.loadError, refreshKey]);
 
   useEffect(() => {
     if (!selection || selection.action !== "reschedule") return;
@@ -156,6 +191,7 @@ export function StudentAppointments({
     appointment: StudentAppointment,
     action: "cancel" | "reschedule",
   ) {
+    setViewing(null);
     setError("");
     setTimes([]);
     setSelectedTime("");
@@ -199,7 +235,7 @@ export function StudentAppointments({
         );
       }
       setSelection(null);
-      setAppointments(await loadAppointments());
+      setRefreshKey((value) => value + 1);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : copy.saveError);
     } finally {
@@ -219,6 +255,65 @@ export function StudentAppointments({
     <section className="mt-10 rounded-[28px] border border-black/10 bg-white p-6 sm:p-8">
       <h2 className="font-display text-3xl">{copy.title}</h2>
       <p className="mt-2 text-sm text-black/55">{copy.intro}</p>
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+        <p className="text-xs text-black/55">
+          {timeZone
+            ? copy.calendarTimeZone.replace("{timeZone}", timeZone)
+            : ""}
+        </p>
+        <Button
+          variant="outline"
+          disabled={loading || saving}
+          onClick={() => setRefreshKey((value) => value + 1)}
+        >
+          {copy.refresh}
+        </Button>
+      </div>
+      <div
+        aria-label={copy.calendarTitle}
+        aria-busy={loading}
+        className="provider-calendar mt-4 min-w-0 overflow-hidden"
+      >
+        <FullCalendar
+          plugins={calendarPlugins}
+          locales={calendarLocales}
+          locale={locale}
+          initialView="timeGridWeek"
+          firstDay={1}
+          allDaySlot={false}
+          editable={false}
+          nowIndicator
+          timeZone="local"
+          height={600}
+          scrollTime="08:00:00"
+          slotDuration="00:30:00"
+          headerToolbar={{
+            left: "prev,next today",
+            center: "title",
+            right: "",
+          }}
+          events={calendarEvents}
+          datesSet={({ start, end }) => {
+            setTimeZone(Intl.DateTimeFormat().resolvedOptions().timeZone);
+            const next = {
+              startsAt: start.toISOString(),
+              endsAt: end.toISOString(),
+            };
+            setCalendarRange((current) =>
+              current?.startsAt === next.startsAt &&
+              current.endsAt === next.endsAt
+                ? current
+                : next,
+            );
+          }}
+          eventClick={({ event }) =>
+            setViewing(
+              event.extendedProps.attendingAppointment as StudentAppointment,
+            )
+          }
+        />
+      </div>
+      <h3 className="mt-6 font-semibold">{copy.weekAppointments}</h3>
       {error && !selection ? (
         <p role="alert" className="mt-4 text-sm text-red-700">
           {error}
@@ -277,6 +372,57 @@ export function StudentAppointments({
           ))}
         </ul>
       )}
+      <Dialog
+        open={!!viewing}
+        onOpenChange={(value) => {
+          if (!value) setViewing(null);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{copy.detailsTitle}</DialogTitle>
+            <DialogDescription>{copy.detailsBody}</DialogDescription>
+          </DialogHeader>
+          {viewing ? (
+            <>
+              <p className="font-semibold">
+                {copy.withTeacher.replace("{name}", viewing.providerName)}
+              </p>
+              <p className="text-sm">
+                {formatTime(viewing.startsAt, viewing.timeZone)} –{" "}
+                {formatTime(viewing.endsAt, viewing.timeZone)}
+              </p>
+              <p className="text-xs text-black/55">
+                {viewing.timeZone} · {copy[viewing.status]}
+              </p>
+              <p className="text-xs text-black/55">
+                {viewing.canChange
+                  ? copy.notice.replace(
+                      "{hours}",
+                      String(viewing.minimumNoticeHours),
+                    )
+                  : copy.locked}
+              </p>
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  disabled={!viewing.canReschedule || saving}
+                  onClick={() => open(viewing, "reschedule")}
+                >
+                  {copy.reschedule}
+                </Button>
+                <Button
+                  variant="outline"
+                  disabled={!viewing.canChange || saving}
+                  onClick={() => open(viewing, "cancel")}
+                >
+                  {copy.cancel}
+                </Button>
+              </DialogFooter>
+            </>
+          ) : null}
+        </DialogContent>
+      </Dialog>
       <Dialog
         open={!!selection}
         onOpenChange={(value) => {

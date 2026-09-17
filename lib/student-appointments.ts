@@ -1,11 +1,13 @@
-import { eq } from "drizzle-orm";
+import { and, eq, inArray, isNull, or, sql } from "drizzle-orm";
 
 import { db } from "@/db";
+import { user } from "@/db/auth-schema";
 import {
   appointments,
   availabilitySlots,
   bookingPages,
   providerProfiles,
+  providerStudents,
 } from "@/db/schema";
 import { getAvailableTimesForBookingPage } from "@/lib/available-times";
 import type { AvailableTimeRange } from "@/lib/available-time";
@@ -21,8 +23,28 @@ import {
 } from "@/lib/student-appointment-policy";
 
 async function loadStudentRows(studentId: string) {
+  // Only a verified account can claim an unlinked contact by email. An existing
+  // account link always takes precedence over later edits to the contact email.
+  const owned = sql<boolean>`coalesce(${or(
+    eq(appointments.studentId, studentId),
+    and(
+      isNull(appointments.studentId),
+      eq(user.emailVerified, true),
+      sql`lower(btrim(${providerStudents.email})) = lower(btrim(${user.email}))`,
+    ),
+  )}, false)`;
+  const ownedIds = db
+    .select({ id: appointments.id })
+    .from(appointments)
+    .innerJoin(user, eq(user.id, studentId))
+    .leftJoin(
+      providerStudents,
+      eq(providerStudents.id, appointments.providerStudentId),
+    )
+    .where(owned);
   const rows = await db
     .select({
+      owned,
       appointment: appointments,
       startsAt: availabilitySlots.startsAt,
       endsAt: availabilitySlots.endsAt,
@@ -31,6 +53,11 @@ async function loadStudentRows(studentId: string) {
       restBetweenSessionsMinutes: providerProfiles.restBetweenSessionsMinutes,
     })
     .from(appointments)
+    .innerJoin(user, eq(user.id, studentId))
+    .leftJoin(
+      providerStudents,
+      eq(providerStudents.id, appointments.providerStudentId),
+    )
     .innerJoin(availabilitySlots, eq(availabilitySlots.id, appointments.slotId))
     .innerJoin(
       bookingPages,
@@ -40,7 +67,11 @@ async function loadStudentRows(studentId: string) {
       providerProfiles,
       eq(providerProfiles.userId, availabilitySlots.teacherId),
     )
-    .where(eq(appointments.studentId, studentId));
+    // Include series exceptions before expanding so moved/cancelled occurrences
+    // cannot reappear at the original time. Ownership is applied again afterward.
+    .where(
+      or(owned, inArray(appointments.exceptionForAppointmentId, ownedIds)),
+    );
   return rows.map(({ appointment, ...row }) => ({
     ...appointment,
     ...row,
@@ -53,12 +84,9 @@ type StudentRow = Awaited<ReturnType<typeof loadStudentRows>>[number];
 export async function listStudentAppointments(
   studentId: string,
   now = new Date(),
+  range = { startsAt: now, endsAt: new Date(now.getTime() + 90 * 86_400_000) },
 ) {
   const rows = await loadStudentRows(studentId);
-  const range = {
-    startsAt: now,
-    endsAt: new Date(now.getTime() + 90 * 86_400_000),
-  };
   const pages = new Map(rows.map((row) => [row.page.id, row.page]));
   return [...pages.values()]
     .flatMap((page) =>
@@ -68,7 +96,10 @@ export async function listStudentAppointments(
         page.timeZone,
       ),
     )
-    .filter((row) => row.status === "pending" || row.status === "scheduled")
+    .filter(
+      (row) =>
+        row.owned && (row.status === "pending" || row.status === "scheduled"),
+    )
     .sort((a, b) => a.startsAt.getTime() - b.startsAt.getTime())
     .map((row) => {
       const changeDeadline = studentAppointmentChangeDeadline(
@@ -81,6 +112,7 @@ export async function listStudentAppointments(
         startsAt: row.startsAt.toISOString(),
         endsAt: row.endsAt.toISOString(),
         providerName: row.providerName,
+        recurrence: row.recurrence,
         timeZone: row.page.timeZone,
         status: row.status,
         minimumNoticeHours: row.page.minimumNoticeHours,
@@ -98,7 +130,8 @@ async function requireStudentOccurrence(
 ) {
   const rows = await loadStudentRows(studentId);
   const row = rows.find(
-    (candidate) => candidate.id === id && !candidate.deletedAt,
+    (candidate) =>
+      candidate.id === id && candidate.owned && !candidate.deletedAt,
   );
   if (!row) throw new StudentAppointmentChangeError("not_found");
   if (row.recurrence === "none") {
