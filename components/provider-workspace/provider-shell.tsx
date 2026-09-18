@@ -17,6 +17,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 
@@ -42,6 +43,7 @@ type ProviderWorkspaceState = {
   accessToken: string;
   data: ProviderSetupData;
   refresh: () => Promise<void>;
+  refreshPendingRequestCount: () => Promise<void>;
 };
 
 type ProviderSetupResponse = {
@@ -66,6 +68,8 @@ export function ProviderShell({
   const [accessToken, setAccessToken] = useState("");
   const [data, setData] = useState<ProviderSetupData | null>(null);
   const [error, setError] = useState("");
+  const { pendingRequestCount, refreshPendingRequestCount } =
+    usePendingRequestCount(accessToken, Boolean(data));
 
   const loadProviderSetup = useCallback(
     async (token: string) => {
@@ -126,9 +130,10 @@ export function ProviderShell({
             accessToken,
             data,
             refresh: () => loadProviderSetup(accessToken),
+            refreshPendingRequestCount,
           }
         : null,
-    [accessToken, data, loadProviderSetup],
+    [accessToken, data, loadProviderSetup, refreshPendingRequestCount],
   );
 
   async function signOut() {
@@ -211,15 +216,20 @@ export function ProviderShell({
                       : "text-black/65 hover:bg-black/5 hover:text-vast-ink"
                   }`}
                   href={href}
-                  key={href}
-                >
-                  <Icon
-                    className={
-                      active ? "text-lavender-whisper" : "text-black/45"
-                    }
-                    size={18}
-                  />
-                  {label}
+                  key={href}>
+                  <span className="relative">
+                    {href === "/provider/requests" &&
+                    pendingRequestCount > 0 ? (
+                      <RequestCountBadge count={pendingRequestCount} />
+                    ) : null}
+                    <Icon
+                      className={
+                        active ? "text-lavender-whisper" : "text-black/45"
+                      }
+                      size={18}
+                    />
+                  </span>
+                  <span className="relative">{label}</span>
                 </Link>
               );
             })}
@@ -236,8 +246,7 @@ export function ProviderShell({
           <button
             className="mt-3 flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-semibold text-black/55 hover:bg-black/5 hover:text-vast-ink"
             onClick={signOut}
-            type="button"
-          >
+            type="button">
             <LogOut size={17} /> {copy.signOut}
           </button>
         </aside>
@@ -246,8 +255,7 @@ export function ProviderShell({
           <div className="flex items-center justify-between">
             <Link
               className="flex items-center gap-2 font-bold"
-              href="/provider"
-            >
+              href="/provider">
               <span className="grid size-8 place-items-center rounded-full bg-vast-ink text-xs text-lavender-whisper">
                 P
               </span>
@@ -257,12 +265,11 @@ export function ProviderShell({
               aria-label={copy.signOut}
               className="grid size-9 place-items-center rounded-full border border-black/10 bg-white"
               onClick={signOut}
-              type="button"
-            >
+              type="button">
               <LogOut size={16} />
             </button>
           </div>
-          <nav className="mt-3 flex gap-1 overflow-x-auto pb-1">
+          <nav className="mt-1 flex gap-1 overflow-x-auto pt-2 pb-1">
             {navigation.map(({ href, label }) => {
               const active =
                 href === "/provider"
@@ -272,9 +279,14 @@ export function ProviderShell({
                 <Link
                   className={`shrink-0 rounded-full px-3 py-2 text-xs font-semibold ${active ? "bg-vast-ink text-white" : "bg-white text-black/55"}`}
                   href={href}
-                  key={href}
-                >
-                  {label}
+                  key={href}>
+                  <span className="relative">
+                    {label}
+                    {href === "/provider/requests" &&
+                    pendingRequestCount > 0 ? (
+                      <RequestCountBadge count={pendingRequestCount} />
+                    ) : null}
+                  </span>
                 </Link>
               );
             })}
@@ -282,14 +294,73 @@ export function ProviderShell({
         </header>
 
         <main
-          className={`px-4 py-4 sm:px-6 lg:ml-64 ${isAppointmentsPage ? "lg:px-6 lg:py-6" : "lg:px-10 lg:py-10"}`}
-        >
+          className={`px-4 py-4 sm:px-6 lg:ml-64 ${isAppointmentsPage ? "lg:px-6 lg:py-6" : "lg:px-10 lg:py-10"}`}>
           <div className={isAppointmentsPage ? "w-full" : "mx-auto max-w-6xl"}>
             {children}
           </div>
         </main>
       </div>
     </ProviderWorkspaceContext.Provider>
+  );
+}
+
+function usePendingRequestCount(accessToken: string, enabled: boolean) {
+  const pathname = usePathname();
+  const [pendingRequestCount, setPendingRequestCount] = useState(0);
+  const requestCountVersion = useRef(0);
+
+  const refreshPendingRequestCount = useCallback(async () => {
+    if (!accessToken) return;
+    const version = ++requestCountVersion.current;
+    try {
+      const response = await fetch("/api/provider/appointment-requests", {
+        headers: { Authorization: `Bearer ${accessToken}` },
+        cache: "no-store",
+      });
+      if (!response.ok) return;
+      const body = (await response.json()) as {
+        appointments: { id: string }[];
+      };
+      if (version === requestCountVersion.current) {
+        setPendingRequestCount(body.appointments.length);
+      }
+    } catch {
+      // Keep the last known count if a background refresh fails.
+    }
+  }, [accessToken]);
+
+  useEffect(() => {
+    if (!enabled || !accessToken) return;
+
+    function refreshWhenVisible() {
+      if (document.visibilityState === "visible") {
+        void refreshPendingRequestCount();
+      }
+    }
+
+    async function initialize() {
+      await refreshPendingRequestCount();
+    }
+    void initialize();
+    window.addEventListener("focus", refreshWhenVisible);
+    document.addEventListener("visibilitychange", refreshWhenVisible);
+    const interval = window.setInterval(refreshWhenVisible, 60_000);
+    return () => {
+      requestCountVersion.current += 1;
+      window.removeEventListener("focus", refreshWhenVisible);
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
+      window.clearInterval(interval);
+    };
+  }, [accessToken, enabled, pathname, refreshPendingRequestCount]);
+
+  return { pendingRequestCount, refreshPendingRequestCount };
+}
+
+function RequestCountBadge({ count }: { count: number }) {
+  return (
+    <span className="absolute -top-3 left-2 inline-flex h-4 min-w-3 items-center justify-center rounded-full bg-ember-glow p-1 text-[10px] leading-none font-bold text-vast-ink tabular-nums">
+      {count}
+    </span>
   );
 }
 

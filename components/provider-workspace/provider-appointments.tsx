@@ -25,6 +25,7 @@ import {
   Trash2,
   UserPlus,
   Coffee,
+  RefreshCw,
 } from "lucide-react";
 import { useLocale } from "next-intl";
 import {
@@ -604,7 +605,8 @@ export function ProviderAppointments({
       return;
     }
     const appointment = calendarEvent?.extendedProps.appointment as
-      CalendarAppointment | undefined;
+      | CalendarAppointment
+      | undefined;
     const date =
       calendarEvent?.start ??
       calendarTimeAtPointer(
@@ -681,9 +683,11 @@ export function ProviderAppointments({
       if (quickCreating) return;
       setQuickCreate(null);
       const activity = info.event.extendedProps.personalActivity as
-        PersonalActivityOccurrence | undefined;
+        | PersonalActivityOccurrence
+        | undefined;
       const attending = info.event.extendedProps.attendingAppointment as
-        AttendingAppointment | undefined;
+        | AttendingAppointment
+        | undefined;
       if (attending) {
         setDialogOpen(false);
         setAttendingSelection(attending);
@@ -727,10 +731,12 @@ export function ProviderAppointments({
         return;
       }
       const availabilityWindow = info.event.extendedProps.availabilityWindow as
-        AvailabilityWindow | undefined;
+        | AvailabilityWindow
+        | undefined;
       const availabilityOccurrence = info.event.extendedProps
         .availabilityOccurrence as
-        { startsAt: string; endsAt: string } | undefined;
+        | { startsAt: string; endsAt: string }
+        | undefined;
 
       if (availabilityWindow && availabilityOccurrence) {
         const startsAt = splitProviderDateTime(
@@ -769,7 +775,8 @@ export function ProviderAppointments({
       }
 
       const appointment = info.event.extendedProps.appointment as
-        CalendarAppointment | undefined;
+        | CalendarAppointment
+        | undefined;
       if (
         !appointment ||
         (appointment.status !== "scheduled" &&
@@ -810,14 +817,17 @@ export function ProviderAppointments({
         return;
       }
       const appointment = info.oldEvent.extendedProps.appointment as
-        CalendarAppointment | undefined;
+        | CalendarAppointment
+        | undefined;
       const start = info.event.start;
       const end = info.event.end;
 
       const activity = info.oldEvent.extendedProps.personalActivity as
-        PersonalActivityOccurrence | undefined;
+        | PersonalActivityOccurrence
+        | undefined;
       const available = info.oldEvent.extendedProps.availabilityWindow as
-        AvailabilityWindow | undefined;
+        | AvailabilityWindow
+        | undefined;
       if ((activity || available) && start && end) {
         setInteractionSaving(true);
         setError("");
@@ -1264,19 +1274,19 @@ export function ProviderAppointments({
             {copy.dragHint} {copy.copyPasteHint}
           </p>
         </div>
-        <div className="flex flex-wrap justify-end gap-2">
+        <div className="flex flex-wrap justify-end gap-2 items-center">
           <Button
             variant="outline"
+            className="min-h-11 rounded-full text-vast-ink px-5 font-bold"
             disabled={loading || saving || interactionSaving || quickCreating}
-            onClick={() => calendarRef.current?.getApi().refetchEvents()}
-          >
+            onClick={() => calendarRef.current?.getApi().refetchEvents()}>
+            <RefreshCw size={16} />
             {copy.refreshCalendar}
           </Button>
           <Button
             className="min-h-11 rounded-full bg-vast-ink px-5 font-bold text-white"
             disabled={quickCreating}
-            onClick={() => openNewSession()}
-          >
+            onClick={() => openNewSession()}>
             <CalendarPlus size={17} /> {copy.addToTimetable}
           </Button>
         </div>
@@ -1297,8 +1307,7 @@ export function ProviderAppointments({
       {attendingError ? (
         <p
           role="alert"
-          className="mb-3 rounded-xl bg-amber-50 px-4 py-3 text-sm"
-        >
+          className="mb-3 rounded-xl bg-amber-50 px-4 py-3 text-sm">
           {attendingError}
         </p>
       ) : null}
@@ -1307,8 +1316,7 @@ export function ProviderAppointments({
         open={!!attendingSelection}
         onOpenChange={(open) => {
           if (!open) setAttendingSelection(null);
-        }}
-      >
+        }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{copy.attendingSession}</DialogTitle>
@@ -1342,8 +1350,7 @@ export function ProviderAppointments({
               </p>
               <a
                 className="text-sm font-semibold underline"
-                href={`/${locale}/account`}
-              >
+                href={`/${locale}/account`}>
                 {copy.manageAttending}
               </a>
             </>
@@ -1354,14 +1361,12 @@ export function ProviderAppointments({
       <ContextMenu modal={false}>
         <section
           aria-busy={loading || interactionSaving}
-          className={`provider-calendar relative min-h-0 min-w-0 flex-1 overflow-hidden rounded-[24px] border border-black/10 bg-[#fbfaf4] p-3 shadow-sm sm:p-4 ${calendarInteractionActive ? "provider-calendar-interacting" : ""}`}
-        >
+          className={`provider-calendar relative min-h-0 min-w-0 flex-1 overflow-hidden rounded-[24px] border border-black/10 bg-[#fbfaf4] p-3 shadow-sm sm:p-4 ${calendarInteractionActive ? "provider-calendar-interacting" : ""}`}>
           {loading || interactionSaving ? (
             <span
               aria-live="polite"
               className="absolute top-4 right-4 z-10 flex min-h-9 items-center gap-2 rounded-full bg-lavender-whisper px-3 text-xs font-bold shadow-sm"
-              role="status"
-            >
+              role="status">
               <LoaderCircle
                 className="animate-spin motion-reduce:animate-none"
                 size={16}
@@ -1371,16 +1376,14 @@ export function ProviderAppointments({
           ) : null}
           <ContextMenuTrigger
             asChild
-            disabled={loading || saving || interactionSaving}
-          >
+            disabled={loading || saving || interactionSaving}>
             <div
               className="h-full min-w-0"
               onContextMenuCapture={handleCalendarContextMenu}
               onPointerDownCapture={(event) => {
                 if (event.pointerType === "touch")
                   handleCalendarContextMenu(event);
-              }}
-            >
+              }}>
               <FullCalendar
                 allDaySlot={false}
                 dateClick={handleDateClick}
@@ -1427,8 +1430,7 @@ export function ProviderAppointments({
           </ContextMenuTrigger>
         </section>
         <ContextMenuContent
-          onCloseAutoFocus={(event) => event.preventDefault()}
-        >
+          onCloseAutoFocus={(event) => event.preventDefault()}>
           <ContextMenuItem
             disabled={!contextTarget?.appointment}
             onSelect={() => {
@@ -1436,8 +1438,7 @@ export function ProviderAppointments({
                 setCopiedAppointment({ ...contextTarget.appointment });
                 setError("");
               }
-            }}
-          >
+            }}>
             <Copy aria-hidden="true" /> {copy.copySession}
           </ContextMenuItem>
           <ContextMenuItem
@@ -1446,8 +1447,7 @@ export function ProviderAppointments({
               !contextTarget ||
               !!contextTarget.appointment
             }
-            onSelect={pasteSession}
-          >
+            onSelect={pasteSession}>
             <ClipboardPaste aria-hidden="true" /> {copy.pasteSession}
           </ContextMenuItem>
         </ContextMenuContent>
@@ -1543,8 +1543,7 @@ export function ProviderAppointments({
                               : { ...draft, entryType: "session" },
                         )
                       }
-                      value={draft.entryType}
-                    >
+                      value={draft.entryType}>
                       <SelectTrigger className="min-h-11 w-full rounded-xl">
                         <SelectValue />
                       </SelectTrigger>
@@ -1584,12 +1583,10 @@ export function ProviderAppointments({
                                   )
                                 : current,
                             );
-                        }}
-                      >
+                        }}>
                         <SelectTrigger
                           aria-label={copy.activityName}
-                          className="min-h-11 w-full rounded-xl"
-                        >
+                          className="min-h-11 w-full rounded-xl">
                           <SelectValue>
                             {activityNames.find(
                               ({ id }) => id === draft.activityId,
@@ -1612,8 +1609,7 @@ export function ProviderAppointments({
                     draft.activityId === newActivityValue ? (
                       <Field
                         className="sm:col-span-2"
-                        label={copy.newActivityName}
-                      >
+                        label={copy.newActivityName}>
                         <Input
                           aria-label={copy.newActivityName}
                           required
@@ -1633,8 +1629,7 @@ export function ProviderAppointments({
                     draft.activityId === newActivityValue ? (
                       <Field
                         className="sm:col-span-2"
-                        label={copy.activityDurationLabel}
-                      >
+                        label={copy.activityDurationLabel}>
                         <Input
                           aria-label={copy.activityDurationLabel}
                           type="number"
@@ -1662,8 +1657,7 @@ export function ProviderAppointments({
                         />
                         <p
                           id="activity-duration-help"
-                          className="mt-2 text-xs leading-5 text-black/50"
-                        >
+                          className="mt-2 text-xs leading-5 text-black/50">
                           {copy.activityDurationHelp}
                         </p>
                       </Field>
@@ -1671,8 +1665,7 @@ export function ProviderAppointments({
                     {draft.activityDurationMinutes ? (
                       <p
                         role="status"
-                        className="sm:col-span-2 rounded-xl bg-[#fde7b0] px-4 py-3 text-xs leading-5"
-                      >
+                        className="sm:col-span-2 rounded-xl bg-[#fde7b0] px-4 py-3 text-xs leading-5">
                         {copy.activityDurationApplied.replace(
                           "{minutes}",
                           String(draft.activityDurationMinutes),
@@ -1694,8 +1687,7 @@ export function ProviderAppointments({
                       onValueChange={(studentId) =>
                         setDraft({ ...draft, studentId })
                       }
-                      value={draft.studentId}
-                    >
+                      value={draft.studentId}>
                       <SelectTrigger className="min-h-11 w-full rounded-xl">
                         <SelectValue placeholder={copy.emptyStudents} />
                       </SelectTrigger>
@@ -1829,8 +1821,7 @@ export function ProviderAppointments({
                           recurrence: recurrence as "none" | "weekly",
                         })
                       }
-                      value={draft.recurrence}
-                    >
+                      value={draft.recurrence}>
                       <SelectTrigger className="min-h-11 w-full rounded-xl">
                         <SelectValue />
                       </SelectTrigger>
@@ -1849,8 +1840,7 @@ export function ProviderAppointments({
                           editScope: editScope as "exception" | "future",
                         })
                       }
-                      value={draft.editScope}
-                    >
+                      value={draft.editScope}>
                       <SelectTrigger className="min-h-11 w-full rounded-xl">
                         <SelectValue />
                       </SelectTrigger>
@@ -1909,8 +1899,7 @@ export function ProviderAppointments({
                       {freeTimePreview.slots.map((slot) => (
                         <span
                           className="rounded-full border border-[#56a46f]/40 bg-white/60 px-2.5 py-1 font-semibold"
-                          key={slot.startsAt.toISOString()}
-                        >
+                          key={slot.startsAt.toISOString()}>
                           {formatProviderTime(slot.startsAt, locale, timeZone)}
                         </span>
                       ))}
@@ -1949,8 +1938,7 @@ export function ProviderAppointments({
                       disabled={saving}
                       onClick={() => void deleteActivitySchedule()}
                       type="button"
-                      variant="destructive"
-                    >
+                      variant="destructive">
                       <Trash2 size={15} />
                       {draft.movedOriginalStartsAt
                         ? copy.deleteMovedBlock
@@ -1963,8 +1951,7 @@ export function ProviderAppointments({
                       disabled={saving}
                       onClick={() => void deleteAvailableTime()}
                       type="button"
-                      variant="destructive"
-                    >
+                      variant="destructive">
                       <Trash2 size={15} />
                       {draft.movedOriginalStartsAt
                         ? copy.deleteMovedBlock
@@ -1977,8 +1964,7 @@ export function ProviderAppointments({
                       disabled={saving}
                       onClick={() => void deleteSession()}
                       type="button"
-                      variant="destructive"
-                    >
+                      variant="destructive">
                       <Trash2 size={15} />
                       {draft.recurrence === "weekly" &&
                       draft.editScope === "future"
@@ -1989,8 +1975,7 @@ export function ProviderAppointments({
                       disabled={saving}
                       onClick={toggleCancellation}
                       type="button"
-                      variant="outline"
-                    >
+                      variant="outline">
                       {draft.status === "scheduled" ? (
                         copy.cancelSession
                       ) : (
@@ -2083,7 +2068,8 @@ function renderSession(info: EventContentArg) {
   }
 
   const appointment = info.event.extendedProps.appointment as
-    CalendarAppointment | undefined;
+    | CalendarAppointment
+    | undefined;
   if (!appointment) return null;
 
   const recurrenceLabel = info.event.extendedProps.recurrenceLabel as string;

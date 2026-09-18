@@ -39,7 +39,8 @@ export function ProviderAppointmentRequests({
   copy: ProviderAppointmentRequestsCopy;
 }) {
   const locale = useLocale();
-  const { accessToken, data } = useProviderWorkspace();
+  const { accessToken, data, refreshPendingRequestCount } =
+    useProviderWorkspace();
   const [appointments, setAppointments] = useState<AppointmentRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [reviewing, setReviewing] = useState<{
@@ -98,6 +99,7 @@ export function ProviderAppointmentRequests({
       setAppointments((current) =>
         current.filter(({ id }) => id !== appointmentId),
       );
+      void refreshPendingRequestCount();
     } catch {
       setError(copy.reviewError);
     } finally {

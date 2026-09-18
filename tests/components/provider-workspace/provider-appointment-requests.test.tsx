@@ -13,6 +13,7 @@ vi.mock("next-intl", () => ({ useLocale: () => "en" }));
 vi.mock("@/components/provider-workspace/provider-shell", () => ({
   useProviderWorkspace: () => ({
     accessToken: "access-token",
+    refreshPendingRequestCount: vi.fn(),
     data: { bookingPage: { timeZone: "Europe/Istanbul" } },
   }),
 }));
