@@ -16,6 +16,11 @@ import {
   sql,
 } from "drizzle-orm";
 
+import {
+  consumeClientRescheduleQuery,
+  type ClientReschedule,
+} from "@/lib/client-reschedules";
+
 import { db } from "@/db";
 import { user } from "@/db/auth-schema";
 import { appointments, availabilitySlots, providerStudents } from "@/db/schema";
@@ -348,6 +353,7 @@ export async function updateProviderAppointment(
   providerId: string,
   appointmentId: string,
   input: ProviderAppointmentUpdateInput,
+  clientReschedule?: ClientReschedule,
 ) {
   const current = await requireProviderAppointment(providerId, appointmentId);
 
@@ -377,10 +383,15 @@ export async function updateProviderAppointment(
     current.recurrence === "weekly" &&
     !current.exceptionForAppointmentId
   ) {
-    return createAppointmentException(providerId, current, input);
+    return createAppointmentException(
+      providerId,
+      current,
+      input,
+      clientReschedule,
+    );
   }
 
-  return updateAppointmentRecord(providerId, current, input);
+  return updateAppointmentRecord(providerId, current, input, clientReschedule);
 }
 
 export async function deleteProviderAppointment(
@@ -589,6 +600,7 @@ async function createAppointmentException(
   providerId: string,
   series: Awaited<ReturnType<typeof requireProviderAppointment>>,
   input: ProviderAppointmentUpdateInput,
+  clientReschedule?: ClientReschedule,
 ) {
   if (!input.occurrenceStartsAt) {
     throw new ProviderAppointmentValidationError(
@@ -613,24 +625,28 @@ async function createAppointmentException(
     },
   );
 
-  const appointmentId = await insertAppointment(providerId, {
-    providerStudentId: series.providerStudentId!,
-    studentId: series.studentId ?? undefined,
-    ...range,
-    recurrence: "none",
-    exceptionForAppointmentId: series.id,
-    exceptionOriginalStartsAt: input.occurrenceStartsAt,
-    comment:
-      input.comment !== undefined
-        ? input.comment
-        : (series.comment ?? undefined),
-    color: input.color ?? series.color,
-    meetingUrl: series.meetingUrl,
-    meetingSpaceName: series.meetingSpaceName,
-    status: input.status ?? series.status,
-    createdByProvider: true,
-    rescheduleCount: sql`${series.rescheduleCount} + 1`,
-  });
+  const appointmentId = await insertAppointment(
+    providerId,
+    {
+      providerStudentId: series.providerStudentId!,
+      studentId: series.studentId ?? undefined,
+      ...range,
+      recurrence: "none",
+      exceptionForAppointmentId: series.id,
+      exceptionOriginalStartsAt: input.occurrenceStartsAt,
+      comment:
+        input.comment !== undefined
+          ? input.comment
+          : (series.comment ?? undefined),
+      color: input.color ?? series.color,
+      meetingUrl: series.meetingUrl,
+      meetingSpaceName: series.meetingSpaceName,
+      status: input.status ?? series.status,
+      createdByProvider: true,
+      rescheduleCount: sql`${series.rescheduleCount} + 1`,
+    },
+    clientReschedule,
+  );
 
   return requireProviderAppointment(providerId, appointmentId);
 }
@@ -639,6 +655,7 @@ async function updateAppointmentRecord(
   providerId: string,
   current: Awaited<ReturnType<typeof requireProviderAppointment>>,
   input: ProviderAppointmentUpdateInput,
+  clientReschedule?: ClientReschedule,
 ) {
   const comparisonRange =
     current.recurrence === "weekly" && input.occurrenceStartsAt
@@ -694,6 +711,9 @@ async function updateAppointmentRecord(
   const targetSlot = await findSlotByRange(providerId, range);
   const targetSlotId = targetSlot?.id ?? randomUUID();
   const shouldDeleteOldSlot = current.windowId === null;
+  const quota = clientReschedule
+    ? [consumeClientRescheduleQuery(providerId, clientReschedule)]
+    : [];
 
   try {
     const updateQuery = db
@@ -717,8 +737,8 @@ async function updateAppointmentRecord(
     if (targetSlot) {
       await db.batch(
         shouldDeleteOldSlot && current.slotId !== targetSlotId
-          ? [updateQuery, deleteOldSlot]
-          : [updateQuery],
+          ? [updateQuery, deleteOldSlot, ...quota]
+          : [updateQuery, ...quota],
       );
     } else {
       const insertSlot = db.insert(availabilitySlots).values({
@@ -728,8 +748,8 @@ async function updateAppointmentRecord(
       });
       await db.batch(
         shouldDeleteOldSlot
-          ? [insertSlot, updateQuery, deleteOldSlot]
-          : [insertSlot, updateQuery],
+          ? [insertSlot, updateQuery, deleteOldSlot, ...quota]
+          : [insertSlot, updateQuery, ...quota],
       );
     }
   } catch (error) {
@@ -763,6 +783,7 @@ type InsertAppointmentInput = {
 async function insertAppointment(
   providerId: string,
   input: InsertAppointmentInput,
+  clientReschedule?: ClientReschedule,
 ) {
   const slot = await findSlotByRange(providerId, input);
   const appointmentId = randomUUID();
@@ -785,8 +806,18 @@ async function insertAppointment(
   };
 
   try {
+    const quota = clientReschedule
+      ? [consumeClientRescheduleQuery(providerId, clientReschedule)]
+      : [];
     if (slot) {
-      await db.insert(appointments).values(appointmentValues);
+      if (clientReschedule) {
+        await db.batch([
+          db.insert(appointments).values(appointmentValues),
+          ...quota,
+        ]);
+      } else {
+        await db.insert(appointments).values(appointmentValues);
+      }
     } else {
       await db.batch([
         db.insert(availabilitySlots).values({
@@ -796,6 +827,7 @@ async function insertAppointment(
           endsAt: input.endsAt,
         }),
         db.insert(appointments).values(appointmentValues),
+        ...quota,
       ]);
     }
   } catch (error) {

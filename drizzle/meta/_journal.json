@@ -176,6 +176,13 @@
       "when": 1789813055687,
       "tag": "0024_google_meet",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1789819224471,
+      "tag": "0025_weekly_reschedule_limits",
+      "breakpoints": true
     }
   ]
 }

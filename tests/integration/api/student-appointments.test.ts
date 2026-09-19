@@ -116,6 +116,7 @@ describe("student appointment API", () => {
   });
   it.each([
     ["notice", 403],
+    ["reschedule_limit", 403],
     ["not_found", 404],
     ["unavailable", 409],
   ] as const)("returns %s failures", async (code, status) => {

@@ -40,6 +40,8 @@ const nearStart = new Date("2030-01-15T10:00:00Z");
 function row(startsAt = oldStart) {
   return {
     owned: true,
+    reschedulesUsed: 0,
+    rescheduleResetsAt: "2030-01-20T21:00:00Z",
     appointment: {
       id: "appointment-id",
       studentId: "student-id",
@@ -57,6 +59,7 @@ function row(startsAt = oldStart) {
       providerId: "provider-id",
       timeZone: "Europe/Istanbul",
       minimumNoticeHours: 24,
+      weeklyRescheduleLimit: 1,
       appointmentDurationMinutes: 30,
       bookingIntervalMinutes: 30,
       isPublished: true,
@@ -118,6 +121,7 @@ describe("student appointment changes", () => {
         endsAt: new Date("2030-01-15T10:30:00Z"),
         editScope: "exception",
       }),
+      { clientId: "student-id", changedAt: now },
     );
     expect(mocks.available).toHaveBeenCalledWith(
       expect.objectContaining({ minimumNoticeHours: 0 }),
@@ -154,6 +158,7 @@ describe("student appointment changes", () => {
       "provider-id",
       "appointment-id",
       expect.objectContaining({ status: "cancelled" }),
+      undefined,
     );
     expect(mocks.available).not.toHaveBeenCalled();
   });
@@ -229,5 +234,49 @@ describe("student appointment changes", () => {
     const result = await listStudentAppointments("student-id");
     expect(result[0]).toMatchObject({ canChange: false, canReschedule: false });
     expect(result[0]).not.toHaveProperty("comment");
+  });
+});
+
+describe("weekly client reschedule policy", () => {
+  it("blocks slot lookup and writes at the limit but keeps cancellation eligible", async () => {
+    mocks.rows.mockResolvedValue([{ ...row(), reschedulesUsed: 1 }]);
+    const [listed] = await listStudentAppointments("student-id");
+    expect(listed).toMatchObject({
+      canChange: true,
+      canReschedule: false,
+      reschedulesRemaining: 0,
+    });
+    await expect(
+      getStudentRescheduleTimes("student-id", "appointment-id", oldStart, {
+        startsAt: now,
+        endsAt: oldStart,
+      }),
+    ).rejects.toThrow("reschedule_limit");
+    await expect(
+      changeStudentAppointment("student-id", "appointment-id", {
+        action: "reschedule",
+        occurrenceStartsAt: oldStart,
+        startsAt: nearStart,
+      }),
+    ).rejects.toThrow("reschedule_limit");
+    expect(mocks.available).not.toHaveBeenCalled();
+    expect(mocks.update).not.toHaveBeenCalled();
+    await changeStudentAppointment("student-id", "appointment-id", {
+      action: "cancel",
+      occurrenceStartsAt: oldStart,
+    });
+    expect(mocks.update).toHaveBeenCalledOnce();
+  });
+  it("maps an atomic quota rejection to a meaningful API error", async () => {
+    mocks.update.mockRejectedValue({
+      cause: { code: "P0001", constraint: "client_weekly_reschedule_limit" },
+    });
+    await expect(
+      changeStudentAppointment("student-id", "appointment-id", {
+        action: "reschedule",
+        occurrenceStartsAt: oldStart,
+        startsAt: nearStart,
+      }),
+    ).rejects.toThrow("reschedule_limit");
   });
 });

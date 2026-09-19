@@ -23,6 +23,9 @@ export type AgendaAppointment = {
   minimumNoticeHours: number;
   canChange: boolean;
   canReschedule: boolean;
+  weeklyRescheduleLimit: number;
+  reschedulesRemaining: number;
+  rescheduleResetsAt: string;
 };
 export type AppointmentAgendaPage = {
   appointments: AgendaAppointment[];

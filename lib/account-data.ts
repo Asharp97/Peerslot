@@ -1,4 +1,4 @@
-import { eq, inArray } from "drizzle-orm";
+import { eq, inArray, or } from "drizzle-orm";
 
 import { db } from "@/db";
 import { user } from "@/db/auth-schema";
@@ -7,6 +7,7 @@ import {
   availabilitySlots,
   availabilityWindows,
   bookingPages,
+  clientRescheduleUsage,
   profiles,
   personalActivities,
   personalActivitySchedules,
@@ -46,6 +47,7 @@ export async function buildAccountExport(userId: string) {
     requestedAppointments,
     activityRows,
     activityScheduleRows,
+    rescheduleUsage,
   ] = await Promise.all([
     db
       .select({
@@ -123,6 +125,15 @@ export async function buildAccountExport(userId: string) {
         eq(personalActivities.id, personalActivitySchedules.activityId),
       )
       .where(eq(personalActivities.providerId, userId)),
+    db
+      .select()
+      .from(clientRescheduleUsage)
+      .where(
+        or(
+          eq(clientRescheduleUsage.providerId, userId),
+          eq(clientRescheduleUsage.clientId, userId),
+        ),
+      ),
   ]);
 
   if (!identities[0]) return null;
@@ -133,6 +144,7 @@ export async function buildAccountExport(userId: string) {
     profile: profileRows[0] ?? null,
     provider: providerRows[0] ?? null,
     bookingPages: pageRows,
+    rescheduleUsage,
     availabilityWindows: windowRows.map(({ window }) => window),
     availabilitySlots: slotRows,
     providerStudents: studentRows,

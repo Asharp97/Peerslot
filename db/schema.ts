@@ -1,6 +1,8 @@
 import { sql } from "drizzle-orm";
 import {
   boolean,
+  date,
+  primaryKey,
   check,
   foreignKey,
   index,
@@ -112,6 +114,9 @@ export const bookingPages = pgTable(
       .default(30)
       .notNull(),
     minimumNoticeHours: integer("minimum_notice_hours").default(24).notNull(),
+    weeklyRescheduleLimit: integer("weekly_reschedule_limit")
+      .default(1)
+      .notNull(),
     isPublished: boolean("is_published").default(true).notNull(),
     createdAt: timestamp("created_at", {
       withTimezone: true,
@@ -128,6 +133,10 @@ export const bookingPages = pgTable(
       .notNull(),
   },
   (table) => [
+    check(
+      "booking_page_weekly_reschedule_limit_valid",
+      sql`${table.weeklyRescheduleLimit} between 0 and 10`,
+    ),
     check("booking_page_slug_length", sql`char_length(${table.slug}) = 8`),
     check(
       "booking_page_duration_valid",
@@ -145,6 +154,30 @@ export const bookingPages = pgTable(
       "booking_page_notice_valid",
       sql`${table.minimumNoticeHours} between 0 and 720`,
     ),
+  ],
+);
+
+export const clientRescheduleUsage = pgTable(
+  "client_reschedule_usage",
+  {
+    providerId: text("provider_id")
+      .notNull()
+      .references(() => providerProfiles.userId, { onDelete: "cascade" }),
+    clientId: text("client_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    weekStartsOn: date("week_starts_on").notNull(),
+    rescheduleCount: integer("reschedule_count").notNull(),
+  },
+  (table) => [
+    primaryKey({
+      columns: [table.providerId, table.clientId, table.weekStartsOn],
+    }),
+    check(
+      "client_reschedule_usage_count_positive",
+      sql`${table.rescheduleCount} > 0`,
+    ),
+    index("client_reschedule_usage_client_idx").on(table.clientId),
   ],
 );
 

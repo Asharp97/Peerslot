@@ -42,7 +42,11 @@ function changeError(error: unknown) {
     { error: error.code },
     {
       status:
-        error.code === "not_found" ? 404 : error.code === "notice" ? 403 : 409,
+        error.code === "not_found"
+          ? 404
+          : error.code === "notice" || error.code === "reschedule_limit"
+            ? 403
+            : 409,
       headers: { "Cache-Control": "no-store" },
     },
   );

@@ -42,6 +42,10 @@ export type AppointmentsCopy = {
   saveError: string;
   noticeError: string;
   changedError: string;
+  weeklyReschedulePolicy: string;
+  rescheduleLimitReached: string;
+  reschedulingDisabled: string;
+  rescheduleLimitError: string;
   rescheduleSuccess: string;
   cancelSuccess: string;
 };

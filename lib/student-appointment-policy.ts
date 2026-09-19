@@ -1,5 +1,5 @@
 export type StudentAppointmentChangeCode =
-  "notice" | "inactive" | "not_found" | "unavailable";
+  "notice" | "inactive" | "not_found" | "unavailable" | "reschedule_limit";
 
 export class StudentAppointmentChangeError extends Error {
   constructor(public code: StudentAppointmentChangeCode) {
@@ -41,4 +41,8 @@ export function assertStudentAppointmentCanChange(
 ) {
   const restriction = studentAppointmentChangeRestriction(appointment, now);
   if (restriction) throw new StudentAppointmentChangeError(restriction);
+}
+
+export function studentRescheduleAllowance(limit: number, used: number) {
+  return { remaining: Math.max(0, limit - used), reached: used >= limit };
 }

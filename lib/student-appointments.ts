@@ -14,6 +14,7 @@ import {
   appointments,
   availabilitySlots,
   bookingPages,
+  clientRescheduleUsage,
   providerProfiles,
   providerStudents,
 } from "@/db/schema";
@@ -28,11 +29,14 @@ import {
   assertStudentAppointmentCanChange,
   StudentAppointmentChangeError,
   studentAppointmentChangeRestriction,
+  studentRescheduleAllowance,
 } from "@/lib/student-appointment-policy";
+
+import { isClientRescheduleLimitError } from "@/lib/client-reschedules";
 
 const providerAccount = alias(user, "appointment_provider_account");
 
-async function loadStudentRows(studentId: string) {
+async function loadStudentRows(studentId: string, now = new Date()) {
   // Only a verified account can claim an unlinked contact by email. An existing
   // account link always takes precedence over later edits to the contact email.
   const owned = sql<boolean>`coalesce(${or(
@@ -61,6 +65,8 @@ async function loadStudentRows(studentId: string) {
       page: bookingPages,
       providerName: providerProfiles.displayName,
       providerAvatar: providerAccount.image,
+      reschedulesUsed: sql<number>`coalesce(${clientRescheduleUsage.rescheduleCount}, 0)`,
+      rescheduleResetsAt: sql<string>`((date_trunc('week', ${now.toISOString()}::timestamptz at time zone ${bookingPages.timeZone}) + interval '7 days') at time zone ${bookingPages.timeZone})::text`,
       restBetweenSessionsMinutes: providerProfiles.restBetweenSessionsMinutes,
     })
     .from(appointments)
@@ -82,6 +88,17 @@ async function loadStudentRows(studentId: string) {
       providerAccount,
       eq(providerAccount.id, availabilitySlots.teacherId),
     )
+    .leftJoin(
+      clientRescheduleUsage,
+      and(
+        eq(clientRescheduleUsage.providerId, bookingPages.providerId),
+        eq(clientRescheduleUsage.clientId, studentId),
+        eq(
+          clientRescheduleUsage.weekStartsOn,
+          sql`date_trunc('week', ${now.toISOString()}::timestamptz at time zone ${bookingPages.timeZone})::date`,
+        ),
+      ),
+    )
     // Include series exceptions before expanding so moved/cancelled occurrences
     // cannot reappear at the original time. Ownership is applied again afterward.
     .where(
@@ -101,7 +118,7 @@ export async function listStudentAppointments(
   now = new Date(),
   range = { startsAt: now, endsAt: new Date(now.getTime() + 90 * 86_400_000) },
 ) {
-  const rows = await loadStudentRows(studentId);
+  const rows = await loadStudentRows(studentId, now);
   const pages = new Map(rows.map((row) => [row.page.id, row.page]));
   return [...pages.values()]
     .flatMap((page) =>
@@ -136,7 +153,19 @@ export async function listStudentAppointments(
         status: row.status,
         minimumNoticeHours: row.page.minimumNoticeHours,
         canChange,
-        canReschedule: canChange && row.page.isPublished,
+        canReschedule:
+          canChange &&
+          row.page.isPublished &&
+          !studentRescheduleAllowance(
+            row.page.weeklyRescheduleLimit,
+            row.reschedulesUsed,
+          ).reached,
+        weeklyRescheduleLimit: row.page.weeklyRescheduleLimit,
+        reschedulesRemaining: studentRescheduleAllowance(
+          row.page.weeklyRescheduleLimit,
+          row.reschedulesUsed,
+        ).remaining,
+        rescheduleResetsAt: new Date(row.rescheduleResetsAt).toISOString(),
       };
     });
 }
@@ -147,7 +176,7 @@ export async function listAppointmentAgenda(
   now = new Date(),
 ): Promise<AppointmentAgendaPage> {
   const page = paginateAppointmentOccurrences(
-    await loadStudentRows(accountId),
+    await loadStudentRows(accountId, now),
     query,
     now,
   );
@@ -174,7 +203,19 @@ export async function listAppointmentAgenda(
         timeZone: row.page.timeZone,
         minimumNoticeHours: row.page.minimumNoticeHours,
         canChange,
-        canReschedule: canChange && row.page.isPublished,
+        canReschedule:
+          canChange &&
+          row.page.isPublished &&
+          !studentRescheduleAllowance(
+            row.page.weeklyRescheduleLimit,
+            row.reschedulesUsed,
+          ).reached,
+        weeklyRescheduleLimit: row.page.weeklyRescheduleLimit,
+        reschedulesRemaining: studentRescheduleAllowance(
+          row.page.weeklyRescheduleLimit,
+          row.reschedulesUsed,
+        ).remaining,
+        rescheduleResetsAt: new Date(row.rescheduleResetsAt).toISOString(),
       };
     }),
   };
@@ -223,8 +264,20 @@ function assertChangeAllowed(current: StudentRow) {
   });
 }
 
+function assertRescheduleAllowed(current: StudentRow) {
+  if (
+    studentRescheduleAllowance(
+      current.page.weeklyRescheduleLimit,
+      current.reschedulesUsed,
+    ).reached
+  ) {
+    throw new StudentAppointmentChangeError("reschedule_limit");
+  }
+}
+
 async function rescheduleTimes(current: StudentRow, range: AvailableTimeRange) {
   assertChangeAllowed(current);
+  assertRescheduleAllowed(current);
   if (!current.page.isPublished)
     throw new StudentAppointmentChangeError("unavailable");
   const duration =
@@ -312,6 +365,7 @@ export async function changeStudentAppointment(
     }
     current = latest;
     assertChangeAllowed(current);
+    assertRescheduleAllowed(current);
   }
   try {
     const result = await updateProviderAppointment(
@@ -325,6 +379,9 @@ export async function changeStudentAppointment(
         comment: undefined,
         ...(input.action === "cancel" ? { status: "cancelled" as const } : {}),
       },
+      input.action === "reschedule"
+        ? { clientId: studentId, changedAt: new Date() }
+        : undefined,
     );
     // Return no internal provider notes or unrelated account details.
     return {
@@ -334,6 +391,8 @@ export async function changeStudentAppointment(
       endsAt: result.endsAt,
     };
   } catch (error) {
+    if (isClientRescheduleLimitError(error))
+      throw new StudentAppointmentChangeError("reschedule_limit");
     if (error instanceof ProviderAppointmentConflictError)
       throw new StudentAppointmentChangeError("unavailable");
     throw error;

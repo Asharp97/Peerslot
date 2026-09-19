@@ -110,3 +110,17 @@ describe("booking pages", () => {
     ).rejects.toBeInstanceOf(BookingSlugGenerationError);
   });
 });
+
+describe("weekly reschedule setting validation", () => {
+  it.each([0, 1, 2, 10])("accepts %s reschedules per week", (limit) => {
+    expect(
+      bookingPageSettingsSchema.parse({ weeklyRescheduleLimit: limit }),
+    ).toEqual({ weeklyRescheduleLimit: limit });
+  });
+  it.each([-1, 11, 1.5, "1", null])("rejects invalid limit %s", (limit) => {
+    expect(
+      bookingPageSettingsSchema.safeParse({ weeklyRescheduleLimit: limit })
+        .success,
+    ).toBe(false);
+  });
+});

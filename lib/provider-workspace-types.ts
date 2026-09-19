@@ -23,6 +23,7 @@ export type ProviderSetupData = {
     appointmentDurationMinutes: number;
     bookingIntervalMinutes: number;
     minimumNoticeHours: number;
+    weeklyRescheduleLimit: number;
     isPublished: boolean;
   };
 };

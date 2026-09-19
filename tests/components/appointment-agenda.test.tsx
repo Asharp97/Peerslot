@@ -30,6 +30,9 @@ const appointment: AgendaAppointment = {
   timeZone: "Europe/Istanbul",
   status: "scheduled",
   minimumNoticeHours: 24,
+  weeklyRescheduleLimit: 1,
+  reschedulesRemaining: 1,
+  rescheduleResetsAt: "2030-01-20T21:00:00Z",
   canChange: true,
   canReschedule: true,
 };
@@ -326,5 +329,45 @@ describe("appointment date presentation", () => {
     );
     expect(formatted).toContain("Jan 18");
     expect(formatted).toContain("Jan 19");
+  });
+});
+
+describe("weekly reschedule allowance feedback", () => {
+  it("shows the weekly reset while leaving eligible cancellation available", async () => {
+    setup({ canReschedule: false, reschedulesRemaining: 0 });
+    await screen.findByText(
+      /You’ve reached this provider’s weekly reschedule limit/,
+    );
+    expect(screen.queryByRole("button", { name: copy.reschedule })).toBeNull();
+    expect(screen.getByRole("button", { name: copy.cancel })).toBeTruthy();
+    expect(screen.getByText(/Jan 21, 2030/)).toBeTruthy();
+  });
+  it("explains when the provider disables rescheduling", async () => {
+    setup({
+      weeklyRescheduleLimit: 0,
+      reschedulesRemaining: 0,
+      canReschedule: false,
+    });
+    await screen.findByText(copy.reschedulingDisabled);
+    expect(screen.queryByRole("button", { name: copy.reschedule })).toBeNull();
+  });
+  it("reports a quota error without altering the card when another request used the allowance", async () => {
+    const fetchMock = setup();
+    await screen.findByText("Ada Provider");
+    await userEvent.click(
+      screen.getByRole("button", { name: copy.reschedule }),
+    );
+    await userEvent.click(
+      await screen.findByRole("button", { name: /Tuesday, January 15, 2030/ }),
+    );
+    fetchMock.mockResolvedValueOnce(
+      Response.json({ error: "reschedule_limit" }, { status: 403 }),
+    );
+    const before = document.querySelector("article")!.textContent;
+    await userEvent.click(screen.getByRole("button", { name: copy.save }));
+    expect((await screen.findByRole("alert")).textContent).toBe(
+      copy.rescheduleLimitError,
+    );
+    expect(document.querySelector("article")!.textContent).toBe(before);
   });
 });

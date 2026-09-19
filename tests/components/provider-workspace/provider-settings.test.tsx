@@ -7,6 +7,7 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
@@ -14,7 +15,9 @@ import {
   type ProviderSettingsCopy,
 } from "@/components/provider-workspace/provider-settings";
 
-vi.mock("@/components/provider-workspace/google-meet-settings", () => ({ GoogleMeetSettings: () => null }));
+vi.mock("@/components/provider-workspace/google-meet-settings", () => ({
+  GoogleMeetSettings: () => null,
+}));
 
 vi.mock("@/components/provider-workspace/provider-shell", () => ({
   useProviderWorkspace: () => ({
@@ -61,7 +64,7 @@ describe("provider scheduling settings", () => {
     const { container } = render(<ProviderSettings copy={copy} locale="tr" />);
     const selects = screen.getAllByRole("combobox");
 
-    expect(selects).toHaveLength(3);
+    expect(selects).toHaveLength(4);
     expect(container.querySelector('input[type="number"]')).toBeNull();
     expect(screen.getByRole("button", { name: "timeZone-tr" })).toBeTruthy();
     for (const select of selects) {
@@ -83,6 +86,7 @@ describe("provider scheduling settings", () => {
     expect(body).toMatchObject({
       appointmentDurationMinutes: 45,
       restBetweenSessionsMinutes: 10,
+      weeklyRescheduleLimit: 1,
     });
     expect(body).not.toHaveProperty("bookingIntervalMinutes");
   });
@@ -92,3 +96,37 @@ const copy = new Proxy(
   {},
   { get: (_target, property) => String(property) },
 ) as ProviderSettingsCopy;
+
+describe("weekly reschedule settings", () => {
+  it("defaults to once per week and saves the edited limit", async () => {
+    vi.stubGlobal(
+      "ResizeObserver",
+      class {
+        observe() {}
+        unobserve() {}
+        disconnect() {}
+      },
+    );
+    HTMLElement.prototype.hasPointerCapture = () => false;
+    HTMLElement.prototype.setPointerCapture = () => undefined;
+    HTMLElement.prototype.releasePointerCapture = () => undefined;
+    HTMLElement.prototype.scrollIntoView = () => undefined;
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true });
+    vi.stubGlobal("fetch", fetchMock);
+    render(<ProviderSettings copy={copy} locale="en" />);
+    const field = screen.getByRole("combobox", {
+      name: "weeklyRescheduleLimit",
+    });
+    expect(field.textContent).toContain("1 perWeek");
+    const user = userEvent.setup();
+    await user.click(field);
+    await user.click(screen.getByRole("option", { name: "2 perWeek" }));
+    await user.click(screen.getByRole("button", { name: "save" }));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledOnce());
+    expect(
+      JSON.parse(fetchMock.mock.calls[0][1].body).weeklyRescheduleLimit,
+    ).toBe(2);
+    cleanup();
+    vi.unstubAllGlobals();
+  });
+});

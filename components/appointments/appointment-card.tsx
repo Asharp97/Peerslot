@@ -129,6 +129,34 @@ export function AppointmentCard({
             ) : null}
           </div>
           <p className="text-xs leading-5 text-black/55">
+            {appointment.weeklyRescheduleLimit === 0
+              ? copy.reschedulingDisabled
+              : appointment.reschedulesRemaining === 0
+                ? copy.rescheduleLimitReached
+                    .replace(
+                      "{date}",
+                      new Intl.DateTimeFormat(locale, {
+                        timeZone: appointment.timeZone,
+                        dateStyle: "medium",
+                        timeStyle: "short",
+                      }).format(new Date(appointment.rescheduleResetsAt)),
+                    )
+                    .replace("{timeZone}", appointment.timeZone)
+                : copy.weeklyReschedulePolicy
+                    .replace(
+                      "{remaining}",
+                      new Intl.NumberFormat(locale).format(
+                        appointment.reschedulesRemaining,
+                      ),
+                    )
+                    .replace(
+                      "{limit}",
+                      new Intl.NumberFormat(locale).format(
+                        appointment.weeklyRescheduleLimit,
+                      ),
+                    )}
+          </p>
+          <p className="text-xs leading-5 text-black/55">
             {appointment.canChange
               ? copy.notice.replace(
                   "{hours}",

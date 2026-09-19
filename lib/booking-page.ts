@@ -25,6 +25,7 @@ export const bookingPageSettingsSchema = z
       .refine((value) => isFiveMinuteOption(value, 0, 60))
       .optional(),
     minimumNoticeHours: z.number().int().min(0).max(720).optional(),
+    weeklyRescheduleLimit: z.number().int().min(0).max(10).optional(),
     isPublished: z.boolean().optional(),
   })
   .strict()

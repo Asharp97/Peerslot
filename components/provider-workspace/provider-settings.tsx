@@ -1,7 +1,10 @@
 "use client";
 
-import { GoogleMeetSettings, type GoogleMeetSettingsCopy } from "./google-meet-settings";
-
+import {
+  GoogleMeetSettings,
+  type GoogleMeetSettingsCopy,
+} from "./google-meet-settings";
+import { Separator, Tooltip } from "radix-ui";
 import {
   Check,
   Eye,
@@ -9,6 +12,7 @@ import {
   Link2,
   LoaderCircle,
   RefreshCw,
+  Info,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -46,6 +50,10 @@ export type ProviderSettingsCopy = AccountDataCopy & {
   rest: string;
   restHelp: string;
   notice: string;
+  noticeHelp: string;
+  weeklyRescheduleLimit: string;
+  weeklyRescheduleHelp: string;
+  perWeek: string;
   timeZone: string;
   timeZoneSearch: string;
   timeZoneEmpty: string;
@@ -74,6 +82,9 @@ export function ProviderSettings({
     data.bookingPage.appointmentDurationMinutes,
   );
   const [notice, setNotice] = useState(data.bookingPage.minimumNoticeHours);
+  const [weeklyRescheduleLimit, setWeeklyRescheduleLimit] = useState(
+    data.bookingPage.weeklyRescheduleLimit ?? 1,
+  );
   const [rest, setRest] = useState(data.profile.restBetweenSessionsMinutes);
   const [timeZone, setTimeZone] = useState(data.bookingPage.timeZone);
   const [published, setPublished] = useState(data.bookingPage.isPublished);
@@ -85,30 +96,35 @@ export function ProviderSettings({
   async function save(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setState("saving");
-    const response = await fetch("/api/booking-page", {
-      method: "PATCH",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        title,
-        timeZone,
-        appointmentDurationMinutes: duration,
-        restBetweenSessionsMinutes: rest,
-        minimumNoticeHours: notice,
-        isPublished: published,
-      }),
-    });
+    try {
+      const response = await fetch("/api/booking-page", {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title,
+          timeZone,
+          appointmentDurationMinutes: duration,
+          restBetweenSessionsMinutes: rest,
+          minimumNoticeHours: notice,
+          weeklyRescheduleLimit,
+          isPublished: published,
+        }),
+      });
 
-    if (!response.ok) {
+      if (!response.ok) {
+        setState("error");
+        return;
+      }
+
+      await refresh();
+      setState("saved");
+      window.setTimeout(() => setState("idle"), 1800);
+    } catch {
       setState("error");
-      return;
     }
-
-    await refresh();
-    setState("saved");
-    window.setTimeout(() => setState("idle"), 1800);
   }
 
   async function regenerateLink() {
@@ -138,13 +154,12 @@ export function ProviderSettings({
         </p>
       </section>
 
-      <section className="mt-8 grid gap-5 xl:grid-cols-[1.2fr_0.8fr]">
+      <section className="mt-8 grid grid-cols-1 gap-5 xl:grid-cols-[1.2fr_0.8fr]">
         <form
           className="rounded-[28px] border border-black/10 bg-[#fbfaf4] p-6 sm:p-8"
-          onSubmit={save}
-        >
+          onSubmit={save}>
           <h2 className="text-lg font-bold">{copy.bookingPage}</h2>
-          <div className="mt-6 grid gap-5 sm:grid-cols-2">
+          <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2">
             <SettingsInput
               label={copy.pageTitle}
               onChange={setTitle}
@@ -176,6 +191,7 @@ export function ProviderSettings({
               options={restTimeOptions}
               suffix={copy.minutes}
               value={rest}
+              hint={copy.restHelp}
             />
             <NumberSelect
               label={copy.notice}
@@ -183,16 +199,22 @@ export function ProviderSettings({
               options={[0, 1, 4, 12, 24, 48]}
               suffix={copy.hours}
               value={notice}
+              hint={copy.noticeHelp}
+            />
+            <NumberSelect
+              label={copy.weeklyRescheduleLimit}
+              onChange={setWeeklyRescheduleLimit}
+              options={Array.from({ length: 5 }, (_, index) => index)}
+              suffix={copy.perWeek}
+              value={weeklyRescheduleLimit}
+              hint={copy.weeklyRescheduleHelp}
             />
           </div>
-          <p className="mt-3 text-xs leading-5 text-black/45">
-            {copy.restHelp}
-          </p>
 
+          <Separator.Root decorative className="mt-6 h-px w-full bg-black/10" />
           <div className="mt-6 flex items-center gap-4 rounded-2xl border border-black/10 bg-white p-4">
             <span
-              className={`grid size-10 place-items-center rounded-full ${published ? "bg-lavender-whisper" : "bg-black/5 text-black/35"}`}
-            >
+              className={`grid size-10 place-items-center rounded-full ${published ? "bg-lavender-whisper" : "bg-black/5 text-black/35"}`}>
               {published ? <Eye size={18} /> : <EyeOff size={18} />}
             </span>
             <span className="flex-1">
@@ -217,8 +239,7 @@ export function ProviderSettings({
           <Button
             className="mt-6 inline-flex min-h-12 items-center gap-2 rounded-full bg-vast-ink px-6 text-sm font-bold text-white disabled:opacity-50"
             disabled={state === "saving"}
-            type="submit"
-          >
+            type="submit">
             {state === "saving" ? (
               <LoaderCircle className="animate-spin" size={16} />
             ) : (
@@ -244,15 +265,18 @@ export function ProviderSettings({
             disabled={rotating}
             onClick={regenerateLink}
             type="button"
-            variant="outline"
-          >
+            variant="outline">
             <RefreshCw className={rotating ? "animate-spin" : ""} size={15} />
             {copy.regenerate}
           </Button>
         </article>
       </section>
 
-      <GoogleMeetSettings accessToken={accessToken} locale={locale} copy={copy.googleMeet} />
+      <GoogleMeetSettings
+        accessToken={accessToken}
+        locale={locale}
+        copy={copy.googleMeet}
+      />
 
       <AccountDataControls
         accessToken={accessToken}
@@ -292,21 +316,40 @@ function NumberSelect({
   options,
   suffix,
   value,
+  hint,
 }: {
   label: string;
   onChange: (value: number) => void;
   options: readonly number[];
   suffix: string;
   value: number;
+  hint?: string;
 }) {
   return (
     <div>
-      <Label className="text-xs font-bold text-black/55">{label}</Label>
+      <span className="flex items-center justify-between pr-2">
+        <Label className="text-xs font-bold text-black/55">{label}</Label>
+        {hint && (
+          <Tooltip.Provider>
+            <Tooltip.Root delayDuration={0}>
+              <Tooltip.Trigger aria-label={label} type="button">
+                <Info className="ml-1" size={12} />
+              </Tooltip.Trigger>
+              <Tooltip.Content sideOffset={5} className="max-w-50 z-50">
+                <p className="mt-1 text-xs text-white/95  bg-black rounded-xl p-2">
+                  {hint}
+                </p>
+              </Tooltip.Content>
+            </Tooltip.Root>
+          </Tooltip.Provider>
+        )}
+      </span>
       <Select
         onValueChange={(nextValue) => onChange(Number(nextValue))}
-        value={String(value)}
-      >
-        <SelectTrigger className="mt-2 min-h-12 w-full rounded-xl border-black/10 bg-white px-4 text-vast-ink focus-visible:border-black/10 focus-visible:ring-0">
+        value={String(value)}>
+        <SelectTrigger
+          aria-label={label}
+          className="mt-2 min-h-12 w-full rounded-xl border-black/10 bg-white px-4 text-vast-ink focus-visible:border-black/10 focus-visible:ring-0">
           <SelectValue />
         </SelectTrigger>
         <SelectContent className="max-h-48 overflow-y-auto">

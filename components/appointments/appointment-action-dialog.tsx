@@ -291,6 +291,7 @@ function actionError(
   copy: AppointmentsCopy,
   fallback: string,
 ) {
+  if (code === "reschedule_limit") return copy.rescheduleLimitError;
   if (code === "notice") return copy.noticeError;
   if (code === "not_found" || code === "inactive") return copy.changedError;
   return fallback;
