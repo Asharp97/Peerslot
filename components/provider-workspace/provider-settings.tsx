@@ -1,5 +1,7 @@
 "use client";
 
+import { GoogleMeetSettings, type GoogleMeetSettingsCopy } from "./google-meet-settings";
+
 import {
   Check,
   Eye,
@@ -34,6 +36,7 @@ import { TimeZoneCombobox } from "./time-zone-combobox";
 import { useProviderWorkspace } from "./provider-shell";
 
 export type ProviderSettingsCopy = AccountDataCopy & {
+  googleMeet: GoogleMeetSettingsCopy;
   eyebrow: string;
   title: string;
   intro: string;
@@ -248,6 +251,8 @@ export function ProviderSettings({
           </Button>
         </article>
       </section>
+
+      <GoogleMeetSettings accessToken={accessToken} locale={locale} copy={copy.googleMeet} />
 
       <AccountDataControls
         accessToken={accessToken}

@@ -81,7 +81,7 @@ function setupFetch(initialCount: number, reviewStatus = 200) {
 }
 
 function expectNavCount(count: number) {
-  const links = screen.getAllByRole("link", { name: /^requests/ });
+  const links = screen.getAllByRole("link", { name: /requests/ });
   expect(links).toHaveLength(2);
   for (const link of links) {
     if (count) expect(within(link).getByText(String(count))).toBeTruthy();

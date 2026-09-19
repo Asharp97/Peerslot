@@ -11,6 +11,9 @@ import {
   updateProviderAppointment,
 } from "@/lib/provider-appointments";
 import { getCurrentUser } from "@/lib/current-user";
+import { attachAppointmentMeeting } from "@/lib/google-meet";
+
+vi.mock("@/lib/google-meet", () => ({ attachAppointmentMeeting: vi.fn(async (_providerId: string, appointment: unknown) => appointment) }));
 
 vi.mock("@/lib/current-user", () => ({ getCurrentUser: vi.fn() }));
 vi.mock("@/lib/provider-appointments", () => ({
@@ -91,6 +94,7 @@ describe("provider appointments API integration", () => {
     );
 
     expect(response.status).toBe(201);
+    expect(attachAppointmentMeeting).toHaveBeenCalledWith(providerId, expect.objectContaining({ id: appointmentId }));
     expect(createProviderAppointment).toHaveBeenCalledWith(
       providerId,
       expect.objectContaining({

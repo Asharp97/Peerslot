@@ -155,6 +155,17 @@
   },
   "Account": {
     "appointments": {
+      "meeting": {
+        "join": "Join",
+        "opensNewTab": "Opens in a new tab",
+        "create": "Create Google Meet link",
+        "creating": "Preparing your Google Meet link…",
+        "connect": "Connect Google Meet in Settings",
+        "notConfigured": "Google Meet is not available yet. Please contact PeerSlot support.",
+        "failed": "We couldn’t create the meeting link. Try again, or reconnect Google Meet in Settings.",
+        "unavailable": "A meeting link can only be created for a confirmed, upcoming session.",
+        "retry": "Try again"
+      },
       "title": "Your appointments",
       "intro": "Your bookings and sessions assigned to your verified email appear here, including weekly lessons.",
       "empty": "No appointments in this week.",
@@ -568,6 +579,17 @@
       }
     },
     "appointments": {
+      "meeting": {
+        "join": "Join",
+        "opensNewTab": "Opens in a new tab",
+        "create": "Create Google Meet link",
+        "creating": "Preparing your Google Meet link…",
+        "connect": "Connect Google Meet in Settings",
+        "notConfigured": "Google Meet is not available yet. Please contact PeerSlot support.",
+        "failed": "We couldn’t create the meeting link. Try again, or reconnect Google Meet in Settings.",
+        "unavailable": "A meeting link can only be created for a confirmed, upcoming session.",
+        "retry": "Try again"
+      },
       "eyebrow": "Weekly timetable",
       "title": "{name}’s sessions",
       "quickTitle": "Add to calendar",
@@ -692,6 +714,19 @@
       "comment": "Comment"
     },
     "settings": {
+      "googleMeet": {
+        "title": "Google Meet",
+        "description": "Connect your Google account to automatically add a meeting link to confirmed sessions. You and your student can join from your calendars. Weekly sessions keep the same link.",
+        "connect": "Connect Google Meet",
+        "reconnect": "Reconnect Google Meet",
+        "disconnect": "Disconnect",
+        "connected": "Connected as {email}",
+        "disconnected": "Connect once to start creating meeting links. Disconnecting stops new links; existing meeting links remain available.",
+        "loading": "Loading Google Meet connection…",
+        "notConfigured": "Google Meet is not available yet. Please contact PeerSlot support.",
+        "error": "We couldn’t update your Google Meet connection. Please try again.",
+        "connectionError": "Google Meet wasn’t connected. Please try again and allow PeerSlot to create meetings."
+      },
       "eyebrow": "Settings",
       "title": "Set the rhythm of your booking page.",
       "intro": "Keep the public page, appointment length, notice period, and link security in one calm place.",

@@ -97,6 +97,8 @@ const appointmentSelection = {
   exceptionOriginalStartsAt: appointments.exceptionOriginalStartsAt,
   status: appointments.status,
   comment: appointments.comment,
+  meetingUrl: appointments.meetingUrl,
+  meetingSpaceName: appointments.meetingSpaceName,
   color: appointments.color,
   deletedAt: appointments.deletedAt,
   createdByProvider: appointments.createdByProvider,
@@ -466,6 +468,8 @@ async function updateFutureAppointmentSeries(
     recurrence: "weekly" as const,
     comment: input.comment !== undefined ? input.comment : series.comment,
     color: input.color ?? series.color,
+    meetingUrl: series.meetingUrl,
+    meetingSpaceName: series.meetingSpaceName,
     status: input.status ?? series.status,
     createdByProvider: true,
     rescheduleCount: sql`${series.rescheduleCount} + 1`,
@@ -621,6 +625,8 @@ async function createAppointmentException(
         ? input.comment
         : (series.comment ?? undefined),
     color: input.color ?? series.color,
+    meetingUrl: series.meetingUrl,
+    meetingSpaceName: series.meetingSpaceName,
     status: input.status ?? series.status,
     createdByProvider: true,
     rescheduleCount: sql`${series.rescheduleCount} + 1`,
@@ -737,6 +743,8 @@ async function updateAppointmentRecord(
 }
 
 type InsertAppointmentInput = {
+  meetingUrl?: string | null;
+  meetingSpaceName?: string | null;
   providerStudentId: string;
   studentId?: string;
   startsAt: Date;
@@ -767,6 +775,8 @@ async function insertAppointment(
     exceptionForAppointmentId: input.exceptionForAppointmentId,
     exceptionOriginalStartsAt: input.exceptionOriginalStartsAt,
     comment: input.comment,
+    meetingUrl: input.meetingUrl,
+    meetingSpaceName: input.meetingSpaceName,
     color: input.color,
     status: input.status,
     deletedAt: input.deletedAt,

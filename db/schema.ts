@@ -148,6 +148,21 @@ export const bookingPages = pgTable(
   ],
 );
 
+export const providerGoogleMeetConnections = pgTable(
+  "provider_google_meet_connections",
+  {
+    providerId: text("provider_id")
+      .primaryKey()
+      .references(() => providerProfiles.userId, { onDelete: "cascade" }),
+    googleAccountId: text("google_account_id").notNull(),
+    email: text("email").notNull(),
+    encryptedRefreshToken: text("encrypted_refresh_token").notNull(),
+    connectedAt: timestamp("connected_at", { withTimezone: true, mode: "date" })
+      .defaultNow()
+      .notNull(),
+  },
+);
+
 export const availabilityWindows = pgTable(
   "availability_windows",
   {
@@ -281,6 +296,12 @@ export const appointments = pgTable(
     rescheduleCount: integer("reschedule_count").default(0).notNull(),
     status: appointmentStatus("status").default("scheduled").notNull(),
     comment: text("comment"),
+    meetingUrl: text("meeting_url"),
+    meetingSpaceName: text("meeting_space_name"),
+    meetingCreatingAt: timestamp("meeting_creating_at", {
+      withTimezone: true,
+      mode: "date",
+    }),
     recurrence: availabilityRecurrence("recurrence").default("none").notNull(),
     recurrenceEndsAt: timestamp("recurrence_ends_at", {
       withTimezone: true,

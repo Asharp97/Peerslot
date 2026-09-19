@@ -7,6 +7,7 @@ export type AttendingAppointment = {
   startsAt: string;
   endsAt: string;
   providerName: string;
+  meetingUrl?: string | null;
   timeZone: string;
   status: "pending" | "scheduled";
   recurrence?: "none" | "weekly";

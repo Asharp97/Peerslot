@@ -32,6 +32,7 @@ const appointment = {
   startsAt: "2030-01-18T09:00:00Z",
   endsAt: "2030-01-18T09:30:00Z",
   providerName: "Ada Provider",
+  meetingUrl: "https://meet.google.com/abc-defg-hij",
   timeZone: "Europe/Istanbul",
   status: "scheduled",
   minimumNoticeHours: 24,
@@ -86,6 +87,7 @@ describe("student appointment controls", () => {
       } as unknown as EventClickArg);
     });
     expect(screen.getByRole("dialog")).toBeTruthy();
+    expect(screen.getByRole("link", { name: /Google Meet.*Join/ }).getAttribute("href")).toBe(appointment.meetingUrl);
     expect(
       screen.getByRole("heading", { name: copy.detailsTitle }),
     ).toBeTruthy();

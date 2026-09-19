@@ -2,6 +2,8 @@ import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
 
 const nextConfig: NextConfig = {
+  // The Meet SDK loads protobuf definitions from its package at runtime.
+  serverExternalPackages: ["@google-apps/meet"],
   async headers() {
     return [
       {

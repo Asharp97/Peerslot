@@ -1,5 +1,8 @@
 "use client";
 
+import { JoinMeeting, ProviderAppointmentMeeting, type AppointmentMeetingCopy } from "@/components/appointment-meeting";
+
+
 import type {
   EventClickArg,
   EventContentArg,
@@ -99,6 +102,7 @@ type ProviderStudent = {
 };
 
 type CalendarAppointment = {
+  meetingUrl?: string | null;
   id: string;
   appointmentId: string;
   occurrenceStartsAt: string;
@@ -123,6 +127,7 @@ type AvailabilityWindow = {
 };
 
 type SessionDraft = {
+  meetingUrl?: string | null;
   movedOriginalStartsAt?: string;
   entryType: "session" | "availability" | "personal";
   activityId?: string;
@@ -154,6 +159,7 @@ type CalendarContextTarget = {
 };
 
 export type ProviderAppointmentsCopy = CalendarCreatePopoverCopy & {
+  meeting: AppointmentMeetingCopy;
   attendingSession: string;
   attendingWith: string;
   attendingDescription: string;
@@ -789,6 +795,7 @@ export function ProviderAppointments({
       setDraft({
         entryType: "session",
         appointmentId: appointment.appointmentId,
+        meetingUrl: appointment.meetingUrl,
         availabilityWindowId: null,
         studentId: appointment.providerStudentId ?? "",
         studentName: appointment.studentName,
@@ -1348,6 +1355,7 @@ export function ProviderAppointments({
                   ? copy.pendingRequest
                   : copy.attendingConfirmed}
               </p>
+              <JoinMeeting meetingUrl={attendingSelection.meetingUrl} status={attendingSelection.status} copy={copy.meeting} />
               <a
                 className="text-sm font-semibold underline"
                 href={`/${locale}/account`}>
@@ -1507,6 +1515,21 @@ export function ProviderAppointments({
                             : copy.addSessionDescription}
                 </DialogDescription>
               </DialogHeader>
+
+              {draft.appointmentId && draft.entryType === "session" ? (
+                <div className="mt-4">
+                  <ProviderAppointmentMeeting
+                    key={draft.appointmentId}
+                    appointmentId={draft.appointmentId}
+                    meetingUrl={draft.meetingUrl}
+                    status={draft.status}
+                    accessToken={accessToken}
+                    locale={locale}
+                    copy={copy.meeting}
+                    onCreated={() => calendarRef.current?.getApi().refetchEvents()}
+                  />
+                </div>
+              ) : null}
 
               <div className="mt-6 grid gap-4 sm:grid-cols-2">
                 {!draft.appointmentId &&

@@ -155,6 +155,17 @@
   },
   "Account": {
     "appointments": {
+      "meeting": {
+        "join": "Katıl",
+        "opensNewTab": "Yeni sekmede açılır",
+        "create": "Google Meet bağlantısı oluştur",
+        "creating": "Google Meet bağlantınız hazırlanıyor…",
+        "connect": "Ayarlar’dan Google Meet’i bağlayın",
+        "notConfigured": "Google Meet henüz kullanılamıyor. Lütfen PeerSlot destek ekibiyle iletişime geçin.",
+        "failed": "Toplantı bağlantısı oluşturulamadı. Tekrar deneyin veya Ayarlar’dan Google Meet’i yeniden bağlayın.",
+        "unavailable": "Toplantı bağlantısı yalnızca onaylanmış, yaklaşan bir ders için oluşturulabilir.",
+        "retry": "Tekrar dene"
+      },
       "title": "Randevularınız",
       "intro": "Rezervasyonlarınız ve doğrulanmış e-posta adresinize atanan dersler, haftalık dersler dahil burada görünür.",
       "empty": "Bu hafta randevunuz yok.",
@@ -568,6 +579,17 @@
       }
     },
     "appointments": {
+      "meeting": {
+        "join": "Katıl",
+        "opensNewTab": "Yeni sekmede açılır",
+        "create": "Google Meet bağlantısı oluştur",
+        "creating": "Google Meet bağlantınız hazırlanıyor…",
+        "connect": "Ayarlar’dan Google Meet’i bağlayın",
+        "notConfigured": "Google Meet henüz kullanılamıyor. Lütfen PeerSlot destek ekibiyle iletişime geçin.",
+        "failed": "Toplantı bağlantısı oluşturulamadı. Tekrar deneyin veya Ayarlar’dan Google Meet’i yeniden bağlayın.",
+        "unavailable": "Toplantı bağlantısı yalnızca onaylanmış, yaklaşan bir ders için oluşturulabilir.",
+        "retry": "Tekrar dene"
+      },
       "eyebrow": "Haftalık program",
       "title": "{name} için dersler",
       "quickTitle": "Takvime ekle",
@@ -692,6 +714,19 @@
       "comment": "Not"
     },
     "settings": {
+      "googleMeet": {
+        "title": "Google Meet",
+        "description": "Onaylanan derslere otomatik olarak toplantı bağlantısı eklemek için Google hesabınızı bağlayın. Siz ve öğrenciniz takvimlerinizden katılabilirsiniz. Haftalık dersler aynı bağlantıyı kullanır.",
+        "connect": "Google Meet’i bağla",
+        "reconnect": "Google Meet’i yeniden bağla",
+        "disconnect": "Bağlantıyı kes",
+        "connected": "Bağlı hesap: {email}",
+        "disconnected": "Toplantı bağlantıları oluşturmak için hesabınızı bir kez bağlayın. Bağlantıyı kesmek yeni bağlantıların oluşturulmasını durdurur; mevcut toplantı bağlantıları kullanılabilir kalır.",
+        "loading": "Google Meet bağlantısı yükleniyor…",
+        "notConfigured": "Google Meet henüz kullanılamıyor. Lütfen PeerSlot destek ekibiyle iletişime geçin.",
+        "error": "Google Meet bağlantınız güncellenemedi. Lütfen tekrar deneyin.",
+        "connectionError": "Google Meet bağlanamadı. Lütfen tekrar deneyin ve PeerSlot’un toplantı oluşturmasına izin verin."
+      },
       "eyebrow": "Ayarlar",
       "title": "Rezervasyon sayfanızın ritmini belirleyin.",
       "intro": "Herkese açık sayfayı, randevu süresini, bildirim aralığını ve bağlantı güvenliğini tek bir sakin yerde yönetin.",

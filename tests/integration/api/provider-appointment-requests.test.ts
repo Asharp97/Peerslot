@@ -4,6 +4,7 @@ import { GET } from "@/app/api/provider/appointment-requests/route";
 import { PATCH } from "@/app/api/provider/appointment-requests/[id]/route";
 
 import { getCurrentUser } from "@/lib/current-user";
+import { attachAppointmentMeeting } from "@/lib/google-meet";
 import {
   listPendingProviderAppointments,
   reviewProviderAppointment,
@@ -12,6 +13,8 @@ import {
 const notificationMocks = vi.hoisted(() => ({
   notifyStudent: vi.fn(),
 }));
+
+vi.mock("@/lib/google-meet", () => ({ attachAppointmentMeeting: vi.fn(async (_providerId: string, appointment: unknown) => appointment) }));
 
 vi.mock("@/lib/current-user", () => ({ getCurrentUser: vi.fn() }));
 vi.mock("@/lib/provider-appointments", () => ({
@@ -76,6 +79,7 @@ describe("provider appointment requests API integration", () => {
       );
 
       expect(response.status).toBe(200);
+      expect(attachAppointmentMeeting).toHaveBeenCalledWith(providerId, expect.objectContaining({ id: appointmentId, status: decision === "accept" ? "scheduled" : "declined" }));
       expect(reviewProviderAppointment).toHaveBeenCalledWith(
         providerId,
         appointmentId,

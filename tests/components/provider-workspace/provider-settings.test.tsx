@@ -14,6 +14,8 @@ import {
   type ProviderSettingsCopy,
 } from "@/components/provider-workspace/provider-settings";
 
+vi.mock("@/components/provider-workspace/google-meet-settings", () => ({ GoogleMeetSettings: () => null }));
+
 vi.mock("@/components/provider-workspace/provider-shell", () => ({
   useProviderWorkspace: () => ({
     accessToken: "access-token",

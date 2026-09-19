@@ -169,6 +169,13 @@
       "when": 1789223355153,
       "tag": "0023_calendar_block_moves",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1789813055687,
+      "tag": "0024_google_meet",
+      "breakpoints": true
     }
   ]
 }

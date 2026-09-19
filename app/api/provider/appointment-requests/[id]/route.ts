@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { attachAppointmentMeeting } from "@/lib/google-meet";
 import { z } from "zod";
 
 import { providerAppointmentErrorResponse } from "../../appointments/error-response";
@@ -37,11 +38,12 @@ export async function PATCH(
   }
 
   try {
-    const appointment = await reviewProviderAppointment(
+    let appointment = await reviewProviderAppointment(
       currentUser.user.id,
       id.data,
       input.data.decision,
     );
+    appointment = await attachAppointmentMeeting(currentUser.user.id, appointment);
     await notifyStudentOfBookingDecision({
       appointmentId: appointment.id,
       decision: input.data.decision,

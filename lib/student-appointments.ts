@@ -112,6 +112,7 @@ export async function listStudentAppointments(
         startsAt: row.startsAt.toISOString(),
         endsAt: row.endsAt.toISOString(),
         providerName: row.providerName,
+        meetingUrl: row.status === "scheduled" ? row.meetingUrl : null,
         recurrence: row.recurrence,
         timeZone: row.page.timeZone,
         status: row.status,

@@ -1,5 +1,7 @@
 "use client";
 
+import { JoinMeeting, type AppointmentMeetingCopy } from "@/components/appointment-meeting";
+
 import { useCallback, useEffect, useMemo, useState } from "react";
 import FullCalendar from "@fullcalendar/react";
 import timeGridPlugin from "@fullcalendar/timegrid";
@@ -28,6 +30,7 @@ import {
 } from "@/components/ui/select";
 
 export type StudentAppointmentsCopy = {
+  meeting: AppointmentMeetingCopy;
   calendarTitle: string;
   calendarTimeZone: string;
   withTeacher: string;
@@ -351,7 +354,8 @@ export function StudentAppointments({
                       : copy.locked}
                   </p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
+                  <JoinMeeting meetingUrl={appointment.meetingUrl} status={appointment.status} copy={copy.meeting} />
                   <Button
                     variant="outline"
                     disabled={!appointment.canReschedule || saving}
@@ -404,6 +408,7 @@ export function StudentAppointments({
                   : copy.locked}
               </p>
               <DialogFooter>
+                <JoinMeeting meetingUrl={viewing.meetingUrl} status={viewing.status} copy={copy.meeting} />
                 <Button
                   variant="outline"
                   disabled={!viewing.canReschedule || saving}

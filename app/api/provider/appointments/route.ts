@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { attachAppointmentMeeting } from "@/lib/google-meet";
 
 import { providerAppointmentErrorResponse } from "./error-response";
 
@@ -58,10 +59,11 @@ export async function POST(request: Request) {
   }
 
   try {
-    const appointment = await createProviderAppointment(
+    let appointment = await createProviderAppointment(
       currentUser.user.id,
       input.data,
     );
+    appointment = await attachAppointmentMeeting(currentUser.user.id, appointment);
     return NextResponse.json({ appointment }, { status: 201 });
   } catch (error) {
     return providerAppointmentErrorResponse(error);

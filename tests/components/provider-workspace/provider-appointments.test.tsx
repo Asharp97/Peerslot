@@ -75,6 +75,7 @@ describe("provider appointments calendar", () => {
         startsAt: "2030-01-16T09:00:00Z",
         endsAt: "2030-01-16T09:30:00Z",
         providerName: "Ceyda",
+        meetingUrl: "https://meet.google.com/abc-defg-hij",
         timeZone: "UTC",
         status,
         canChange: true,
@@ -136,6 +137,11 @@ describe("provider appointments calendar", () => {
           .getByRole("link", { name: realCopy.manageAttending })
           .getAttribute("href"),
       ).toBe("/en/account");
+      if (status === "scheduled") {
+        expect(screen.getByRole("link", { name: /Google Meet.*Join/ }).getAttribute("href")).toBe(attending.meetingUrl);
+      } else {
+        expect(screen.queryByRole("link", { name: /Google Meet.*Join/ })).toBeNull();
+      }
       const revert = vi.fn();
       await act(async () => {
         await (calendar.props!.eventDrop as (info: unknown) => Promise<void>)({

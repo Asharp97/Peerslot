@@ -23,6 +23,8 @@
     "@fullcalendar/interaction": "^6.1.21",
     "@fullcalendar/react": "^6.1.21",
     "@fullcalendar/timegrid": "^6.1.21",
+    "@google-apps/meet": "^0.10.0",
+    "@google-cloud/local-auth": "2.1.0",
     "@neondatabase/serverless": "^1.1.0",
     "better-auth": "1.6.25",
     "class-variance-authority": "^0.7.1",
