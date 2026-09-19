@@ -2,7 +2,7 @@ import { getTranslations } from "next-intl/server";
 
 import { AccountPage, type AccountPageCopy } from "@/components/account-page";
 import { PublicSiteLayout } from "@/components/public-site-layout";
-import type { StudentAppointmentsCopy } from "@/components/student-appointments";
+import type { AppointmentsCopy } from "@/components/appointments/appointment-agenda";
 
 export default async function AccountRoute({
   params,
@@ -15,7 +15,7 @@ export default async function AccountRoute({
   return (
     <PublicSiteLayout>
       <AccountPage
-        appointmentsCopy={t.raw("appointments") as StudentAppointmentsCopy}
+        appointmentsCopy={t.raw("appointments") as AppointmentsCopy}
         copy={t.raw("controls") as AccountPageCopy}
         locale={locale}
       />

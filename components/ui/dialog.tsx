@@ -61,7 +61,7 @@ function DialogContent({
         <DialogPrimitive.Close data-slot="dialog-close" asChild>
           <Button
             variant="ghost"
-            className="absolute top-2 right-2"
+            className="absolute top-2 end-2"
             size="icon-sm"
           >
             <XIcon />
@@ -83,10 +83,7 @@ function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
-function DialogFooter({
-  className,
-  ...props
-}: React.ComponentProps<"div">) {
+function DialogFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="dialog-footer"
@@ -95,8 +92,7 @@ function DialogFooter({
         className,
       )}
       {...props}
-    >
-    </div>
+    ></div>
   );
 }
 

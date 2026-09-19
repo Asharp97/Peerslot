@@ -2,12 +2,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   user: vi.fn(),
   list: vi.fn(),
+  agenda: vi.fn(),
   times: vi.fn(),
   change: vi.fn(),
 }));
 vi.mock("@/lib/current-user", () => ({ getCurrentUser: mocks.user }));
 vi.mock("@/lib/student-appointments", () => ({
   listStudentAppointments: mocks.list,
+  listAppointmentAgenda: mocks.agenda,
   getStudentRescheduleTimes: mocks.times,
   changeStudentAppointment: mocks.change,
 }));
@@ -32,6 +34,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   mocks.user.mockResolvedValue({ user: { id: "student-id" } });
   mocks.list.mockResolvedValue([]);
+  mocks.agenda.mockResolvedValue({ appointments: [], nextCursor: null });
   mocks.times.mockResolvedValue([]);
 });
 describe("student appointment API", () => {
@@ -145,5 +148,38 @@ describe("student appointment API", () => {
     expect((await GET(new Request(`${url}?${params}`), context)).status).toBe(
       400,
     );
+  });
+});
+
+describe("appointment agenda API", () => {
+  it.each(["upcoming", "past"])(
+    "loads %s for the authenticated account only",
+    async (view) => {
+      const response = await list(
+        new Request(
+          `http://localhost/api/account/appointments?view=${view}&accountId=someone-else`,
+        ),
+      );
+      expect(response.status).toBe(200);
+      expect(response.headers.get("Cache-Control")).toBe("no-store");
+      expect(mocks.agenda).toHaveBeenCalledWith("student-id", { view });
+      expect(mocks.list).not.toHaveBeenCalled();
+    },
+  );
+  it.each([
+    "view=invalid",
+    "view=past&cursor=oops",
+    "view=past&cursor=%7B%7D",
+    "view=upcoming&startsAt=2030-01-01T00:00:00Z",
+    "cursor=oops",
+  ])("rejects malformed agenda requests: %s", async (query) => {
+    expect(
+      (
+        await list(
+          new Request(`http://localhost/api/account/appointments?${query}`),
+        )
+      ).status,
+    ).toBe(400);
+    expect(mocks.agenda).not.toHaveBeenCalled();
   });
 });

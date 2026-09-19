@@ -1,5 +1,13 @@
 import { and, eq, inArray, isNull, or, sql } from "drizzle-orm";
 
+import { alias } from "drizzle-orm/pg-core";
+import {
+  appointmentDisplayStatus,
+  paginateAppointmentOccurrences,
+  type AppointmentAgendaQuery,
+  type AppointmentAgendaPage,
+} from "@/lib/appointment-agenda";
+
 import { db } from "@/db";
 import { user } from "@/db/auth-schema";
 import {
@@ -19,8 +27,10 @@ import {
 import {
   assertStudentAppointmentCanChange,
   StudentAppointmentChangeError,
-  studentAppointmentChangeDeadline,
+  studentAppointmentChangeRestriction,
 } from "@/lib/student-appointment-policy";
+
+const providerAccount = alias(user, "appointment_provider_account");
 
 async function loadStudentRows(studentId: string) {
   // Only a verified account can claim an unlinked contact by email. An existing
@@ -50,6 +60,7 @@ async function loadStudentRows(studentId: string) {
       endsAt: availabilitySlots.endsAt,
       page: bookingPages,
       providerName: providerProfiles.displayName,
+      providerAvatar: providerAccount.image,
       restBetweenSessionsMinutes: providerProfiles.restBetweenSessionsMinutes,
     })
     .from(appointments)
@@ -66,6 +77,10 @@ async function loadStudentRows(studentId: string) {
     .innerJoin(
       providerProfiles,
       eq(providerProfiles.userId, availabilitySlots.teacherId),
+    )
+    .innerJoin(
+      providerAccount,
+      eq(providerAccount.id, availabilitySlots.teacherId),
     )
     // Include series exceptions before expanding so moved/cancelled occurrences
     // cannot reappear at the original time. Ownership is applied again afterward.
@@ -102,9 +117,12 @@ export async function listStudentAppointments(
     )
     .sort((a, b) => a.startsAt.getTime() - b.startsAt.getTime())
     .map((row) => {
-      const changeDeadline = studentAppointmentChangeDeadline(
-        row.startsAt,
-        row.page.minimumNoticeHours,
+      const canChange = !studentAppointmentChangeRestriction(
+        {
+          ...row,
+          minimumNoticeHours: row.page.minimumNoticeHours,
+        },
+        now,
       );
       return {
         id: row.appointmentId,
@@ -117,11 +135,49 @@ export async function listStudentAppointments(
         timeZone: row.page.timeZone,
         status: row.status,
         minimumNoticeHours: row.page.minimumNoticeHours,
-        canChange: row.startsAt > now && now <= changeDeadline,
-        canReschedule:
-          row.startsAt > now && now <= changeDeadline && row.page.isPublished,
+        canChange,
+        canReschedule: canChange && row.page.isPublished,
       };
     });
+}
+
+export async function listAppointmentAgenda(
+  accountId: string,
+  query: AppointmentAgendaQuery,
+  now = new Date(),
+): Promise<AppointmentAgendaPage> {
+  const page = paginateAppointmentOccurrences(
+    await loadStudentRows(accountId),
+    query,
+    now,
+  );
+  return {
+    nextCursor: page.nextCursor,
+    appointments: page.appointments.map((row) => {
+      const status = appointmentDisplayStatus(row, now);
+      const canChange = !studentAppointmentChangeRestriction(
+        {
+          ...row,
+          minimumNoticeHours: row.page.minimumNoticeHours,
+        },
+        now,
+      );
+      return {
+        id: row.appointmentId,
+        occurrenceStartsAt: row.occurrenceStartsAt.toISOString(),
+        startsAt: row.startsAt.toISOString(),
+        endsAt: row.endsAt.toISOString(),
+        providerName: row.providerName,
+        providerAvatar: row.providerAvatar,
+        status,
+        meetingUrl: status === "scheduled" ? row.meetingUrl : null,
+        timeZone: row.page.timeZone,
+        minimumNoticeHours: row.page.minimumNoticeHours,
+        canChange,
+        canReschedule: canChange && row.page.isPublished,
+      };
+    }),
+  };
 }
 
 async function requireStudentOccurrence(

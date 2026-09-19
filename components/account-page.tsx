@@ -1,5 +1,6 @@
 "use client";
 
+import { appointmentDirection } from "@/lib/appointment-presentation";
 import { FormEvent } from "react";
 import { LoaderCircle } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -9,12 +10,13 @@ import {
   type AccountDataCopy,
 } from "@/components/account-data-controls";
 import { Button } from "@/components/ui/button";
+import { AppointmentsSkeleton } from "@/components/appointments/appointments-states";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  StudentAppointments,
-  type StudentAppointmentsCopy,
-} from "@/components/student-appointments";
+  AppointmentAgenda,
+  type AppointmentsCopy,
+} from "@/components/appointments/appointment-agenda";
 import {
   createGoogleSignInUrl,
   fetchAccessToken,
@@ -43,7 +45,7 @@ export function AccountPage({
 }: {
   copy: AccountPageCopy;
   locale: string;
-  appointmentsCopy: StudentAppointmentsCopy;
+  appointmentsCopy: AppointmentsCopy;
 }) {
   const [accessToken, setAccessToken] = useState<string | null | undefined>();
   const [email, setEmail] = useState("");
@@ -102,7 +104,10 @@ export function AccountPage({
 
   return (
     <main id="main-content" className="flex-1 px-5 py-16 sm:py-24">
-      <div className="mx-auto w-full max-w-5xl text-vast-ink">
+      <div
+        dir={appointmentDirection(locale)}
+        className="mx-auto w-full max-w-3xl text-vast-ink"
+      >
         <p className="text-[11px] font-bold tracking-[0.16em] text-black/45 uppercase">
           {copy.eyebrow}
         </p>
@@ -114,21 +119,26 @@ export function AccountPage({
         </p>
 
         {accessToken === undefined ? (
-          <div className="mt-10 flex items-center gap-3 rounded-[28px] border border-black/10 bg-white p-8 text-sm font-semibold">
-            <LoaderCircle className="animate-spin" size={18} /> {copy.loading}
+          <div className="mt-10">
+            <AppointmentsSkeleton label={copy.loading} />
           </div>
         ) : accessToken ? (
           <>
-            <StudentAppointments
+            <AppointmentAgenda
               accessToken={accessToken}
               locale={locale}
               copy={appointmentsCopy}
             />
-            <AccountDataControls
-              accessToken={accessToken}
-              className="mt-10"
-              copy={copy}
-            />
+            <details className="mt-12 border-t border-black/10 pt-6">
+              <summary className="cursor-pointer text-sm font-semibold text-black/60">
+                {copy.dataPrivacy}
+              </summary>
+              <AccountDataControls
+                accessToken={accessToken}
+                className="mt-4"
+                copy={copy}
+              />
+            </details>
           </>
         ) : (
           <section className="mt-10 max-w-xl rounded-[28px] border border-black/10 bg-white p-8">

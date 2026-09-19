@@ -31,6 +31,7 @@ import { createPublicAppointmentRequest } from "@/lib/public-appointment-request
 import {
   changeStudentAppointment,
   listStudentAppointments,
+  listAppointmentAgenda,
 } from "@/lib/student-appointments";
 
 vi.mock("@/db", async () => {
@@ -308,5 +309,73 @@ describe("attendee calendar identity and recurrence", () => {
       endsAt: new Date("2030-06-08T00:00:00Z"),
     });
     expect(later.map((a) => a.startsAt)).toEqual(["2030-06-02T13:00:00.000Z"]);
+  });
+});
+
+describe("appointment agenda real database", () => {
+  it("uses the provider avatar, hides internal details, and includes a cancelled recurring exception in Past", async () => {
+    await testDb
+      .update(user)
+      .set({ image: "https://example.com/provider.png" })
+      .where(eq(user.id, "ceyda"));
+    const lesson = await addWeekly();
+    await changeStudentAppointment("attendee", lesson.id, {
+      action: "cancel",
+      occurrenceStartsAt: start,
+    });
+    const past = await listAppointmentAgenda("attendee", { view: "past" }, now);
+    expect(past.appointments).toHaveLength(1);
+    expect(past.appointments[0]).toMatchObject({
+      status: "cancelled",
+      providerName: "Ceyda",
+      providerAvatar: "https://example.com/provider.png",
+      occurrenceStartsAt: start.toISOString(),
+      meetingUrl: null,
+      canChange: false,
+      canReschedule: false,
+    });
+    expect(past.appointments[0]).not.toHaveProperty("comment");
+    expect(past.appointments[0]).not.toHaveProperty("studentEmail");
+    const upcoming = await listAppointmentAgenda(
+      "attendee",
+      { view: "upcoming" },
+      now,
+    );
+    expect(upcoming.appointments[0].startsAt).toBe("2030-01-22T09:00:00.000Z");
+    expect(
+      (await listAppointmentAgenda("unrelated", { view: "past" }, now))
+        .appointments,
+    ).toEqual([]);
+    expect(
+      (await listAppointmentAgenda("ceyda", { view: "upcoming" }, now))
+        .appointments,
+    ).toEqual([]);
+  });
+  it("lists completed history for verified email ownership, including provider accounts", async () => {
+    await testDb.insert(providerProfiles).values({ userId: "attendee" });
+    await addWeekly();
+    const later = new Date("2030-01-24T12:00:00Z");
+    const history = await listAppointmentAgenda(
+      "attendee",
+      { view: "past" },
+      later,
+    );
+    expect(history.appointments.map((a) => a.startsAt)).toEqual([
+      "2030-01-22T09:00:00.000Z",
+      "2030-01-15T09:00:00.000Z",
+    ]);
+    expect(
+      history.appointments.every(
+        (a) => a.status === "completed" && !a.canChange && !a.canReschedule,
+      ),
+    ).toBe(true);
+    await testDb
+      .update(user)
+      .set({ emailVerified: false })
+      .where(eq(user.id, "attendee"));
+    expect(
+      (await listAppointmentAgenda("attendee", { view: "past" }, later))
+        .appointments,
+    ).toEqual([]);
   });
 });

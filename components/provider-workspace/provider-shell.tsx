@@ -176,8 +176,8 @@ export function ProviderShell({
       label: copy.personalActivities,
       icon: Coffee,
     },
-    { href: "/provider/settings", label: copy.settings, icon: Settings },
     { href: "/account", label: copy.myAppointments, icon: CalendarDays },
+    { href: "/provider/settings", label: copy.settings, icon: Settings },
   ] as const;
 
   return (

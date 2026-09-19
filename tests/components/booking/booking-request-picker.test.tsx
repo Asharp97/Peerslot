@@ -9,10 +9,11 @@ import {
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { groupBookingSlots } from "@/lib/booking-slot-presentation";
+
 import {
   BookingRequestPicker,
   type BookingRequestCopy,
-  groupBookingSlots,
 } from "@/components/booking/booking-request-picker";
 
 beforeEach(() => {

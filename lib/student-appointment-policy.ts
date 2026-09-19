@@ -15,12 +15,12 @@ export function studentAppointmentChangeDeadline(
   return new Date(startsAt.getTime() - minimumNoticeHours * 3_600_000);
 }
 
-export function assertStudentAppointmentCanChange(
+export function studentAppointmentChangeRestriction(
   appointment: { startsAt: Date; status: string; minimumNoticeHours: number },
   now = new Date(),
 ) {
   if (appointment.status !== "scheduled" && appointment.status !== "pending") {
-    throw new StudentAppointmentChangeError("inactive");
+    return "inactive" as const;
   }
   if (
     appointment.startsAt <= now ||
@@ -30,6 +30,15 @@ export function assertStudentAppointmentCanChange(
         appointment.minimumNoticeHours,
       )
   ) {
-    throw new StudentAppointmentChangeError("notice");
+    return "notice" as const;
   }
+  return null;
+}
+
+export function assertStudentAppointmentCanChange(
+  appointment: Parameters<typeof studentAppointmentChangeRestriction>[0],
+  now = new Date(),
+) {
+  const restriction = studentAppointmentChangeRestriction(appointment, now);
+  if (restriction) throw new StudentAppointmentChangeError(restriction);
 }
