@@ -1,9 +1,13 @@
 import type { AppointmentMeetingCopy } from "@/components/appointment-meeting";
-import type { AppointmentStatus } from "@/lib/appointment-agenda";
+import type { AppointmentRole, AppointmentStatus } from "@/lib/appointment-agenda";
 
 export type AppointmentsCopy = {
   meeting: AppointmentMeetingCopy;
   statuses: Record<AppointmentStatus, string>;
+  roles: Record<AppointmentRole, string>;
+  manageHosted: string;
+  reviewRequest: string;
+  pendingHostingBody: string;
   upcoming: string;
   past: string;
   views: string;

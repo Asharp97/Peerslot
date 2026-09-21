@@ -116,7 +116,7 @@ describe("provider appointments calendar", () => {
         borderColor: "#2563eb",
       });
       expect(event.title).toBe(
-        `Lesson with Ceyda · ${status === "pending" ? realCopy.pendingRequest : realCopy.attendingConfirmed}`,
+        `Appointment with Ceyda · ${status === "pending" ? realCopy.pendingRequest : realCopy.attendingConfirmed}`,
       );
       expect(
         events.find((item) => item.id === scheduledAppointment.id),
@@ -788,7 +788,7 @@ describe("provider appointments calendar", () => {
     );
 
     expect(confirm).toHaveBeenCalledWith(
-      "Remove Ada Student from your active students? Existing and historical appointments will be preserved.",
+      "Remove Ada Student from your active clients? Existing and historical appointments will be preserved.",
     );
     expect(fetchMock).not.toHaveBeenCalledWith(
       "/api/provider/students/student-id",

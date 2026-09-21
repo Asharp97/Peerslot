@@ -12,22 +12,21 @@
       { "label": "Ürün", "href": "/#product" },
       { "label": "Nasıl çalışır?", "href": "/#how-it-works" },
       { "label": "Kurallar", "href": "/#guardrails" },
-      { "label": "Profesyoneller için", "href": "/#for-professionals" },
-      { "label": "Panelim", "href": "/account" }
+      { "label": "Profesyoneller için", "href": "/#for-professionals" }
     ],
     "languageSwitcher": {
       "label": "Dil seçin",
       "english": "İngilizceye geç",
       "turkish": "Türkçeye geç"
     },
-    "headerCta": "Rezervasyon sayfanı oluştur",
+    "headerCta": "Giriş yap",
     "hero": {
       "eyebrow": "Gerçek işler için planlama",
       "titleMuted": "Planlar değişir.",
       "titleLead": "Takviminiz",
       "titleEmphasis": "sakin kalır.",
       "body": "Danışanlara net bir rezervasyon ve yeniden planlama yolu sunun. Uygun saatleri, bildirim süresini ve haftalık sınırı siz belirleyin.",
-      "primaryCta": "Rezervasyon sayfanı oluştur",
+      "primaryCta": "Giriş yap",
       "secondaryCta": "Nasıl çalışır?",
       "rulesLabel": "PeerSlot planlama kuralları",
       "rules": [
@@ -137,7 +136,7 @@
       "eyebrow": "Hayata yer açın",
       "title": "Randevu kalsın. Saati değişsin.",
       "body": "Profesyoneller için daha sakin bir takvim. Danışanlar için daha net bir rezervasyon deneyimi.",
-      "button": "Rezervasyon sayfanı oluştur"
+      "button": "Giriş yap"
     },
     "footer": {
       "tagline": "Karmaşa olmadan değişen randevular.",
@@ -148,7 +147,7 @@
         { "label": "Gizlilik", "href": "/policy/privacy" },
         { "label": "Koşullar", "href": "/policy/terms-agreements" },
         { "label": "Çerezler", "href": "/policy/cookies" },
-        { "label": "Panelim", "href": "/account" }
+        { "label": "Randevularım", "href": "/account" }
       ],
       "copyright": "© {year} PeerSlot"
     }
@@ -163,7 +162,7 @@
         "connect": "Ayarlar’dan Google Meet’i bağlayın",
         "notConfigured": "Google Meet henüz kullanılamıyor. Lütfen PeerSlot destek ekibiyle iletişime geçin.",
         "failed": "Toplantı bağlantısı oluşturulamadı. Tekrar deneyin veya Ayarlar’dan Google Meet’i yeniden bağlayın.",
-        "unavailable": "Toplantı bağlantısı yalnızca onaylanmış, yaklaşan bir ders için oluşturulabilir.",
+        "unavailable": "Toplantı bağlantısı yalnızca onaylanmış, yaklaşan bir randevu için oluşturulabilir.",
         "retry": "Tekrar dene"
       },
       "loading": "Randevular yükleniyor…",
@@ -181,6 +180,13 @@
       "saveError": "Değişiklik kaydedilemedi. Seçilen saat artık uygun olmayabilir.",
       "noticeError": "Mevcut randevunuz için bildirim süresi doldu; artık değiştirilemez veya iptal edilemez.",
       "changedError": "Bu randevu değişti. Sayfayı yenileyip tekrar deneyin.",
+      "roles": {
+        "hosting": "Düzenleyen",
+        "attending": "Katılan"
+      },
+      "manageHosted": "Takvimde yönet",
+      "reviewRequest": "Talebi incele",
+      "pendingHostingBody": "Bu talep onayınızı bekliyor.",
       "upcoming": "Yaklaşan",
       "past": "Geçmiş",
       "views": "Randevu görünümleri",
@@ -198,7 +204,7 @@
       "pendingBody": "Talebiniz hizmet sağlayıcıya gönderildi.",
       "pendingMeeting": "Görüşme bilgileri onaydan sonra gösterilecek.",
       "upcomingEmpty": "Yaklaşan randevunuz yok",
-      "upcomingEmptyBody": "Rezervasyonlarınız ve hizmet sağlayıcılarınızın oluşturduğu randevular burada görünecek.",
+      "upcomingEmptyBody": "Düzenlediğiniz ve katıldığınız randevular burada görünecek.",
       "pastEmpty": "Henüz geçmiş randevunuz yok",
       "pastEmptyBody": "Tamamlanan, iptal edilen, reddedilen ve süresi dolan randevular burada görünecek.",
       "loadError": "Randevularınızı yükleyemedik.",
@@ -222,10 +228,10 @@
     "controls": {
       "eyebrow": "Hesabım",
       "title": "Randevularım",
-      "intro": "Randevularınızı takip edin ve yaklaşan rezervasyonlarınızı yönetin.",
+      "intro": "Düzenlediğiniz ve katıldığınız tüm randevular tek yerde.",
       "loading": "Hesabınız kontrol ediliyor…",
       "signedOutTitle": "Randevularınızı görmek için giriş yapın.",
-      "signedOutBody": "Rezervasyonlarınızı ve size atanan randevuları görmek için hizmet sağlayıcılarınızla kullandığınız hesabı ve doğrulanmış e-posta adresini kullanın.",
+      "signedOutBody": "Tüm randevularınızı görmek için rezervasyon yaparken kullandığınız hesap ve doğrulanmış e-posta adresiyle giriş yapın.",
       "signInAction": "Giriş yap",
       "emailLabel": "E-posta",
       "passwordLabel": "Parola",
@@ -235,7 +241,7 @@
       "dataPrivacy": "Verileriniz ve hesabınız",
       "dataPrivacyDescription": "PeerSlot verilerinizin taşınabilir bir kopyasını indirin veya hesabınızı kalıcı olarak kapatın.",
       "exportTitle": "Hesap verilerini dışa aktar",
-      "exportDescription": "Profilinizi, rezervasyon sayfalarınızı, uygunluklarınızı, öğrencilerinizi ve randevu kayıtlarınızı JSON olarak indirin. Parolalar ve kimlik doğrulama belirteçleri hiçbir zaman dahil edilmez.",
+      "exportDescription": "Profilinizi, rezervasyon sayfalarınızı, uygunluklarınızı, danışanlarınızı ve randevu kayıtlarınızı JSON olarak indirin. Parolalar ve kimlik doğrulama belirteçleri hiçbir zaman dahil edilmez.",
       "exportAction": "Verilerimi indir",
       "exporting": "İndirme hazırlanıyor…",
       "exportError": "Veri dışa aktarımınız hazırlanamadı. Lütfen tekrar deneyin.",
@@ -243,7 +249,7 @@
       "deleteDescription": "PeerSlot hesabınızı ve ona bağlı planlama verilerini kalıcı olarak kaldırın.",
       "deleteAction": "Hesabımı sil",
       "deleteDialogTitle": "Bu hesap kalıcı olarak silinsin mi?",
-      "deleteWarning": "Bu işlem geri alınamaz. Profiliniz, rezervasyon sayfanız, uygunluklarınız, kayıtlı öğrencileriniz ve sizin düzenlediğiniz tüm randevular silinir. Öğrenci olarak talep ettiğiniz randevular da silinir.",
+      "deleteWarning": "Bu işlem geri alınamaz. Profiliniz, rezervasyon sayfanız, uygunluklarınız, kayıtlı danışanlarınız ve sizin düzenlediğiniz tüm randevular silinir. Danışan olarak talep ettiğiniz randevular da silinir.",
       "deleteConfirmation": "Onaylamak için aşağıya DELETE yazın.",
       "deleteConfirmationLabel": "Onay",
       "cancel": "İptal",
@@ -256,12 +262,12 @@
       "eyebrow": "Yasal",
       "title": "Gizlilik Politikası",
       "updatedAt": "Yürürlük tarihi: 18 Ağustos 2026",
-      "introduction": "Bu politika, sağlayıcılar ve öğrenciler planlama hizmetimizi kullanırken PeerSlot'un kişisel bilgileri nasıl topladığını, kullandığını, paylaştığını ve koruduğunu açıklar.",
+      "introduction": "Bu politika, sağlayıcılar ve danışanlar planlama hizmetimizi kullanırken PeerSlot'un kişisel bilgileri nasıl topladığını, kullandığını, paylaştığını ve koruduğunu açıklar.",
       "sections": [
         {
           "heading": "1. Biz kimiz",
           "paragraphs": [
-            "PeerSlot; rezervasyon sayfaları, uygunluk yönetimi, randevu talepleri, tekrarlanan görüşmeler, öğrenci kayıtları ve planlama bildirimleri sunar. Sorular ve gizlilik talepleri için privacy@peerslot.com adresine yazabilirsiniz."
+            "PeerSlot; rezervasyon sayfaları, uygunluk yönetimi, randevu talepleri, tekrarlanan görüşmeler, danışan kayıtları ve planlama bildirimleri sunar. Sorular ve gizlilik talepleri için privacy@peerslot.com adresine yazabilirsiniz."
           ]
         },
         {
@@ -273,7 +279,7 @@
             "Ad, e-posta adresi, giriş sağlayıcısı tarafından sunulduğunda profil görseli, e-posta doğrulama durumu ve kimlik doğrulama bilgileri veya belirteçleri dahil hesap ve kimlik bilgileri.",
             "Görünen ad, mesleki unvan, saat dilimi, randevu süresi, dinlenme süresi, asgari bildirim süresi, herkese açık rezervasyon bağlantısı ve yayın durumu dahil sağlayıcı profili ve rezervasyon sayfası bilgileri.",
             "Uygunluk aralıkları, randevu tarih ve saatleri, tekrarlama seçimleri, rezervasyon durumu, yeniden planlama geçmişi, görüşme rengi ve tekrarlanan görüşme istisnaları dahil planlama bilgileri.",
-            "Sağlayıcıların veya öğrencilerin girdiği ad, e-posta adresi, yorum ve randevu geçmişi dahil öğrenci kayıtları.",
+            "Sağlayıcıların veya danışanların girdiği ad, e-posta adresi, yorum ve randevu geçmişi dahil danışan kayıtları.",
             "Doğrulama e-postaları ile rezervasyon talebi, kabul veya ret bildirimleri gibi hizmet üzerinden oluşturulan iletişimler.",
             "Oturum tanımlayıcıları, IP adresi, tarayıcı veya cihaz bilgisi, dil tercihi, istek günlükleri ve başarısız rezervasyon veya hız sınırı olayları gibi teknik ve güvenlik bilgileri."
           ]
@@ -281,8 +287,8 @@
         {
           "heading": "3. Bilgileri nasıl ve neden kullanırız",
           "items": [
-            "Hesap oluşturmak, kullanıcı kimliğini doğrulamak, e-posta adreslerini doğrulamak ve rezervasyon, uygunluk, tekrarlanan görüşme, öğrenci yönetimi ve yeniden planlama özelliklerini sunmak.",
-            "Sağlayıcılara yönettikleri öğrenci ve randevuları; ziyaretçilere ilgili herkese açık rezervasyon sayfasını ve uygun saatleri göstermek.",
+            "Hesap oluşturmak, kullanıcı kimliğini doğrulamak, e-posta adreslerini doğrulamak ve rezervasyon, uygunluk, tekrarlanan görüşme, danışan yönetimi ve yeniden planlama özelliklerini sunmak.",
+            "Sağlayıcılara yönettikleri danışan ve randevuları; ziyaretçilere ilgili herkese açık rezervasyon sayfasını ve uygun saatleri göstermek.",
             "Hesap doğrulaması ve randevu talebi ya da kararıyla ilgili işlem bildirimlerini göndermek.",
             "Çifte rezervasyonu önlemek, planlama kurallarını uygulamak, hataları incelemek, hesapları korumak, kötüye kullanımı sınırlamak ve hizmet güvenilirliğini sürdürmek.",
             "Yasalara uymak, koşullarımızı uygulamak ve hukuki talepleri oluşturmak veya savunmak."
@@ -297,7 +303,7 @@
             "Kişisel bilgileri satmayız. Bilgileri yalnızca PeerSlot'u sunmak ve korumak için gerektiğinde şu taraflarla paylaşırız:"
           ],
           "items": [
-            "Randevuyla ilgili sağlayıcı veya öğrenci. Sağlayıcılar, öğrenci ve rezervasyonlarıyla bağlantılı kimlik, iletişim ve planlama bilgilerini görebilir.",
+            "Randevuyla ilgili sağlayıcı veya danışan. Sağlayıcılar, danışan ve rezervasyonlarıyla bağlantılı kimlik, iletişim ve planlama bilgilerini görebilir.",
             "Bizim adımıza çalışan altyapı, veri tabanı, e-posta gönderimi, güvenlik ve kimlik doğrulama sağlayıcıları.",
             "Google ile giriş seçeneğini kullandığınızda, kendi gizlilik koşullarına tabi olan Google.",
             "Yasalar gerektirdiğinde, hakları ve güvenliği korumak için gerektiğinde veya birleşme, finansman, satın alma ya da varlık satışıyla bağlantılı olarak yetkililer, danışmanlar veya diğer taraflar."
@@ -306,13 +312,13 @@
         {
           "heading": "5. Herkese açık rezervasyon sayfaları",
           "paragraphs": [
-            "Yayınlanmış bir rezervasyon sayfasına bağlantıya sahip herkes erişebilir; sayfada sağlayıcının seçtiği ad, mesleki unvan, saat dilimi, randevu süresi ve boş saatler gösterilebilir. Öğrenci bilgileri veya dolu bir saatin kime ait olduğu herkese açık olarak gösterilmez. Sağlayıcılar, bağlantı istemeden paylaşılmışsa bağlantıyı yenilemelidir."
+            "Yayınlanmış bir rezervasyon sayfasına bağlantıya sahip herkes erişebilir; sayfada sağlayıcının seçtiği ad, mesleki unvan, saat dilimi, randevu süresi ve boş saatler gösterilebilir. Danışan bilgileri veya dolu bir saatin kime ait olduğu herkese açık olarak gösterilmez. Sağlayıcılar, bağlantı istemeden paylaşılmışsa bağlantıyı yenilemelidir."
           ]
         },
         {
           "heading": "6. Saklama ve silme",
           "paragraphs": [
-            "Bilgileri hesap aktif olduğu sürece ve hizmeti sunmak, uyuşmazlıkları çözmek, güvenliği sağlamak ve yasal yükümlülükleri karşılamak için makul ölçüde gerekli olduğu müddetçe saklarız. Sağlayıcının oluşturduğu bir öğrencinin silinmesi, o öğrenciye bağlı randevuları da siler. Bazı sınırlı kayıtlar yedeklerde veya yasal saklama zorunluluğu bulunduğunda kalabilir. Rezervasyon niyeti verileri yaklaşık on dakika sonra sona erer."
+            "Bilgileri hesap aktif olduğu sürece ve hizmeti sunmak, uyuşmazlıkları çözmek, güvenliği sağlamak ve yasal yükümlülükleri karşılamak için makul ölçüde gerekli olduğu müddetçe saklarız. Sağlayıcının oluşturduğu bir danışanın silinmesi, o danışana bağlı randevuları da siler. Bazı sınırlı kayıtlar yedeklerde veya yasal saklama zorunluluğu bulunduğunda kalabilir. Rezervasyon niyeti verileri yaklaşık on dakika sonra sona erer."
           ]
         },
         {
@@ -328,9 +334,9 @@
           ]
         },
         {
-          "heading": "9. Çocuklar ve öğrenci bilgileri",
+          "heading": "9. Çocuklar ve danışan bilgileri",
           "paragraphs": [
-            "PeerSlot eğitim ortamlarında kullanılabilir. Sağlayıcılar, özellikle küçük yaştaki öğrencilerin bilgilerini girmek ve yönetmek için gereken hukuki dayanağa ve izinlere sahip olmaktan sorumludur. Çocuklar PeerSlot'u yalnızca yerel hukukun, ebeveyn veya vasinin ve ilgili eğitim kurumunun gerektirdiği katılım veya izinle kullanmalıdır. Bilgilerin gerekli izin olmadan toplandığını düşünüyorsanız lütfen bizimle iletişime geçin."
+            "PeerSlot eğitim ortamlarında kullanılabilir. Sağlayıcılar, özellikle küçük yaştaki danışanların bilgilerini girmek ve yönetmek için gereken hukuki dayanağa ve izinlere sahip olmaktan sorumludur. Çocuklar PeerSlot'u yalnızca yerel hukukun, ebeveyn veya vasinin ve ilgili eğitim kurumunun gerektirdiği katılım veya izinle kullanmalıdır. Bilgilerin gerekli izin olmadan toplandığını düşünüyorsanız lütfen bizimle iletişime geçin."
           ]
         },
         {
@@ -350,7 +356,7 @@
         {
           "heading": "1. Hizmet",
           "paragraphs": [
-            "PeerSlot; sağlayıcıların uygunluk yayınlamasına, öğrencileri ve tek seferlik ya da tekrarlanan görüşmeleri yönetmesine, randevu talepleri almasına ve rezervasyonları kabul etmesine, reddetmesine, düzenlemesine veya iptal etmesine olanak veren bir planlama aracıdır. PeerSlot eğitim, danışmanlık, sağlık veya başka bir profesyonel hizmet sunmaz ve sağlayıcı ile öğrenci arasındaki temel ilişkinin tarafı değildir."
+            "PeerSlot; sağlayıcıların uygunluk yayınlamasına, danışanları ve tek seferlik ya da tekrarlanan görüşmeleri yönetmesine, randevu talepleri almasına ve rezervasyonları kabul etmesine, reddetmesine, düzenlemesine veya iptal etmesine olanak veren bir planlama aracıdır. PeerSlot eğitim, danışmanlık, sağlık veya başka bir profesyonel hizmet sunmaz ve sağlayıcı ile danışan arasındaki temel ilişkinin tarafı değildir."
           ]
         },
         {
@@ -362,9 +368,9 @@
         {
           "heading": "3. Sağlayıcının sorumlulukları",
           "items": [
-            "Uygunluk, saat dilimi, süre, dinlenme süresi, bildirim süreleri, öğrenci kayıtları ve randevu bilgilerini doğru tutmak.",
-            "Öğrenci adları, e-posta adresleri, yorumlar veya diğer kişisel bilgileri eklemek için gerekli rızayı ya da başka bir hukuki dayanağı edinmek.",
-            "Bekleyen randevu taleplerini incelemek ve önemli program değişikliklerini etkilenen öğrencilere bildirmek.",
+            "Uygunluk, saat dilimi, süre, dinlenme süresi, bildirim süreleri, danışan kayıtları ve randevu bilgilerini doğru tutmak.",
+            "Danışan adları, e-posta adresleri, yorumlar veya diğer kişisel bilgileri eklemek için gerekli rızayı ya da başka bir hukuki dayanağı edinmek.",
+            "Bekleyen randevu taleplerini incelemek ve önemli program değişikliklerini etkilenen danışanlara bildirmek.",
             "Uygun mesleki muhakemeyi kullanmak. PeerSlot uygunluğu ve bildirimleri kendi takvim kontrollerinizin, acil durum süreçlerinizin veya kayıt tutma yükümlülüklerinizin yerini almaz.",
             "Herkese açık rezervasyon bağlantılarını korumak ve bağlantının ele geçirildiğini ya da gereğinden geniş paylaşıldığını düşünüyorsanız yenilemek."
           ]
@@ -407,7 +413,7 @@
         {
           "heading": "9. Sorumluluk reddi ve sınırlaması",
           "paragraphs": [
-            "Hukukun izin verdiği ölçüde PeerSlot; kesintisiz çalışma, belirli bir amaca uygunluk veya hatasız planlama garantisi olmadan sunulur. Dolaylı, arızi, özel, sonuçsal veya cezai zararlardan, veri ya da fırsat kaybından veya sağlayıcılar ile öğrenciler arasındaki davranışlardan sorumlu değiliz. Bu koşullardaki hiçbir hüküm, hukuken sınırlandırılamayan sorumlulukları veya tüketici haklarını ortadan kaldırmaz."
+            "Hukukun izin verdiği ölçüde PeerSlot; kesintisiz çalışma, belirli bir amaca uygunluk veya hatasız planlama garantisi olmadan sunulur. Dolaylı, arızi, özel, sonuçsal veya cezai zararlardan, veri ya da fırsat kaybından veya sağlayıcılar ile danışanlar arasındaki davranışlardan sorumlu değiliz. Bu koşullardaki hiçbir hüküm, hukuken sınırlandırılamayan sorumlulukları veya tüketici haklarını ortadan kaldırmaz."
           ]
         },
         {
@@ -495,7 +501,7 @@
       "consentJoin": "ve şunu okuduğunuzu onaylarsınız:",
       "onboardingEyebrow": "Sağlayıcı kurulumu",
       "onboardingTitle": "Rezervasyon sayfanızı oluşturun.",
-      "onboardingBody": "Bu varsayılanlar öğrencilerin gördüğü saatleri belirler. Daha sonra panelinizden değiştirebilirsiniz.",
+      "onboardingBody": "Bu varsayılanlar danışanların gördüğü saatleri belirler. Daha sonra panelinizden değiştirebilirsiniz.",
       "displayNameLabel": "Görünen ad",
       "professionalTitleLabel": "Mesleki unvan",
       "professionalTitlePlaceholder": "Danışman",
@@ -533,7 +539,7 @@
       "workspace": "Sağlayıcı çalışma alanı",
       "signOut": "Çıkış yap",
       "loadError": "Çalışma alanınız yüklenemedi. Lütfen sayfayı yenileyip tekrar deneyin.",
-      "students": "Öğrencileri yönet",
+      "students": "Danışanları yönet",
       "personalActivities": "Kişisel aktiviteler",
       "myAppointments": "Randevularım"
     },
@@ -587,7 +593,7 @@
       "timezoneNote": "{timeZone} saat diliminde girilir ve gösterilir.",
       "invalidWindow": "En az bir randevuya uyan geçerli bir gelecek zaman aralığı seçin.",
       "saveError": "Uygunluk kaydedilemedi. Lütfen tekrar deneyin.",
-      "overlapError": "Bu uygunluk, {studentName} öğrencisinin önceden ayarlanmış dersiyle çakışıyor.",
+      "overlapError": "Bu zaman aralığı, {studentName} ile planlanmış randevuyla çakışıyor.",
       "repeats": "Tekrar",
       "doesNotRepeat": "Tekrarlanmaz",
       "weekly": "Her hafta",
@@ -608,13 +614,13 @@
         "connect": "Ayarlar’dan Google Meet’i bağlayın",
         "notConfigured": "Google Meet henüz kullanılamıyor. Lütfen PeerSlot destek ekibiyle iletişime geçin.",
         "failed": "Toplantı bağlantısı oluşturulamadı. Tekrar deneyin veya Ayarlar’dan Google Meet’i yeniden bağlayın.",
-        "unavailable": "Toplantı bağlantısı yalnızca onaylanmış, yaklaşan bir ders için oluşturulabilir.",
+        "unavailable": "Toplantı bağlantısı yalnızca onaylanmış, yaklaşan bir randevu için oluşturulabilir.",
         "retry": "Tekrar dene"
       },
       "eyebrow": "Haftalık program",
-      "title": "{name} için dersler",
+      "title": "{name} için randevular",
       "quickTitle": "Takvime ekle",
-      "quickSearchStudent": "Öğrenci ara veya yeni bir ad yaz",
+      "quickSearchStudent": "Danışan ara veya yeni bir ad yaz",
       "quickSearchActivity": "Aktivite ara veya yeni bir ad yaz",
       "quickCreate": "“{name}” oluştur ve ekle",
       "quickEmpty": "Başlamak için bir ad yazın.",
@@ -624,17 +630,17 @@
       "quickMinutes": "{minutes} dk",
       "quickClose": "Kapat",
       "quickRetry": "Tekrar dene",
-      "quickLoadError": "Öğrenciler ve aktiviteler yüklenemedi. Tekrar deneyin.",
+      "quickLoadError": "Danışanlar ve aktiviteler yüklenemedi. Tekrar deneyin.",
       "quickNameError": "{minimum} ile 100 karakter arasında bir ad girin.",
       "quickTimeError": "Geçerli bir başlangıç saati ve 1 ile 1.440 dakika arasında bir süre seçin.",
       "quickLoading": "Adlar yükleniyor…",
       "quickOneTime": "Tek sefer",
       "addToTimetable": "Ekle",
       "addType": "Ne eklemek istersiniz?",
-      "studentSession": "Öğrenci dersi",
+      "studentSession": "Danışan randevusu",
       "freeTimeWindow": "Uygun zaman",
       "availableSlot": "Uygun",
-      "freeTimeDescription": "Aynı programa uygun bir zaman aralığı ekleyin. Öğrenciler oluşturulan saatleri rezerve edebilir.",
+      "freeTimeDescription": "Aynı programa uygun bir zaman aralığı ekleyin. Danışanlar oluşturulan saatleri rezerve edebilir.",
       "editFreeTime": "Uygun zamanı düzenle",
       "editFreeTimeDescription": "Bu uygun zaman aralığını güncelleyin veya programdan kaldırın.",
       "saveFreeTime": "Uygun zamanı kaydet",
@@ -644,19 +650,19 @@
       "freeTimePreview": "Rezerve edilebilir saatler",
       "generatedTimes": "oluşturulan saat",
       "invalidFreeTime": "En az bir randevuya uyan gelecekteki bir zaman aralığı seçin.",
-      "editSession": "Ders ayrıntıları",
-      "addSessionDescription": "Bir öğrenci ekleyin ve programınızda doğrudan bir ders ayırın.",
-      "editSessionDescription": "Değişikliklerin yalnızca bu dersi mi, yoksa bu ve gelecekteki tüm dersleri mi etkileyeceğini seçin.",
-      "student": "Öğrenci",
-      "newStudent": "Yeni öğrenci ekle",
-      "studentName": "Öğrenci adı",
-      "studentEmail": "Öğrenci e-postası (isteğe bağlı)",
+      "editSession": "Randevu ayrıntıları",
+      "addSessionDescription": "Bir danışan ekleyin ve programınızda doğrudan bir randevu ayırın.",
+      "editSessionDescription": "Değişiklikleri yalnızca bu randevuya mı, yoksa bu ve gelecekteki tüm randevulara mı uygulamak istediğinizi seçin.",
+      "student": "Danışan",
+      "newStudent": "Yeni danışan ekle",
+      "studentName": "Danışan adı",
+      "studentEmail": "Danışan e-postası (isteğe bağlı)",
       "date": "Tarih",
       "startsAt": "Başlangıç",
       "endsAt": "Bitiş",
       "comment": "Not",
       "commentPlaceholder": "Hazırlık, hedefler veya hatırlanacaklar…",
-      "save": "Dersi kaydet",
+      "save": "Randevuyu kaydet",
       "saving": "Kaydediliyor…",
       "updatingSession": "Takvim güncelleniyor…",
       "movedOccurrenceHelp": "Bu taşınmış bloğu düzenlemek veya silmek yalnızca bu tarihi etkiler. Diğer bloklar ve haftalar aynı kalır.",
@@ -666,33 +672,33 @@
       "calendarBlockConflict": "Bu saat bir randevu, gerekli dinlenme süresi, kişisel aktivite veya müsait zaman bloğuyla çakışıyor. Başka bir saat seçin.",
       "calendarBlockPast": "Müsait zaman yalnızca gelecekteki bir saatten başka bir gelecek saate taşınabilir.",
       "calendarBlockInvalid": "Geçerli bir zaman aralığı seçin. Müsait bloklar randevu süresini korumalıdır.",
-      "dragHint": "Dersleri, müsait saatleri veya kişisel aktiviteleri 10 dakikalık adımlarla sürükleyerek taşıyın. Yalnızca o tarihteki sürüklenen blok değişir. Ders veya aktivitenin süresini değiştirmek için alt kenarını çekin.",
-      "copySession": "Dersi kopyala",
-      "pasteSession": "Dersi yapıştır",
-      "copyPasteHint": "Bir dersi kopyalamak için sağ tıklayın. Ardından boş bir saate veya uygun zaman dilimine sağ tıklayıp yapıştırın ve kaydetmeden önce gözden geçirin.",
-      "sessionCopied": "{name} adlı öğrencinin dersi kopyalandı. Yapıştırmak için bir saate sağ tıklayın.",
-      "studentEmailConflict": "Bu e-posta adresi zaten {name} adlı öğrenciye ait.",
-      "pastSessionError": "Bu ders için gelecekte bir tarih ve saat seçin.",
-      "pasteDayError": "Kopyalanan dersin aynı gün bitmesi için daha erken bir saat seçin.",
-      "cancelSession": "Dersi iptal et",
-      "restoreSession": "Dersi geri yükle",
+      "dragHint": "Randevuları, müsait saatleri veya kişisel aktiviteleri 10 dakikalık adımlarla sürükleyerek taşıyın. Yalnızca o tarihteki sürüklenen blok değişir. Randevu veya aktivitenin süresini değiştirmek için alt kenarını çekin.",
+      "copySession": "Randevuyu kopyala",
+      "pasteSession": "Randevuyu yapıştır",
+      "copyPasteHint": "Bir randevuyu kopyalamak için sağ tıklayın. Ardından boş bir saate veya uygun zaman dilimine sağ tıklayıp yapıştırın ve kaydetmeden önce gözden geçirin.",
+      "sessionCopied": "{name} ile randevu kopyalandı. Yapıştırmak için bir saate sağ tıklayın.",
+      "studentEmailConflict": "Bu e-posta adresi zaten {name} adlı danışana ait.",
+      "pastSessionError": "Bu randevu için gelecekte bir tarih ve saat seçin.",
+      "pasteDayError": "Kopyalanan randevunun aynı gün bitmesi için daha erken bir saat seçin.",
+      "cancelSession": "Randevuyu iptal et",
+      "restoreSession": "Randevuyu geri yükle",
       "repetition": "Tekrar",
       "oneTime": "Tek seferlik istisna",
       "everyWeek": "Her hafta",
       "pendingRequest": "Onay bekliyor",
       "editScope": "Değişiklikleri uygula",
-      "thisSessionOnly": "Yalnızca bu ders",
-      "thisAndFutureSessions": "Bu ve gelecekteki tüm dersler",
-      "deleteThisSession": "Yalnızca bu dersi sil",
-      "deleteThisAndFutureSessions": "Bu ve gelecekteki dersleri sil",
-      "deleteThisSessionConfirm": "Yalnızca bu ders silinsin mi? Haftalık serinin geri kalanı devam eder.",
-      "deleteThisAndFutureConfirm": "Bu ders ve haftalık serideki gelecekteki tüm dersler silinsin mi? Geçmiş dersler değişmeden kalır.",
-      "sessionColor": "Ders rengi",
-      "exceptionHelp": "Bu değişiklikler yalnızca seçili derse uygulanır. Haftalık seri değişmeden kalır.",
-      "seriesHelp": "Bu değişiklikler seçili dersten itibaren yeni bir haftalık program başlatır. Geçmiş dersler değişmeden kalır.",
-      "emptyStudents": "Bir öğrenci seçin",
+      "thisSessionOnly": "Yalnızca bu randevu",
+      "thisAndFutureSessions": "Bu ve gelecekteki tüm randevular",
+      "deleteThisSession": "Yalnızca bu randevuyu sil",
+      "deleteThisAndFutureSessions": "Bu ve gelecekteki randevuları sil",
+      "deleteThisSessionConfirm": "Yalnızca bu randevu silinsin mi? Haftalık serinin geri kalanı devam eder.",
+      "deleteThisAndFutureConfirm": "Bu randevu ve haftalık serideki gelecekteki tüm randevular silinsin mi? Geçmiş randevular değişmeden kalır.",
+      "sessionColor": "Randevu rengi",
+      "exceptionHelp": "Bu değişiklikler yalnızca seçili randevuya uygulanır. Haftalık seri değişmeden kalır.",
+      "seriesHelp": "Bu değişiklikler seçili randevudan itibaren yeni bir haftalık program başlatır. Geçmiş randevular değişmeden kalır.",
+      "emptyStudents": "Bir danışan seçin",
       "loadError": "Haftalık program yüklenemedi.",
-      "saveError": "Ders kaydedilemedi. Bilgileri kontrol edip tekrar deneyin.",
+      "saveError": "Randevu kaydedilemedi. Bilgileri kontrol edip tekrar deneyin.",
       "personalActivity": "Kişisel aktivite",
       "activityName": "Aktivite",
       "newActivity": "Yeni aktivite ekle",
@@ -711,11 +717,11 @@
       "activityDurationLabel": "Varsayılan süre (dakika, isteğe bağlı)",
       "activityDurationHelp": "Boş bırakırsanız saatleri kendiniz seçebilirsiniz. Varsayılan süre, başlangıç saatinden bitişi hesaplar; mevcut planlamalar değişmez.",
       "activityDurationApplied": "Varsayılan süre: {minutes} dakika. Bitiş, başlangıç saatine göre hesaplanır; bu planlama için değiştirebilirsiniz.",
-      "attendingSession": "Katıldığım dersler",
-      "attendingWith": "{name} ile ders",
-      "attendingDescription": "Bu dersi başka bir öğretmen veriyor. Katılımınızı kendi panelinizden yönetin.",
+      "attendingSession": "Katıldığım randevular",
+      "attendingWith": "{name} ile randevu",
+      "attendingDescription": "Bu randevuyu başka bir profesyonel düzenliyor. Değişiklikler için Randevularım sayfasını kullanın.",
       "attendingConfirmed": "Onaylandı",
-      "attendingLoadError": "Diğer öğretmenlerle olan dersleriniz yüklenemedi. Tekrar denemek için takvimi yenileyin.",
+      "attendingLoadError": "Diğer profesyonellerle olan randevularınız yüklenemedi. Tekrar denemek için takvimi yenileyin.",
       "manageAttending": "Randevularımı yönet",
       "refreshCalendar": "Yenile"
     },
@@ -737,7 +743,7 @@
     "settings": {
       "googleMeet": {
         "title": "Google Meet",
-        "description": "Onaylanan derslere otomatik olarak toplantı bağlantısı eklemek için Google hesabınızı bağlayın. Siz ve öğrenciniz takvimlerinizden katılabilirsiniz. Haftalık dersler aynı bağlantıyı kullanır.",
+        "description": "Onaylanan randevulara otomatik toplantı bağlantısı eklemek için Google hesabınızı bağlayın. Siz ve danışanınız takvimlerinizden katılabilirsiniz. Haftalık randevular aynı bağlantıyı kullanır.",
         "connect": "Google Meet’i bağla",
         "reconnect": "Google Meet’i yeniden bağla",
         "disconnect": "Bağlantıyı kes",
@@ -765,7 +771,7 @@
       "timeZoneSearch": "Saat dilimlerinde ara…",
       "timeZoneEmpty": "Saat dilimi bulunamadı.",
       "published": "Rezervasyon sayfasını yayınla",
-      "publishHelp": "Yayında değilken bağlantınız ve uygunluğunuz öğrencilerden gizlenir.",
+      "publishHelp": "Yayında değilken bağlantınız ve uygunluğunuz danışanlardan gizlenir.",
       "save": "Ayarları kaydet",
       "saved": "Ayarlar kaydedildi",
       "saveError": "Ayarlar kaydedilemedi. Alanları kontrol edip tekrar deneyin.",
@@ -777,7 +783,7 @@
       "dataPrivacy": "Verileriniz ve hesabınız",
       "dataPrivacyDescription": "PeerSlot verilerinizin taşınabilir bir kopyasını indirin veya hesabınızı kalıcı olarak kapatın.",
       "exportTitle": "Hesap verilerini dışa aktar",
-      "exportDescription": "Profilinizi, rezervasyon sayfalarınızı, uygunluklarınızı, öğrencilerinizi ve randevu kayıtlarınızı JSON olarak indirin. Parolalar ve kimlik doğrulama belirteçleri hiçbir zaman dahil edilmez.",
+      "exportDescription": "Profilinizi, rezervasyon sayfalarınızı, uygunluklarınızı, danışanlarınızı ve randevu kayıtlarınızı JSON olarak indirin. Parolalar ve kimlik doğrulama belirteçleri hiçbir zaman dahil edilmez.",
       "exportAction": "Verilerimi indir",
       "exporting": "İndirme hazırlanıyor…",
       "exportError": "Veri dışa aktarımınız hazırlanamadı. Lütfen tekrar deneyin.",
@@ -785,7 +791,7 @@
       "deleteDescription": "PeerSlot hesabınızı ve ona bağlı planlama verilerini kalıcı olarak kaldırın.",
       "deleteAction": "Hesabımı sil",
       "deleteDialogTitle": "Bu hesap kalıcı olarak silinsin mi?",
-      "deleteWarning": "Bu işlem geri alınamaz. Profiliniz, rezervasyon sayfanız, uygunluklarınız, kayıtlı öğrencileriniz ve sizin düzenlediğiniz tüm randevular silinir. Öğrenci olarak talep ettiğiniz randevular da silinir.",
+      "deleteWarning": "Bu işlem geri alınamaz. Profiliniz, rezervasyon sayfanız, uygunluklarınız, kayıtlı danışanlarınız ve sizin düzenlediğiniz tüm randevular silinir. Danışan olarak talep ettiğiniz randevular da silinir.",
       "deleteConfirmation": "Onaylamak için aşağıya DELETE yazın.",
       "deleteConfirmationLabel": "Onay",
       "cancel": "İptal",
@@ -800,18 +806,18 @@
       "loading": "Çalışma alanınız açılıyor…",
       "loadError": "Liste yüklenemedi. Lütfen sayfayı yenileyin.",
       "saveError": "Değişiklik kaydedilemedi. Lütfen tekrar deneyin.",
-      "email": "Öğrenci e-postası (isteğe bağlı)",
-      "emailConflict": "Bu e-posta adresi zaten {name} adlı öğrenciye ait.",
+      "email": "Danışan e-postası (isteğe bağlı)",
+      "emailConflict": "Bu e-posta adresi zaten {name} adlı danışana ait.",
       "nameConflict": "Bu ada sahip bir kişisel aktiviteniz zaten var.",
       "calendar": "Takvimde zaman planla",
-      "title": "Öğrencileri yönet",
-      "description": "Öğrenci bilgilerini düzenleyin veya randevu geçmişini koruyarak öğrenciyi aktif listeden kaldırın.",
-      "add": "Yeni öğrenci ekle",
-      "name": "Öğrenci adı",
-      "edit": "Öğrenciyi düzenle",
-      "remove": "Öğrenciyi sil",
-      "deleteConfirm": "{name} aktif öğrenci listenizden kaldırılsın mı? Mevcut ve geçmiş randevular korunacak.",
-      "empty": "Henüz aktif öğrenci yok."
+      "title": "Danışanları yönet",
+      "description": "Danışan bilgilerini düzenleyin veya randevu geçmişini koruyarak danışanı aktif listeden kaldırın.",
+      "add": "Yeni danışan ekle",
+      "name": "Danışan adı",
+      "edit": "Danışanı düzenle",
+      "remove": "Danışanı sil",
+      "deleteConfirm": "{name} aktif danışan listenizden kaldırılsın mı? Mevcut ve geçmiş randevular korunacak.",
+      "empty": "Henüz aktif danışan yok."
     },
     "personalActivities": {
       "eyebrow": "Sağlayıcı çalışma alanı",
@@ -821,8 +827,8 @@
       "loading": "Çalışma alanınız açılıyor…",
       "loadError": "Liste yüklenemedi. Lütfen sayfayı yenileyin.",
       "saveError": "Değişiklik kaydedilemedi. Lütfen tekrar deneyin.",
-      "email": "Öğrenci e-postası (isteğe bağlı)",
-      "emailConflict": "Bu e-posta adresi zaten {name} adlı öğrenciye ait.",
+      "email": "Danışan e-postası (isteğe bağlı)",
+      "emailConflict": "Bu e-posta adresi zaten {name} adlı danışana ait.",
       "nameConflict": "Bu ada sahip bir kişisel aktiviteniz zaten var.",
       "calendar": "Takvimde zaman planla",
       "title": "Kişisel aktiviteler",
@@ -831,7 +837,7 @@
       "name": "Aktivite adı",
       "edit": "Aktiviteyi düzenle",
       "remove": "Aktiviteyi sil",
-      "deleteConfirm": "“{name}” aktivitesi ve takvimdeki tüm zamanları silinsin mi? Öğrenci randevuları korunur.",
+      "deleteConfirm": "“{name}” aktivitesi ve takvimdeki tüm zamanları silinsin mi? Danışan randevuları korunur.",
       "empty": "Henüz kişisel aktivite yok. İlk aktivitenizi ekleyin.",
       "durationLabel": "Varsayılan süre (dakika, isteğe bağlı)",
       "durationHelp": "Boş bırakırsanız saatleri kendiniz seçebilirsiniz. Varsayılan süre, başlangıç saatinden bitişi hesaplar; mevcut planlamalar değişmez.",

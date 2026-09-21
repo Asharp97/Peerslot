@@ -329,7 +329,7 @@ describe("appointment copy and paste", () => {
     await pasteAtEmptyTime();
     expect(screen.getByDisplayValue("Ada")).toBeTruthy();
     expect(screen.getAllByRole("combobox")[1].textContent).toContain(
-      "Add a new student",
+      "Add a new client",
     );
   });
 });

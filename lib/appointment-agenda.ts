@@ -8,6 +8,7 @@ import {
 export type AppointmentView = "upcoming" | "past";
 export type AppointmentStatus =
   "pending" | "scheduled" | "completed" | "cancelled" | "declined" | "expired";
+export type AppointmentRole = "hosting" | "attending";
 export type AgendaAppointment = {
   id: string;
   occurrenceStartsAt: string;
@@ -15,6 +16,7 @@ export type AgendaAppointment = {
   endsAt: string;
   providerName: string;
   providerAvatar: string | null;
+  role: AppointmentRole;
   serviceName?: string | null;
   location?: string | null;
   status: AppointmentStatus;

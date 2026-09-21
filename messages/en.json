@@ -12,15 +12,14 @@
       { "label": "Product", "href": "/#product" },
       { "label": "How it works", "href": "/#how-it-works" },
       { "label": "Guardrails", "href": "/#guardrails" },
-      { "label": "For professionals", "href": "/#for-professionals" },
-      { "label": "My dashboard", "href": "/account" }
+      { "label": "For professionals", "href": "/#for-professionals" }
     ],
     "languageSwitcher": {
       "label": "Choose language",
       "english": "Switch to English",
       "turkish": "Switch to Turkish"
     },
-    "headerCta": "Create your booking page",
+    "headerCta": "Login",
     "hero": {
       "eyebrow": "Scheduling for real work",
       "titleMuted": "Plans change.",
@@ -148,7 +147,7 @@
         { "label": "Privacy", "href": "/policy/privacy" },
         { "label": "Terms", "href": "/policy/terms-agreements" },
         { "label": "Cookies", "href": "/policy/cookies" },
-        { "label": "My dashboard", "href": "/account" }
+        { "label": "My appointments", "href": "/account" }
       ],
       "copyright": "© {year} PeerSlot"
     }
@@ -181,6 +180,13 @@
       "saveError": "This change could not be saved. The selected time may no longer be available.",
       "noticeError": "Your current appointment is now inside the notice period and can no longer be changed or cancelled.",
       "changedError": "This appointment has changed. Refresh the page and try again.",
+      "roles": {
+        "hosting": "Hosting",
+        "attending": "Attending"
+      },
+      "manageHosted": "Manage in calendar",
+      "reviewRequest": "Review request",
+      "pendingHostingBody": "This request is waiting for your approval.",
       "upcoming": "Upcoming",
       "past": "Past",
       "views": "Appointment views",
@@ -198,7 +204,7 @@
       "pendingBody": "Your request has been sent to the provider.",
       "pendingMeeting": "Meeting details will be available after confirmation.",
       "upcomingEmpty": "No upcoming appointments",
-      "upcomingEmptyBody": "Your bookings and appointments arranged by your providers will appear here.",
+      "upcomingEmptyBody": "Appointments you host and attend will appear here.",
       "pastEmpty": "No previous appointments yet",
       "pastEmptyBody": "Completed, cancelled, declined and expired appointments will appear here.",
       "loadError": "We couldn't load your appointments.",
@@ -222,10 +228,10 @@
     "controls": {
       "eyebrow": "My account",
       "title": "My Appointments",
-      "intro": "Keep track of your appointments and manage upcoming bookings.",
+      "intro": "Appointments you host and attend, together in one place.",
       "loading": "Checking your account…",
       "signedOutTitle": "Sign in to see your appointments.",
-      "signedOutBody": "Use the same account and verified email you use with your providers to see your bookings and assigned appointments.",
+      "signedOutBody": "Sign in with the same account and verified email you use when booking to see all your appointments.",
       "signInAction": "Sign in",
       "emailLabel": "Email",
       "passwordLabel": "Password",
@@ -235,7 +241,7 @@
       "dataPrivacy": "Your data and account",
       "dataPrivacyDescription": "Download a portable copy of your PeerSlot data or permanently close your account.",
       "exportTitle": "Export account data",
-      "exportDescription": "Download your profile, booking pages, availability, students, and appointment records as JSON. Passwords and authentication tokens are never included.",
+      "exportDescription": "Download your profile, booking pages, availability, clients, and appointment records as JSON. Passwords and authentication tokens are never included.",
       "exportAction": "Download my data",
       "exporting": "Preparing download…",
       "exportError": "Your data export could not be prepared. Please try again.",
@@ -243,7 +249,7 @@
       "deleteDescription": "Permanently remove your PeerSlot account and the scheduling data attached to it.",
       "deleteAction": "Delete my account",
       "deleteDialogTitle": "Permanently delete this account?",
-      "deleteWarning": "This cannot be undone. Your profile, booking page, availability, saved students, and every appointment hosted by you will be deleted. Appointments you requested as a student will also be deleted.",
+      "deleteWarning": "This cannot be undone. Your profile, booking page, availability, saved clients, and every appointment hosted by you will be deleted. Appointments you requested as a client will also be deleted.",
       "deleteConfirmation": "Type DELETE below to confirm.",
       "deleteConfirmationLabel": "Confirmation",
       "cancel": "Cancel",
@@ -256,12 +262,12 @@
       "eyebrow": "Legal",
       "title": "Privacy Policy",
       "updatedAt": "Effective date: 18 August 2026",
-      "introduction": "This policy explains how PeerSlot collects, uses, shares, and protects personal information when providers and students use our scheduling service.",
+      "introduction": "This policy explains how PeerSlot collects, uses, shares, and protects personal information when providers and clients use our scheduling service.",
       "sections": [
         {
           "heading": "1. Who we are",
           "paragraphs": [
-            "PeerSlot provides booking pages, availability management, appointment requests, recurring sessions, student records, and scheduling notifications. For questions or privacy requests, contact privacy@peerslot.com."
+            "PeerSlot provides booking pages, availability management, appointment requests, recurring sessions, client records, and scheduling notifications. For questions or privacy requests, contact privacy@peerslot.com."
           ]
         },
         {
@@ -273,7 +279,7 @@
             "Account and identity information, including name, email address, profile image when provided by a sign-in provider, email-verification status, and authentication credentials or tokens.",
             "Provider profile and booking-page information, including display name, professional title, time zone, appointment duration, rest time, minimum notice, public booking link, and publication status.",
             "Scheduling information, including availability windows, appointment dates and times, recurrence choices, booking status, reschedule history, session color, and exceptions to recurring sessions.",
-            "Student records entered by providers or students, including name, email address, comments, and appointment history.",
+            "Client records entered by providers or clients, including name, email address, comments, and appointment history.",
             "Communications generated through the service, such as verification emails and booking-request, acceptance, or decline notifications.",
             "Technical and security information, such as session identifiers, IP address, browser or device user agent, language preference, request logs, and failed-booking or rate-limit events."
           ]
@@ -281,8 +287,8 @@
         {
           "heading": "3. How and why we use information",
           "items": [
-            "To create accounts, authenticate users, verify email addresses, and provide booking, availability, recurring-session, student-management, and rescheduling features.",
-            "To show providers the students and appointments they manage and to show visitors the relevant public booking page and available times.",
+            "To create accounts, authenticate users, verify email addresses, and provide booking, availability, recurring-session, client-management, and rescheduling features.",
+            "To show providers the clients and appointments they manage and to show visitors the relevant public booking page and available times.",
             "To send transactional messages about account verification and appointment requests or decisions.",
             "To prevent duplicate bookings, enforce scheduling rules, investigate errors, protect accounts, limit abuse, and maintain service reliability.",
             "To comply with law, enforce our terms, and establish or defend legal claims."
@@ -297,7 +303,7 @@
             "We do not sell personal information. We share it only as needed to provide and protect PeerSlot, including with:"
           ],
           "items": [
-            "The provider or student involved in an appointment. Providers can see the identity, contact details, and scheduling details associated with their students and bookings.",
+            "The provider or client involved in an appointment. Providers can see the identity, contact details, and scheduling details associated with their clients and bookings.",
             "Infrastructure, database, email-delivery, security, and authentication vendors acting on our behalf.",
             "Google when you choose its sign-in option, subject to Google's own privacy terms.",
             "Authorities, advisers, or other parties when required by law, necessary to protect rights and safety, or connected with a merger, financing, acquisition, or sale of assets."
@@ -306,13 +312,13 @@
         {
           "heading": "5. Public booking pages",
           "paragraphs": [
-            "A published booking page is accessible to anyone with its link and may display the provider's chosen name, professional title, time zone, appointment duration, and open times. It does not publicly display student details or identify who occupies unavailable time. Providers should regenerate a link if it has been shared unintentionally."
+            "A published booking page is accessible to anyone with its link and may display the provider's chosen name, professional title, time zone, appointment duration, and open times. It does not publicly display client details or identify who occupies unavailable time. Providers should regenerate a link if it has been shared unintentionally."
           ]
         },
         {
           "heading": "6. Retention and deletion",
           "paragraphs": [
-            "We retain information while an account is active and for as long as reasonably necessary to provide the service, resolve disputes, maintain security, and meet legal obligations. Deleting a provider-created student also deletes appointments connected to that student. Some limited records may remain in backups or where retention is legally required. Booking-intent data expires after approximately ten minutes."
+            "We retain information while an account is active and for as long as reasonably necessary to provide the service, resolve disputes, maintain security, and meet legal obligations. Deleting a provider-created client also deletes appointments connected to that client. Some limited records may remain in backups or where retention is legally required. Booking-intent data expires after approximately ten minutes."
           ]
         },
         {
@@ -328,9 +334,9 @@
           ]
         },
         {
-          "heading": "9. Children and student information",
+          "heading": "9. Children and client information",
           "paragraphs": [
-            "PeerSlot may be used in educational settings. Providers are responsible for ensuring they have a lawful basis and any permission required to enter and manage student information, especially for minors. A child should use PeerSlot only with the involvement or authorization required by local law, a parent or guardian, and the relevant educational organization. Please contact us if you believe information was collected without required authorization."
+            "PeerSlot may be used in educational settings. Providers are responsible for ensuring they have a lawful basis and any permission required to enter and manage client information, especially for minors. A child should use PeerSlot only with the involvement or authorization required by local law, a parent or guardian, and the relevant educational organization. Please contact us if you believe information was collected without required authorization."
           ]
         },
         {
@@ -350,7 +356,7 @@
         {
           "heading": "1. The service",
           "paragraphs": [
-            "PeerSlot is a scheduling tool that lets providers publish availability, manage students and recurring or one-time sessions, receive appointment requests, and accept, decline, edit, or cancel bookings. PeerSlot does not itself provide teaching, counselling, healthcare, or other professional services and is not a party to the underlying relationship between a provider and a student."
+            "PeerSlot is a scheduling tool that lets providers publish availability, manage clients and recurring or one-time sessions, receive appointment requests, and accept, decline, edit, or cancel bookings. PeerSlot does not itself provide teaching, counselling, healthcare, or other professional services and is not a party to the underlying relationship between a provider and a client."
           ]
         },
         {
@@ -362,9 +368,9 @@
         {
           "heading": "3. Provider responsibilities",
           "items": [
-            "Keep availability, time zone, duration, rest time, notice periods, student records, and appointment information accurate.",
-            "Obtain any consent or other lawful basis needed to add student names, email addresses, comments, or other personal information.",
-            "Review pending appointment requests and communicate material schedule changes to affected students.",
+            "Keep availability, time zone, duration, rest time, notice periods, client records, and appointment information accurate.",
+            "Obtain any consent or other lawful basis needed to add client names, email addresses, comments, or other personal information.",
+            "Review pending appointment requests and communicate material schedule changes to affected clients.",
             "Use appropriate professional judgment. PeerSlot availability and notifications do not replace your own calendar checks, emergency procedures, or record-keeping duties.",
             "Protect public booking links and regenerate a link if you believe it is compromised or shared too broadly."
           ]
@@ -407,7 +413,7 @@
         {
           "heading": "9. Disclaimers and liability",
           "paragraphs": [
-            "To the extent permitted by law, PeerSlot is provided without warranties of uninterrupted operation, fitness for a particular purpose, or error-free scheduling. We are not liable for indirect, incidental, special, consequential, or punitive damages, loss of data or opportunity, or conduct between providers and students. Nothing in these terms excludes liability or consumer rights that cannot lawfully be excluded."
+            "To the extent permitted by law, PeerSlot is provided without warranties of uninterrupted operation, fitness for a particular purpose, or error-free scheduling. We are not liable for indirect, incidental, special, consequential, or punitive damages, loss of data or opportunity, or conduct between providers and clients. Nothing in these terms excludes liability or consumer rights that cannot lawfully be excluded."
           ]
         },
         {
@@ -495,7 +501,7 @@
       "consentJoin": "and acknowledge the",
       "onboardingEyebrow": "Provider setup",
       "onboardingTitle": "Create your booking page.",
-      "onboardingBody": "These defaults shape the times students see. You can refine them later from your dashboard.",
+      "onboardingBody": "These defaults shape the times clients see. You can refine them later from your dashboard.",
       "displayNameLabel": "Display name",
       "professionalTitleLabel": "Professional title",
       "professionalTitlePlaceholder": "Counselor",
@@ -533,7 +539,7 @@
       "workspace": "Provider workspace",
       "signOut": "Sign out",
       "loadError": "We couldn't load your workspace. Please refresh and try again.",
-      "students": "Manage students",
+      "students": "Manage clients",
       "personalActivities": "Personal activities",
       "myAppointments": "My appointments"
     },
@@ -614,7 +620,7 @@
       "eyebrow": "Weekly timetable",
       "title": "{name}’s sessions",
       "quickTitle": "Add to calendar",
-      "quickSearchStudent": "Search students or type a new name",
+      "quickSearchStudent": "Search clients or type a new name",
       "quickSearchActivity": "Search activities or type a new name",
       "quickCreate": "Create “{name}” and add",
       "quickEmpty": "Type a name to get started.",
@@ -624,17 +630,17 @@
       "quickMinutes": "{minutes} min",
       "quickClose": "Close",
       "quickRetry": "Try again",
-      "quickLoadError": "Could not load your students and activities. Try again.",
+      "quickLoadError": "Could not load your clients and activities. Try again.",
       "quickNameError": "Use a name between {minimum} and 100 characters.",
       "quickTimeError": "Choose a valid start time and a duration from 1 to 1,440 minutes.",
       "quickLoading": "Loading names…",
       "quickOneTime": "One time",
       "addToTimetable": "Add",
       "addType": "What would you like to add?",
-      "studentSession": "Student session",
+      "studentSession": "Client appointment",
       "freeTimeWindow": "Available time",
       "availableSlot": "Available",
-      "freeTimeDescription": "Add an available window to the same timetable. Students can book the generated times.",
+      "freeTimeDescription": "Add an available window to the same timetable. Clients can book the generated times.",
       "editFreeTime": "Edit available time",
       "editFreeTimeDescription": "Update this available-time window or remove it from the timetable.",
       "saveFreeTime": "Save available time",
@@ -645,12 +651,12 @@
       "generatedTimes": "generated times",
       "invalidFreeTime": "Choose a future window that fits at least one appointment.",
       "editSession": "Session details",
-      "addSessionDescription": "Add a student and reserve a session directly in your timetable.",
+      "addSessionDescription": "Add a client and reserve a session directly in your timetable.",
       "editSessionDescription": "Choose whether changes affect only this session or this and every future session.",
-      "student": "Student",
-      "newStudent": "Add a new student",
-      "studentName": "Student name",
-      "studentEmail": "Student email (optional)",
+      "student": "Client",
+      "newStudent": "Add a new client",
+      "studentName": "Client name",
+      "studentEmail": "Client email (optional)",
       "date": "Date",
       "startsAt": "Starts at",
       "endsAt": "Ends at",
@@ -690,7 +696,7 @@
       "sessionColor": "Session color",
       "exceptionHelp": "These changes apply only to the selected session. The weekly series stays unchanged.",
       "seriesHelp": "These changes start a new weekly schedule from the selected session. Past sessions stay unchanged.",
-      "emptyStudents": "Choose a student",
+      "emptyStudents": "Choose a client",
       "loadError": "The weekly timetable could not be loaded.",
       "saveError": "The session could not be saved. Please review the details and try again.",
       "personalActivity": "Personal activity",
@@ -711,11 +717,11 @@
       "activityDurationLabel": "Default duration (minutes, optional)",
       "activityDurationHelp": "Leave blank to choose times manually. A default calculates the end from your start time; existing schedules stay unchanged.",
       "activityDurationApplied": "Default: {minutes} minutes. The end follows your start time; you can adjust it for this schedule.",
-      "attendingSession": "Lessons I attend",
-      "attendingWith": "Lesson with {name}",
-      "attendingDescription": "This lesson is hosted by another teacher. Manage your attendance from your dashboard.",
+      "attendingSession": "Appointments I attend",
+      "attendingWith": "Appointment with {name}",
+      "attendingDescription": "This appointment is hosted by another professional. Make changes from My appointments.",
       "attendingConfirmed": "Confirmed",
-      "attendingLoadError": "Your lessons with other teachers could not be loaded. Refresh the calendar to try again.",
+      "attendingLoadError": "Your appointments with other professionals could not be loaded. Refresh the calendar to try again.",
       "manageAttending": "Manage my appointments",
       "refreshCalendar": "Refresh"
     },
@@ -737,7 +743,7 @@
     "settings": {
       "googleMeet": {
         "title": "Google Meet",
-        "description": "Connect your Google account to automatically add a meeting link to confirmed sessions. You and your student can join from your calendars. Weekly sessions keep the same link.",
+        "description": "Connect your Google account to automatically add a meeting link to confirmed sessions. You and your client can join from your calendars. Weekly sessions keep the same link.",
         "connect": "Connect Google Meet",
         "reconnect": "Reconnect Google Meet",
         "disconnect": "Disconnect",
@@ -765,7 +771,7 @@
       "timeZoneSearch": "Search time zones…",
       "timeZoneEmpty": "No time zone found.",
       "published": "Publish booking page",
-      "publishHelp": "When unpublished, your link and availability are hidden from students.",
+      "publishHelp": "When unpublished, your link and availability are hidden from clients.",
       "save": "Save settings",
       "saved": "Settings saved",
       "saveError": "Settings could not be saved. Review the fields and try again.",
@@ -777,7 +783,7 @@
       "dataPrivacy": "Your data and account",
       "dataPrivacyDescription": "Download a portable copy of your PeerSlot data or permanently close your account.",
       "exportTitle": "Export account data",
-      "exportDescription": "Download your profile, booking pages, availability, students, and appointment records as JSON. Passwords and authentication tokens are never included.",
+      "exportDescription": "Download your profile, booking pages, availability, clients, and appointment records as JSON. Passwords and authentication tokens are never included.",
       "exportAction": "Download my data",
       "exporting": "Preparing download…",
       "exportError": "Your data export could not be prepared. Please try again.",
@@ -785,7 +791,7 @@
       "deleteDescription": "Permanently remove your PeerSlot account and the scheduling data attached to it.",
       "deleteAction": "Delete my account",
       "deleteDialogTitle": "Permanently delete this account?",
-      "deleteWarning": "This cannot be undone. Your profile, booking page, availability, saved students, and every appointment hosted by you will be deleted. Appointments you requested as a student will also be deleted.",
+      "deleteWarning": "This cannot be undone. Your profile, booking page, availability, saved clients, and every appointment hosted by you will be deleted. Appointments you requested as a client will also be deleted.",
       "deleteConfirmation": "Type DELETE below to confirm.",
       "deleteConfirmationLabel": "Confirmation",
       "cancel": "Cancel",
@@ -800,18 +806,18 @@
       "loading": "Opening your workspace…",
       "loadError": "The list could not be loaded. Please refresh the page.",
       "saveError": "The change could not be saved. Please try again.",
-      "email": "Student email (optional)",
+      "email": "Client email (optional)",
       "emailConflict": "This email already belongs to {name}.",
       "nameConflict": "You already have a personal activity with this name.",
       "calendar": "Schedule time in the calendar",
-      "title": "Manage students",
-      "description": "Edit student details or remove a student from the active list while preserving appointment history.",
-      "add": "Add a new student",
-      "name": "Student name",
-      "edit": "Edit student",
-      "remove": "Delete student",
-      "deleteConfirm": "Remove {name} from your active students? Existing and historical appointments will be preserved.",
-      "empty": "No active students yet."
+      "title": "Manage clients",
+      "description": "Edit client details or remove a client from the active list while preserving appointment history.",
+      "add": "Add a new client",
+      "name": "Client name",
+      "edit": "Edit client",
+      "remove": "Delete client",
+      "deleteConfirm": "Remove {name} from your active clients? Existing and historical appointments will be preserved.",
+      "empty": "No active clients yet."
     },
     "personalActivities": {
       "eyebrow": "Provider workspace",
@@ -821,7 +827,7 @@
       "loading": "Opening your workspace…",
       "loadError": "The list could not be loaded. Please refresh the page.",
       "saveError": "The change could not be saved. Please try again.",
-      "email": "Student email (optional)",
+      "email": "Client email (optional)",
       "emailConflict": "This email already belongs to {name}.",
       "nameConflict": "You already have a personal activity with this name.",
       "calendar": "Schedule time in the calendar",
@@ -831,7 +837,7 @@
       "name": "Activity name",
       "edit": "Edit activity",
       "remove": "Delete activity",
-      "deleteConfirm": "Delete “{name}” and all its scheduled times? Student appointments will be preserved.",
+      "deleteConfirm": "Delete “{name}” and all its scheduled times? Client appointments will be preserved.",
       "empty": "No personal activities yet. Add your first activity.",
       "durationLabel": "Default duration (minutes, optional)",
       "durationHelp": "Leave blank to choose times manually. A default calculates the end from your start time; existing schedules stay unchanged.",

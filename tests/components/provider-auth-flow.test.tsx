@@ -19,6 +19,13 @@ afterEach(() => {
 });
 
 describe("provider registration without a checkbox", () => {
+  it("opens sign-in when entered from the homepage Login button", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => Response.json({}, { status: 401 })));
+    const copy = messages.ProviderAuth.flow;
+    render(<ProviderAuthFlow copy={copy} locale="en" initialMode="sign-in" />);
+    await screen.findByRole("heading", { name: copy.signInTitle });
+    expect(screen.queryByRole("heading", { name: copy.registerTitle })).toBeNull();
+  });
   it.each(["email", "google"])(
     "starts %s registration from the notice",
     async (method) => {

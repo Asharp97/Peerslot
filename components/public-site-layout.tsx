@@ -61,9 +61,9 @@ export async function PublicSiteLayout({
             <Link
               aria-label={t("headerCta")}
               className="inline-flex min-h-13 items-center justify-center gap-2 rounded-3xl border-2 border-vast-ink bg-lavender-whisper px-4.5 text-sm leading-none font-semibold transition duration-200 hover:-translate-y-0.5 hover:bg-ember-glow max-sm:min-h-[42px] max-sm:min-w-[42px] max-sm:px-2 max-sm:text-xs"
-              href="/auth/provider"
+              href="/auth/provider?mode=sign-in"
             >
-              <span className="max-sm:hidden">{t("headerCta")}</span>
+              <span>{t("headerCta")}</span>
               <ArrowRight aria-hidden="true" size={16} />
             </Link>
           </div>

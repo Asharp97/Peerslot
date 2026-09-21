@@ -87,13 +87,15 @@ const noticeOptions = [0, 60, 240, 720, 1440, 2880];
 export function ProviderAuthFlow({
   copy,
   locale,
+  initialMode = "register",
 }: {
   copy: ProviderAuthCopy;
   locale: string;
+  initialMode?: AuthMode;
 }) {
   const router = useRouter();
   const [phase, setPhase] = useState<Phase>("checking");
-  const [mode, setMode] = useState<AuthMode>("register");
+  const [mode, setMode] = useState<AuthMode>(initialMode);
   const [accessToken, setAccessToken] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");

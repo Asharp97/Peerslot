@@ -28,6 +28,7 @@ import {
   updateProviderAppointment,
 } from "@/lib/provider-appointments";
 import { createPublicAppointmentRequest } from "@/lib/public-appointment-request";
+import { appointmentAgendaQuerySchema } from "@/lib/appointment-agenda";
 import {
   changeStudentAppointment,
   listStudentAppointments,
@@ -313,6 +314,55 @@ describe("attendee calendar identity and recurrence", () => {
 });
 
 describe("appointment agenda real database", () => {
+  it("combines hosting and attending in date order, paginates both, and preserves action ownership", async () => {
+    const received = await addWeekly();
+    await testDb.insert(providerProfiles).values({ userId: "attendee", displayName: "Ali" });
+    await testDb.insert(bookingPages).values({ providerId: "attendee", slug: "ALI12345" });
+    const client = await createProviderStudent("attendee", { displayName: "Other", email: "other@example.com" });
+    const hosted = await createProviderAppointment("attendee", {
+      providerStudentId: client.id,
+      startsAt: new Date("2030-01-14T09:00:00Z"),
+      endsAt: new Date("2030-01-14T09:30:00Z"),
+      recurrence: "none",
+      color: "#f0d7ff",
+      comment: undefined,
+    });
+    const first = await listAppointmentAgenda("attendee", { view: "upcoming" }, now);
+    expect(first.appointments).toHaveLength(20);
+    expect(first.appointments.slice(0, 2)).toMatchObject([
+      { id: hosted.id, role: "hosting", providerName: "Other", canChange: false, canReschedule: false },
+      { id: received.id, role: "attending", providerName: "Ceyda", canChange: true, canReschedule: true },
+    ]);
+    expect(first.nextCursor).not.toBeNull();
+    const second = await listAppointmentAgenda("attendee", appointmentAgendaQuerySchema.parse({
+      view: "upcoming", cursor: first.nextCursor,
+    }), now);
+    const combined = [...first.appointments, ...second.appointments];
+    expect(new Set(combined.map(a => `${a.id}:${a.occurrenceStartsAt}`)).size).toBe(combined.length);
+    expect(combined.filter(a => a.id === hosted.id)).toHaveLength(1);
+    expect(second.appointments.every(a => a.role === "attending")).toBe(true);
+    expect(second.appointments[0].startsAt > first.appointments.at(-1)!.startsAt).toBe(true);
+    await expect(changeStudentAppointment("attendee", hosted.id, {
+      action: "cancel", occurrenceStartsAt: new Date(hosted.startsAt),
+    })).rejects.toThrow("not_found");
+    const other = await listAppointmentAgenda("unrelated", { view: "upcoming" }, now);
+    expect(other.appointments).toMatchObject([{ id: hosted.id, role: "attending", providerName: "Ali" }]);
+    expect(other.appointments[0]).not.toHaveProperty("comment");
+    expect(other.appointments[0]).not.toHaveProperty("studentEmail");
+  });
+
+  it("lists a self-matching contact once, with the hosting role", async () => {
+    await testDb.update(providerStudents).set({ email: "ceyda@example.com" }).where(eq(providerStudents.id, studentContactId));
+    await createProviderAppointment("ceyda", {
+      providerStudentId: studentContactId, startsAt: start,
+      endsAt: new Date(+start + 1_800_000), recurrence: "none", color: "#f0d7ff",
+      comment: undefined,
+    });
+    const result = await listAppointmentAgenda("ceyda", { view: "upcoming" }, now);
+    expect(result.appointments).toHaveLength(1);
+    expect(result.appointments[0].role).toBe("hosting");
+  });
+
   it("uses the provider avatar, hides internal details, and includes a cancelled recurring exception in Past", async () => {
     await testDb
       .update(user)
@@ -327,6 +377,7 @@ describe("appointment agenda real database", () => {
     expect(past.appointments).toHaveLength(1);
     expect(past.appointments[0]).toMatchObject({
       status: "cancelled",
+      role: "attending",
       providerName: "Ceyda",
       providerAvatar: "https://example.com/provider.png",
       occurrenceStartsAt: start.toISOString(),
@@ -346,10 +397,18 @@ describe("appointment agenda real database", () => {
       (await listAppointmentAgenda("unrelated", { view: "past" }, now))
         .appointments,
     ).toEqual([]);
-    expect(
-      (await listAppointmentAgenda("ceyda", { view: "upcoming" }, now))
-        .appointments,
-    ).toEqual([]);
+    const hosted = await listAppointmentAgenda("ceyda", { view: "upcoming" }, now);
+    expect(hosted.appointments[0]).toMatchObject({
+        providerName: "Ali",
+        role: "hosting",
+        startsAt: "2030-01-22T09:00:00.000Z",
+        canChange: false,
+        canReschedule: false,
+    });
+    const hostedPast = await listAppointmentAgenda("ceyda", { view: "past" }, now);
+    expect(hostedPast.appointments).toMatchObject([
+      { role: "hosting", status: "cancelled", meetingUrl: null },
+    ]);
   });
   it("lists completed history for verified email ownership, including provider accounts", async () => {
     await testDb.insert(providerProfiles).values({ userId: "attendee" });

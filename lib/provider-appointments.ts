@@ -79,7 +79,7 @@ export class ProviderAppointmentReviewConflictError extends Error {
 
 export class ProviderStudentNotFoundError extends Error {
   constructor() {
-    super("Student not found");
+    super("Client not found");
     this.name = "ProviderStudentNotFoundError";
   }
 }
@@ -91,6 +91,7 @@ const appointmentSelection = {
   windowId: availabilitySlots.availabilityWindowId,
   accountStudentName: user.name,
   accountStudentEmail: user.email,
+  accountStudentAvatar: user.image,
   providerStudentId: providerStudents.id,
   providerStudentName: providerStudents.displayName,
   providerStudentEmail: providerStudents.email,
@@ -932,13 +933,19 @@ function presentAppointmentRow(
     ReturnType<ReturnType<typeof appointmentQuery>["limit"]>
   >[number],
 ) {
-  const { accountStudentName, accountStudentEmail, ...appointment } = row;
+  const {
+    accountStudentName,
+    accountStudentEmail,
+    accountStudentAvatar,
+    ...appointment
+  } = row;
   return {
     ...appointment,
     studentName:
-      appointment.providerStudentName ?? accountStudentName ?? "Student",
+      appointment.providerStudentName ?? accountStudentName ?? "Client",
     studentEmail:
       appointment.providerStudentEmail ?? accountStudentEmail ?? null,
+    studentAvatar: accountStudentAvatar,
   };
 }
 

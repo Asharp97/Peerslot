@@ -8,12 +8,15 @@ import { routing } from "@/i18n/routing";
 
 type ProviderAuthPageProps = {
   params: Promise<{ locale: string }>;
+  searchParams: Promise<{ mode?: string }>;
 };
 
 export default async function ProviderAuthPage({
   params,
+  searchParams,
 }: ProviderAuthPageProps) {
   const { locale } = await params;
+  const { mode } = await searchParams;
 
   if (!hasLocale(routing.locales, locale)) notFound();
 
@@ -60,6 +63,7 @@ export default async function ProviderAuthPage({
           <section className="p-7 sm:p-12 lg:p-14">
             <ProviderAuthFlow
               locale={locale}
+              initialMode={mode === "sign-in" ? "sign-in" : "register"}
               copy={
                 t.raw("flow") as Parameters<typeof ProviderAuthFlow>[0]["copy"]
               }

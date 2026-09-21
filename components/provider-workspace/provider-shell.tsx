@@ -105,7 +105,7 @@ export function ProviderShell({
       if (cancelled) return;
 
       if (!token) {
-        router.replace("/auth/provider");
+        router.replace("/");
         return;
       }
 
@@ -143,7 +143,7 @@ export function ProviderShell({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({}),
     });
-    router.replace("/auth/provider");
+    router.replace("/");
   }
 
   if (!workspaceState) {

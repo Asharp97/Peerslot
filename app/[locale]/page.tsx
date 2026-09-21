@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { clsx } from "clsx";
 import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { notFound } from "next/navigation";
+import { headers } from "next/headers";
+import { notFound, redirect } from "next/navigation";
 import {
   ArrowRight,
   CalendarCheck,
@@ -16,6 +17,7 @@ import {
 
 import { PublicSiteLayout } from "@/components/public-site-layout";
 import { Link } from "@/i18n/navigation";
+import { auth } from "@/lib/auth";
 import { routing } from "@/i18n/routing";
 import { createLocalizedAlternates, resolveSiteUrl } from "@/lib/seo";
 
@@ -250,6 +252,9 @@ export default async function Home({ params }: HomeProps) {
   if (!hasLocale(routing.locales, locale)) {
     notFound();
   }
+
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (session) redirect(`/${locale}/provider`);
 
   setRequestLocale(locale);
 

@@ -17,6 +17,11 @@ import {
 } from "@/lib/appointment-presentation";
 import type { AgendaAppointment } from "@/lib/appointment-agenda";
 import messages from "@/messages/en.json";
+import turkishMessages from "@/messages/tr.json";
+
+vi.mock("@/i18n/navigation", () => ({
+  Link: (props: React.ComponentProps<"a">) => <a {...props} />,
+}));
 
 const copy = messages.Account.appointments;
 const appointment: AgendaAppointment = {
@@ -26,6 +31,7 @@ const appointment: AgendaAppointment = {
   endsAt: "2030-01-18T09:30:00Z",
   providerName: "Ada Provider",
   providerAvatar: null,
+  role: "attending",
   meetingUrl: "https://meet.google.com/abc-defg-hij",
   timeZone: "Europe/Istanbul",
   status: "scheduled",
@@ -89,6 +95,7 @@ describe("appointment agenda", () => {
     });
     const card = provider.closest("article")!;
     expect(within(card).getByText(copy.statuses.scheduled)).toBeTruthy();
+    expect(within(card).getByText(copy.roles.attending)).toBeTruthy();
     const link = within(card).getByRole("link", {
       name: /Google Meet.*Join meeting/,
     });
@@ -152,6 +159,37 @@ describe("appointment agenda", () => {
       expect(screen.queryByRole("link")).toBeNull();
     },
   );
+
+  it("marks appointments hosted by the signed-in professional", () => {
+    render(
+      <AppointmentCard
+        appointment={{ ...appointment, role: "hosting", providerName: "Sam Client" }}
+        locale="en"
+        timeZone="UTC"
+        copy={copy}
+        onAction={vi.fn()}
+      />,
+    );
+    expect(screen.getByText(copy.roles.hosting)).toBeTruthy();
+    expect(screen.getByText("Sam Client")).toBeTruthy();
+    expect(screen.getByText(copy.roles.hosting).tagName).toBe("P");
+    expect(screen.getByText(copy.statuses.scheduled).tagName).toBe("SPAN");
+    expect(screen.getByRole("link", { name: copy.manageHosted }).getAttribute("href")).toBe("/provider/appointments");
+    expect(screen.queryByRole("button", { name: copy.cancel })).toBeNull();
+    expect(screen.queryByRole("button", { name: copy.reschedule })).toBeNull();
+    expect(screen.queryByText(copy.locked)).toBeNull();
+  });
+
+  it.each([messages.Account.appointments, turkishMessages.Account.appointments])("uses host-specific pending copy and a review action", (localizedCopy) => {
+    render(<AppointmentCard
+      appointment={{ ...appointment, role: "hosting", status: "pending" }}
+      locale="en" timeZone="UTC" copy={localizedCopy} onAction={vi.fn()}
+    />);
+    expect(screen.getByText(localizedCopy.pendingHostingBody)).toBeTruthy();
+    expect(screen.queryByText(localizedCopy.pendingBody)).toBeNull();
+    expect(screen.getByRole("link", { name: localizedCopy.reviewRequest }).getAttribute("href")).toBe("/provider/requests");
+    expect(screen.queryByRole("link", { name: /Google Meet/ })).toBeNull();
+  });
 
   it("shows a supplied service and physical location without a meeting link", () => {
     render(

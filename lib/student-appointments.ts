@@ -21,8 +21,10 @@ import {
 import { getAvailableTimesForBookingPage } from "@/lib/available-times";
 import type { AvailableTimeRange } from "@/lib/available-time";
 import { expandProviderAppointmentOccurrences } from "@/lib/provider-appointment-occurrence";
+import { findBookingPage } from "@/lib/booking-pages";
 import {
   ProviderAppointmentConflictError,
+  loadProviderAppointmentRows,
   updateProviderAppointment,
 } from "@/lib/provider-appointments";
 import {
@@ -113,6 +115,47 @@ async function loadStudentRows(studentId: string, now = new Date()) {
 
 type StudentRow = Awaited<ReturnType<typeof loadStudentRows>>[number];
 
+async function loadHostingRows(providerId: string, now: Date) {
+  const [rows, page] = await Promise.all([
+    loadProviderAppointmentRows(providerId),
+    findBookingPage(providerId),
+  ]);
+  if (!page) return [];
+
+  return rows.map(
+    (row) =>
+      ({
+        ...row,
+        owned: true,
+        page,
+        providerName: row.studentName,
+        providerAvatar: row.studentAvatar ?? null,
+        role: "hosting" as const,
+        reschedulesUsed: 0,
+        rescheduleResetsAt: now.toISOString(),
+        restBetweenSessionsMinutes: 0,
+        meetingCreatingAt: null,
+        updatedAt: row.createdAt,
+      }),
+  );
+}
+
+async function loadAgendaRows(accountId: string, now: Date) {
+  const [studentRows, hostingRows] = await Promise.all([
+    loadStudentRows(accountId, now),
+    loadHostingRows(accountId, now),
+  ]);
+  // Prefer the hosting role if the same record also matches this account's
+  // contact email. Include exceptions before recurrence expansion as usual.
+  const hostingIds = new Set(hostingRows.map((row) => row.id));
+  return [
+    ...studentRows
+      .filter((row) => !hostingIds.has(row.id))
+      .map((row) => ({ ...row, role: "attending" as const })),
+    ...hostingRows,
+  ];
+}
+
 export async function listStudentAppointments(
   studentId: string,
   now = new Date(),
@@ -176,7 +219,7 @@ export async function listAppointmentAgenda(
   now = new Date(),
 ): Promise<AppointmentAgendaPage> {
   const page = paginateAppointmentOccurrences(
-    await loadStudentRows(accountId, now),
+    await loadAgendaRows(accountId, now),
     query,
     now,
   );
@@ -184,13 +227,15 @@ export async function listAppointmentAgenda(
     nextCursor: page.nextCursor,
     appointments: page.appointments.map((row) => {
       const status = appointmentDisplayStatus(row, now);
-      const canChange = !studentAppointmentChangeRestriction(
-        {
-          ...row,
-          minimumNoticeHours: row.page.minimumNoticeHours,
-        },
-        now,
-      );
+      const canChange =
+        row.role === "attending" &&
+        !studentAppointmentChangeRestriction(
+          {
+            ...row,
+            minimumNoticeHours: row.page.minimumNoticeHours,
+          },
+          now,
+        );
       return {
         id: row.appointmentId,
         occurrenceStartsAt: row.occurrenceStartsAt.toISOString(),
@@ -198,6 +243,7 @@ export async function listAppointmentAgenda(
         endsAt: row.endsAt.toISOString(),
         providerName: row.providerName,
         providerAvatar: row.providerAvatar,
+        role: row.role,
         status,
         meetingUrl: status === "scheduled" ? row.meetingUrl : null,
         timeZone: row.page.timeZone,
