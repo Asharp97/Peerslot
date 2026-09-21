@@ -158,7 +158,7 @@ type CalendarContextTarget = {
   date: Date;
 };
 
-export type ProviderAppointmentsCopy = CalendarCreatePopoverCopy & {
+export type WorkspaceCalendarCopy = CalendarCreatePopoverCopy & {
   meeting: AppointmentMeetingCopy;
   attendingSession: string;
   attendingWith: string;
@@ -272,10 +272,10 @@ const calendarHeaderToolbar = {
   right: "",
 };
 
-export function ProviderAppointments({
+export function WorkspaceCalendar({
   copy,
 }: {
-  copy: ProviderAppointmentsCopy;
+  copy: WorkspaceCalendarCopy;
 }) {
   const locale = useLocale() as "en" | "tr";
   const { accessToken, data } = useProviderWorkspace();
@@ -1358,7 +1358,7 @@ export function ProviderAppointments({
               <JoinMeeting meetingUrl={attendingSelection.meetingUrl} status={attendingSelection.status} copy={copy.meeting} />
               <a
                 className="text-sm font-semibold underline"
-                href={`/${locale}/account`}>
+                href={`/${locale}/my-appointments`}>
                 {copy.manageAttending}
               </a>
             </>
@@ -2260,7 +2260,7 @@ function authenticatedJsonHeaders(accessToken: string) {
 
 async function responseError(
   response: Response,
-  copy: ProviderAppointmentsCopy,
+  copy: WorkspaceCalendarCopy,
 ) {
   const body = (await response.json().catch(() => null)) as {
     error?: string;

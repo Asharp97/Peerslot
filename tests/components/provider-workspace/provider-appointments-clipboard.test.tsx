@@ -10,7 +10,7 @@ import {
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { ProviderAppointments } from "@/components/provider-workspace/provider-appointments";
+import { WorkspaceCalendar } from "@/components/provider-workspace/workspace-calendar";
 import messages from "@/messages/en.json";
 
 vi.mock("next-intl", () => ({ useLocale: () => "en" }));
@@ -93,7 +93,7 @@ vi.mock("@fullcalendar/react", async () => {
   };
 });
 
-const copy = messages.ProviderWorkspace.appointments;
+const copy = messages.ProviderWorkspace.calendar;
 const appointment = {
   id: "occurrence-id",
   appointmentId: "appointment-id",
@@ -165,7 +165,7 @@ function setup({
     },
   );
   vi.stubGlobal("fetch", fetchMock);
-  render(<ProviderAppointments copy={copy} />);
+  render(<WorkspaceCalendar copy={copy} />);
   return fetchMock;
 }
 

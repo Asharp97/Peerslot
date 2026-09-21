@@ -147,7 +147,7 @@
         { "label": "Gizlilik", "href": "/policy/privacy" },
         { "label": "Koşullar", "href": "/policy/terms-agreements" },
         { "label": "Çerezler", "href": "/policy/cookies" },
-        { "label": "Randevularım", "href": "/account" }
+        { "label": "Randevularım", "href": "/my-appointments" }
       ],
       "copyright": "© {year} PeerSlot"
     }
@@ -226,7 +226,7 @@
       "evening": "Akşam"
     },
     "controls": {
-      "eyebrow": "Hesabım",
+      "eyebrow": "Programınız",
       "title": "Randevularım",
       "intro": "Düzenlediğiniz ve katıldığınız tüm randevular tek yerde.",
       "loading": "Hesabınız kontrol ediliyor…",
@@ -533,13 +533,13 @@
     "shell": {
       "loading": "Çalışma alanınız açılıyor…",
       "overview": "Genel bakış",
-      "appointments": "Takvim",
+      "calendar": "Takvim",
       "requests": "Talepler",
       "settings": "Ayarlar",
       "workspace": "Sağlayıcı çalışma alanı",
       "signOut": "Çıkış yap",
       "loadError": "Çalışma alanınız yüklenemedi. Lütfen sayfayı yenileyip tekrar deneyin.",
-      "students": "Danışanları yönet",
+      "clients": "Danışanlar",
       "personalActivities": "Kişisel aktiviteler",
       "myAppointments": "Randevularım"
     },
@@ -605,7 +605,7 @@
         "unpublished": "Yayında değil"
       }
     },
-    "appointments": {
+    "calendar": {
       "meeting": {
         "join": "Katıl",
         "opensNewTab": "Yeni sekmede açılır",
@@ -798,7 +798,7 @@
       "deleting": "Siliniyor…",
       "deleteError": "Hesabınız silinemedi. Hiçbir değişiklik yapılmadı; lütfen tekrar deneyin."
     },
-    "students": {
+    "clients": {
       "eyebrow": "Sağlayıcı çalışma alanı",
       "save": "Değişiklikleri kaydet",
       "saving": "Kaydediliyor…",

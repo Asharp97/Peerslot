@@ -2,6 +2,7 @@
 
 import {
   CalendarDays,
+  ListTodo,
   Users,
   Coffee,
   LayoutDashboard,
@@ -28,10 +29,10 @@ import type { ProviderSetupData } from "@/lib/provider-workspace-types";
 export type ProviderShellCopy = {
   loading: string;
   overview: string;
-  appointments: string;
+  calendar: string;
   requests: string;
   settings: string;
-  students: string;
+  clients: string;
   personalActivities: string;
   myAppointments: string;
   workspace: string;
@@ -160,23 +161,23 @@ export function ProviderShell({
   }
 
   const workspaceData = workspaceState.data;
-  const isAppointmentsPage = pathname.startsWith("/provider/appointments");
+  const isCalendarPage = pathname.startsWith("/provider/calendar");
 
   const navigation = [
     { href: "/provider", label: copy.overview, icon: LayoutDashboard },
+    { href: "/my-appointments", label: copy.myAppointments, icon: ListTodo },
     {
-      href: "/provider/appointments",
-      label: copy.appointments,
+      href: "/provider/calendar",
+      label: copy.calendar,
       icon: CalendarDays,
     },
     { href: "/provider/requests", label: copy.requests, icon: Inbox },
-    { href: "/provider/students", label: copy.students, icon: Users },
+    { href: "/provider/clients", label: copy.clients, icon: Users },
     {
       href: "/provider/personal-activities",
       label: copy.personalActivities,
       icon: Coffee,
     },
-    { href: "/account", label: copy.myAppointments, icon: CalendarDays },
     { href: "/provider/settings", label: copy.settings, icon: Settings },
   ] as const;
 
@@ -294,8 +295,8 @@ export function ProviderShell({
         </header>
 
         <main
-          className={`px-4 py-4 sm:px-6 lg:ml-64 ${isAppointmentsPage ? "lg:px-6 lg:py-6" : "lg:px-10 lg:py-10"}`}>
-          <div className={isAppointmentsPage ? "w-full" : "mx-auto max-w-6xl"}>
+          className={`px-4 py-4 sm:px-6 lg:ml-64 ${isCalendarPage ? "lg:px-6 lg:py-6" : "lg:px-10 lg:py-10"}`}>
+          <div className={isCalendarPage ? "w-full" : "mx-auto max-w-6xl"}>
             {children}
           </div>
         </main>

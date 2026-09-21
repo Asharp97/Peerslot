@@ -64,7 +64,7 @@ export async function notifyStudentOfBookingDecision(
         studentName: input.studentName,
         timeZone: input.timeZone,
         viewUrl: emailApplicationUrl(
-          `/${input.locale}${input.decision === "accept" ? "/account" : ""}`,
+          `/${input.locale}${input.decision === "accept" ? "/my-appointments" : ""}`,
         ),
       }),
       to: studentEmail,

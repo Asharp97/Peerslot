@@ -89,7 +89,7 @@ describe("localized email content and links", () => {
           ...appointment,
           locale,
           decision,
-          viewUrl: "https://www.peerslot.com/" + locale + "/account",
+          viewUrl: "https://www.peerslot.com/" + locale + "/my-appointments",
         }),
       ),
     ];

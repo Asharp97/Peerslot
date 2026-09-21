@@ -1,14 +1,10 @@
-import { getTranslations } from "next-intl/server";
-import {
-  ProviderDirectory,
-  type ProviderDirectoryCopy,
-} from "@/components/provider-workspace/provider-directory";
-export default async function Page() {
-  const t = await getTranslations("ProviderWorkspace");
-  return (
-    <ProviderDirectory
-      kind="students"
-      copy={t.raw("students") as ProviderDirectoryCopy}
-    />
-  );
+import { redirect } from "next/navigation";
+
+export default async function LegacyStudentsPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  redirect(`/${locale}/provider/clients`);
 }

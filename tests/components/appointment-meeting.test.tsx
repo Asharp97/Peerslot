@@ -10,14 +10,14 @@ import {
 import messages from "@/messages/en.json";
 import tr from "@/messages/tr.json";
 
-const copy = messages.ProviderWorkspace.appointments.meeting;
+const copy = messages.ProviderWorkspace.calendar.meeting;
 const url = "https://meet.google.com/abc-defg-hij";
 afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();
 });
 describe("Google Meet join controls", () => {
-  it.each([copy, tr.ProviderWorkspace.appointments.meeting])(
+  it.each([copy, tr.ProviderWorkspace.calendar.meeting])(
     "shows Google's logo and opens the meeting in a protected new tab",
     (labels) => {
       render(<JoinMeeting meetingUrl={url} status="scheduled" copy={labels} />);

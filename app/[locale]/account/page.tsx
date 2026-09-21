@@ -1,24 +1,10 @@
-import { getTranslations } from "next-intl/server";
+import { redirect } from "next/navigation";
 
-import { AccountPage, type AccountPageCopy } from "@/components/account-page";
-import { PublicSiteLayout } from "@/components/public-site-layout";
-import type { AppointmentsCopy } from "@/components/appointments/appointment-agenda";
-
-export default async function AccountRoute({
+export default async function LegacyAccountRoute({
   params,
 }: {
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  const t = await getTranslations("Account");
-
-  return (
-    <PublicSiteLayout>
-      <AccountPage
-        appointmentsCopy={t.raw("appointments") as AppointmentsCopy}
-        copy={t.raw("controls") as AccountPageCopy}
-        locale={locale}
-      />
-    </PublicSiteLayout>
-  );
+  redirect(`/${locale}/my-appointments`);
 }

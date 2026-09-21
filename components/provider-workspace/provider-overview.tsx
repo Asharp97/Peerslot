@@ -230,7 +230,7 @@ export function ProviderOverview({ copy }: { copy: ProviderOverviewCopy }) {
           </p>
           <Link
             className="mt-6 inline-flex items-center gap-2 text-xs font-bold"
-            href="/provider/appointments"
+            href="/provider/calendar"
           >
             {copy.manageAvailability} <ArrowUpRight size={14} />
           </Link>
@@ -239,7 +239,7 @@ export function ProviderOverview({ copy }: { copy: ProviderOverviewCopy }) {
 
       <section className="mt-4 grid gap-4 xl:grid-cols-2">
         <WorkspaceListCard
-          action={{ href: "/provider/appointments", label: copy.viewAll }}
+          action={{ href: "/provider/calendar", label: copy.viewAll }}
           empty={copy.noAppointments}
           icon={<CalendarCheck size={18} />}
           title={copy.upcoming}
@@ -322,7 +322,7 @@ function WorkspaceListCard({
   icon,
   title,
 }: {
-  action?: { href: "/provider/appointments"; label: string };
+  action?: { href: "/provider/calendar"; label: string };
   children: React.ReactNode;
   empty: string;
   icon: React.ReactNode;

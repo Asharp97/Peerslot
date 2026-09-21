@@ -13,7 +13,7 @@ import { CalendarCreatePopover } from "@/components/provider-workspace/calendar-
 import en from "@/messages/en.json";
 import tr from "@/messages/tr.json";
 
-const copy = en.ProviderWorkspace.appointments;
+const copy = en.ProviderWorkspace.calendar;
 const ada = {
   id: "ada",
   displayName: "Ada Lovelace",
@@ -156,7 +156,7 @@ describe("calendar creation popover", () => {
     "creates and schedules a new student by typing a name and pressing Enter in %s",
     async (locale) => {
       const messages = (locale === "tr" ? tr : en).ProviderWorkspace
-        .appointments;
+        .calendar;
       const api = mockApi();
       vi.stubGlobal("fetch", api);
       const callbacks = open({ copy: messages, locale });

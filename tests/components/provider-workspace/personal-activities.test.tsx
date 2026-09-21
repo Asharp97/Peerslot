@@ -11,7 +11,7 @@ import {
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { ProviderAppointments } from "@/components/provider-workspace/provider-appointments";
+import { WorkspaceCalendar } from "@/components/provider-workspace/workspace-calendar";
 import { ProviderDirectory } from "@/components/provider-workspace/provider-directory";
 import {
   personalActivityColor,
@@ -51,7 +51,7 @@ vi.mock("@/components/provider-workspace/provider-shell", () => ({
     },
   }),
 }));
-const copy = en.ProviderWorkspace.appointments;
+const copy = en.ProviderWorkspace.calendar;
 const activity: PersonalActivityOccurrence = {
   id: "occurrence",
   scheduleId: "schedule-id",
@@ -117,7 +117,7 @@ function mockCalendar(
 }
 async function openPersonal(date = "2030-01-15T12:00:00") {
   const user = userEvent.setup();
-  render(<ProviderAppointments copy={copy} />);
+  render(<WorkspaceCalendar copy={copy} />);
   await user.click(screen.getByRole("button", { name: copy.addToTimetable }));
   fireEvent.change(screen.getByLabelText(copy.date), {
     target: { value: date.slice(0, 10) },
@@ -148,7 +148,7 @@ describe("personal activities in the calendar", () => {
     const user = await openPersonal();
     expect(
       screen.queryByRole("button", {
-        name: en.ProviderWorkspace.students.title,
+        name: en.ProviderWorkspace.clients.title,
       }),
     ).toBeNull();
     const dialog = screen.getByRole("dialog");
@@ -204,7 +204,7 @@ describe("personal activities in the calendar", () => {
 
   it("renders amber activities and retains available slots touching their boundaries", async () => {
     mockCalendar();
-    render(<ProviderAppointments copy={copy} />);
+    render(<WorkspaceCalendar copy={copy} />);
     const events = await loadEvents();
     expect(events.find((event) => event.title === "Prayer")).toMatchObject({
       backgroundColor: personalActivityColor,
@@ -233,7 +233,7 @@ describe("personal activities in the calendar", () => {
 
   it("moves a personal activity in the provider time zone using its independent endpoint", async () => {
     const fetchMock = mockCalendar();
-    render(<ProviderAppointments copy={copy} />);
+    render(<WorkspaceCalendar copy={copy} />);
     const revert = vi.fn();
     await act(async () => {
       await (calendar.props.eventDrop as (arg: unknown) => Promise<void>)({
@@ -268,7 +268,7 @@ describe("personal activities in the calendar", () => {
     const fetchMock = mockCalendar([weekly]);
     const confirm = vi.fn(() => true);
     vi.stubGlobal("confirm", confirm);
-    render(<ProviderAppointments copy={copy} />);
+    render(<WorkspaceCalendar copy={copy} />);
     const events = await loadEvents();
     expect(events[0].editable).toBe(true);
     await act(async () => {
@@ -472,7 +472,7 @@ describe("personal activity default duration controls", () => {
         },
       ],
     );
-    render(<ProviderAppointments copy={copy} />);
+    render(<WorkspaceCalendar copy={copy} />);
     await act(async () => {
       (calendar.props.eventClick as (arg: unknown) => void)({
         event: { extendedProps: { personalActivity: activity } },
@@ -576,7 +576,7 @@ describe("calendar block drag interactions", () => {
     async (recurrence) => {
       const item = { ...activity, recurrence };
       const fetchMock = mockCalendar([item]);
-      render(<ProviderAppointments copy={copy} />);
+      render(<WorkspaceCalendar copy={copy} />);
       const events = await loadEvents();
       expect(events[0].editable).toBe(true);
       const revert = vi.fn();
@@ -604,7 +604,7 @@ describe("calendar block drag interactions", () => {
   );
   it("makes each green block draggable while keeping its fixed duration", async () => {
     const fetchMock = mockCalendar([]);
-    render(<ProviderAppointments copy={copy} />);
+    render(<WorkspaceCalendar copy={copy} />);
     const event = (await loadEvents()).find(
       (item) => item.extendedProps?.availabilitySlot,
     )!;
@@ -631,7 +631,7 @@ describe("calendar block drag interactions", () => {
   });
   it("reverts a rejected green-block drag and displays the specific error", async () => {
     const fetchMock = mockCalendar([]);
-    render(<ProviderAppointments copy={copy} />);
+    render(<WorkspaceCalendar copy={copy} />);
     const event = (await loadEvents()).find(
       (item) => item.extendedProps?.availabilitySlot,
     )!;
@@ -666,7 +666,7 @@ describe("calendar block drag interactions", () => {
       "confirm",
       vi.fn(() => true),
     );
-    render(<ProviderAppointments copy={copy} />);
+    render(<WorkspaceCalendar copy={copy} />);
     const click = async () =>
       act(async () => {
         (calendar.props.eventClick as (info: unknown) => void)({
@@ -713,7 +713,7 @@ describe("editing moved availability", () => {
       "confirm",
       vi.fn(() => true),
     );
-    render(<ProviderAppointments copy={copy} />);
+    render(<WorkspaceCalendar copy={copy} />);
     const props = {
       availabilityWindow: {
         id: "window",

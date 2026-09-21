@@ -31,15 +31,15 @@ describe("email action URLs", () => {
     vi.stubEnv("NODE_ENV", "production");
     vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://www.peerslot.com");
     vi.stubEnv("BETTER_AUTH_URL", "https://peerslot.com");
-    expect(emailApplicationUrl("/tr/account")).toBe(
-      "https://www.peerslot.com/tr/account",
+    expect(emailApplicationUrl("/tr/my-appointments")).toBe(
+      "https://www.peerslot.com/tr/my-appointments",
     );
   });
   it("fails instead of silently putting localhost in production mail", () => {
     vi.stubEnv("NODE_ENV", "production");
     vi.stubEnv("NEXT_PUBLIC_SITE_URL", "");
     vi.stubEnv("BETTER_AUTH_URL", "");
-    expect(() => emailApplicationUrl("/en/account")).toThrow(
+    expect(() => emailApplicationUrl("/en/my-appointments")).toThrow(
       "public HTTPS URL",
     );
   });

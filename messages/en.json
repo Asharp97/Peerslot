@@ -147,7 +147,7 @@
         { "label": "Privacy", "href": "/policy/privacy" },
         { "label": "Terms", "href": "/policy/terms-agreements" },
         { "label": "Cookies", "href": "/policy/cookies" },
-        { "label": "My appointments", "href": "/account" }
+        { "label": "My appointments", "href": "/my-appointments" }
       ],
       "copyright": "© {year} PeerSlot"
     }
@@ -226,7 +226,7 @@
       "evening": "Evening"
     },
     "controls": {
-      "eyebrow": "My account",
+      "eyebrow": "Your schedule",
       "title": "My Appointments",
       "intro": "Appointments you host and attend, together in one place.",
       "loading": "Checking your account…",
@@ -533,13 +533,13 @@
     "shell": {
       "loading": "Opening your workspace…",
       "overview": "Overview",
-      "appointments": "Calendar",
+      "calendar": "Calendar",
       "requests": "Requests",
       "settings": "Settings",
       "workspace": "Provider workspace",
       "signOut": "Sign out",
       "loadError": "We couldn't load your workspace. Please refresh and try again.",
-      "students": "Manage clients",
+      "clients": "Clients",
       "personalActivities": "Personal activities",
       "myAppointments": "My appointments"
     },
@@ -605,7 +605,7 @@
         "unpublished": "Unpublished"
       }
     },
-    "appointments": {
+    "calendar": {
       "meeting": {
         "join": "Join",
         "opensNewTab": "Opens in a new tab",
@@ -798,7 +798,7 @@
       "deleting": "Deleting…",
       "deleteError": "Your account could not be deleted. Nothing was changed; please try again."
     },
-    "students": {
+    "clients": {
       "eyebrow": "Provider workspace",
       "save": "Save changes",
       "saving": "Saving…",

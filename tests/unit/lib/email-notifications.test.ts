@@ -71,7 +71,7 @@ describe("email notifications", () => {
       studentEmail: "student@example.com",
     });
     expect(sendEmailMock.mock.calls[0][0].text).toContain(
-      "https://peerslot.com/en/account",
+      "https://peerslot.com/en/my-appointments",
     );
     expect(sendEmailMock.mock.calls[0][0]).not.toHaveProperty("from");
   });

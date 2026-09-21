@@ -45,7 +45,7 @@ export function ProviderDirectory({
   kind,
   copy,
 }: {
-  kind: "students" | "activities";
+  kind: "clients" | "activities";
   copy: ProviderDirectoryCopy;
 }) {
   const { accessToken } = useProviderWorkspace();
@@ -57,10 +57,11 @@ export function ProviderDirectory({
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [duration, setDuration] = useState("");
-  const isStudent = kind === "students";
-  const endpoint = isStudent
+  const isClient = kind === "clients";
+  const endpoint = isClient
     ? "/api/provider/students"
     : "/api/provider/personal-activities";
+  const responseKey = isClient ? "students" : "activities";
   const nameOf = (entry: Entry) => entry.displayName ?? entry.name ?? "";
 
   const load = useCallback(async () => {
@@ -70,8 +71,8 @@ export function ProviderDirectory({
     });
     if (!response.ok) throw new Error(copy.loadError);
     const body = await response.json();
-    return body[kind] as Entry[];
-  }, [accessToken, copy.loadError, endpoint, kind]);
+    return body[responseKey] as Entry[];
+  }, [accessToken, copy.loadError, endpoint, responseKey]);
 
   useEffect(() => {
     let cancelled = false;
@@ -122,7 +123,7 @@ export function ProviderDirectory({
             "Content-Type": "application/json",
           },
           body: JSON.stringify(
-            isStudent
+            isClient
               ? {
                   displayName: name,
                   email: email || (editing ? "" : undefined),
@@ -178,10 +179,10 @@ export function ProviderDirectory({
         <p className="mt-3 max-w-2xl text-sm leading-6 text-black/55">
           {copy.description}
         </p>
-        {!isStudent ? (
+        {!isClient ? (
           <Link
             className="mt-3 inline-flex text-sm font-semibold underline underline-offset-4"
-            href="/provider/appointments"
+            href="/provider/calendar"
           >
             {copy.calendar}
           </Link>
@@ -209,12 +210,12 @@ export function ProviderDirectory({
             className="mt-2 mb-4 min-h-11 rounded-xl bg-white"
             value={name}
             onChange={(event) => setName(event.target.value)}
-            minLength={isStudent ? 2 : 1}
+            minLength={isClient ? 2 : 1}
             maxLength={100}
             required
             disabled={saving}
           />
-          {isStudent ? (
+          {isClient ? (
             <>
               <Label htmlFor="directory-email">{copy.email}</Label>
               <Input
@@ -228,7 +229,7 @@ export function ProviderDirectory({
               />
             </>
           ) : null}
-          {!isStudent ? (
+          {!isClient ? (
             <>
               <Label htmlFor="directory-duration">{copy.durationLabel}</Label>
               <Input
@@ -296,13 +297,13 @@ export function ProviderDirectory({
                 className="flex items-center gap-3 rounded-2xl border border-black/10 bg-white p-4"
               >
                 <span
-                  className={`grid size-10 shrink-0 place-items-center rounded-full font-bold ${isStudent ? "bg-lavender-whisper" : "bg-[#fde7b0] text-[#78470c]"}`}
+                  className={`grid size-10 shrink-0 place-items-center rounded-full font-bold ${isClient ? "bg-lavender-whisper" : "bg-[#fde7b0] text-[#78470c]"}`}
                 >
                   {nameOf(entry).slice(0, 1).toUpperCase()}
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-bold">{nameOf(entry)}</p>
-                  {isStudent ? (
+                  {isClient ? (
                     <p className="truncate text-xs text-black/50">
                       {entry.email ?? "—"}
                     </p>

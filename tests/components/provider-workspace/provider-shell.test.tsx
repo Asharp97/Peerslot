@@ -114,6 +114,30 @@ describe("provider request navigation badge", () => {
     );
   });
 
+  it("keeps shared appointments above the provider calendar and labels clients clearly", async () => {
+    setupFetch(0);
+    render(<ProviderShell copy={shellCopy}>Dashboard</ProviderShell>);
+
+    await waitFor(() => {
+      expect(screen.getAllByRole("link", { name: "myAppointments" })).toHaveLength(2);
+    });
+
+    for (const navigation of screen.getAllByRole("navigation")) {
+      const links = within(navigation).getAllByRole("link");
+      expect(links.map((link) => link.textContent)).toEqual([
+        "overview",
+        "myAppointments",
+        "calendar",
+        "requests",
+        "clients",
+        "personalActivities",
+        "settings",
+      ]);
+      expect(links[1].getAttribute("href")).toBe("/my-appointments");
+      expect(links[4].getAttribute("href")).toBe("/provider/clients");
+    }
+  });
+
   it("hides the badge when there are no pending requests", async () => {
     const { requests } = setupFetch(0);
     render(<ProviderShell copy={shellCopy}>Dashboard</ProviderShell>);

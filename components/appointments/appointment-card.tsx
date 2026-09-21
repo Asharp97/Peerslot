@@ -122,7 +122,7 @@ export function AppointmentCard({
             ) : null}
             {hosting ? (
               <Button asChild variant="outline" className="min-h-11 rounded-full px-4">
-                <Link href={appointment.status === "pending" ? "/provider/requests" : "/provider/appointments"}>
+                <Link href={appointment.status === "pending" ? "/provider/requests" : "/provider/calendar"}>
                   {appointment.status === "pending" ? copy.reviewRequest : copy.manageHosted}
                 </Link>
               </Button>

@@ -23,7 +23,7 @@ import {
   requestEmailSignIn,
 } from "@/lib/auth-browser";
 
-export type AccountPageCopy = AccountDataCopy & {
+export type MyAppointmentsPageCopy = AccountDataCopy & {
   eyebrow: string;
   title: string;
   intro: string;
@@ -38,12 +38,12 @@ export type AccountPageCopy = AccountDataCopy & {
   authError: string;
 };
 
-export function AccountPage({
+export function MyAppointmentsPage({
   copy,
   locale,
   appointmentsCopy,
 }: {
-  copy: AccountPageCopy;
+  copy: MyAppointmentsPageCopy;
   locale: string;
   appointmentsCopy: AppointmentsCopy;
 }) {
@@ -88,7 +88,7 @@ export function AccountPage({
   async function signInWithGoogle() {
     setSubmitting(true);
     setAuthError("");
-    const callbackURL = `${window.location.origin}/${locale}/account`;
+    const callbackURL = `${window.location.origin}/${locale}/my-appointments`;
     const url = await createGoogleSignInUrl({
       callbackURL,
       errorCallbackURL: callbackURL,

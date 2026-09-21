@@ -12,10 +12,10 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
-  ProviderAppointments,
+  WorkspaceCalendar,
   readableTextColor,
-  type ProviderAppointmentsCopy,
-} from "@/components/provider-workspace/provider-appointments";
+  type WorkspaceCalendarCopy,
+} from "@/components/provider-workspace/workspace-calendar";
 import { ProviderDirectory } from "@/components/provider-workspace/provider-directory";
 import en from "@/messages/en.json";
 import tr from "@/messages/tr.json";
@@ -89,8 +89,8 @@ describe("provider appointments calendar", () => {
           : baseFetch(input, init),
       );
       vi.stubGlobal("fetch", fetchMock);
-      const realCopy = en.ProviderWorkspace.appointments;
-      render(<ProviderAppointments copy={realCopy} />);
+      const realCopy = en.ProviderWorkspace.calendar;
+      render(<WorkspaceCalendar copy={realCopy} />);
       let events: Array<Record<string, unknown>> = [];
       await act(async () => {
         events = await (
@@ -136,7 +136,7 @@ describe("provider appointments calendar", () => {
         screen
           .getByRole("link", { name: realCopy.manageAttending })
           .getAttribute("href"),
-      ).toBe("/en/account");
+      ).toBe("/en/my-appointments");
       if (status === "scheduled") {
         expect(screen.getByRole("link", { name: /Google Meet.*Join/ }).getAttribute("href")).toBe(attending.meetingUrl);
       } else {
@@ -163,7 +163,7 @@ describe("provider appointments calendar", () => {
         ? Promise.reject(new TypeError("offline"))
         : baseFetch(input, init),
     );
-    render(<ProviderAppointments copy={en.ProviderWorkspace.appointments} />);
+    render(<WorkspaceCalendar copy={en.ProviderWorkspace.calendar} />);
     let events: unknown[] = [];
     await act(async () => {
       events = await (
@@ -178,13 +178,13 @@ describe("provider appointments calendar", () => {
     });
     expect(events).toHaveLength(1);
     expect(screen.getByRole("alert").textContent).toBe(
-      en.ProviderWorkspace.appointments.attendingLoadError,
+      en.ProviderWorkspace.calendar.attendingLoadError,
     );
   });
   it.each(["en", "tr"] as const)(
     "shows the conflicting student's name in %s while preserving the edit",
     async (locale) => {
-      const messages = (locale === "tr" ? tr : en).ProviderWorkspace.students;
+      const messages = (locale === "tr" ? tr : en).ProviderWorkspace.clients;
       const fetchMock = vi.fn(
         async (_url: RequestInfo | URL, init?: RequestInit) => {
           if (init?.method === "PATCH")
@@ -202,7 +202,7 @@ describe("provider appointments calendar", () => {
         },
       );
       vi.stubGlobal("fetch", fetchMock);
-      render(<ProviderDirectory kind="students" copy={messages} />);
+      render(<ProviderDirectory kind="clients" copy={messages} />);
       await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
       fireEvent.click(
         await screen.findByRole("button", { name: `${messages.edit}: Ada` }),
@@ -226,7 +226,7 @@ describe("provider appointments calendar", () => {
   it("explains a past session before creating a student or appointment", async () => {
     const fetchMock = calendarFetchMock({ appointments: [] });
     vi.stubGlobal("fetch", fetchMock);
-    render(<ProviderAppointments copy={copy} />);
+    render(<WorkspaceCalendar copy={copy} />);
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
     act(() => {
       const dateClick = calendar.props?.dateClick as (info: unknown) => void;
@@ -300,7 +300,7 @@ describe("provider appointments calendar", () => {
         },
       );
       vi.stubGlobal("fetch", fetchMock);
-      render(<ProviderAppointments copy={copy} />);
+      render(<WorkspaceCalendar copy={copy} />);
       await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
       act(() => {
         const dateClick = calendar.props?.dateClick as (info: unknown) => void;
@@ -346,7 +346,7 @@ describe("provider appointments calendar", () => {
         ],
       }),
     );
-    render(<ProviderAppointments copy={copy} />);
+    render(<WorkspaceCalendar copy={copy} />);
     let events: Array<{
       start: string;
       editable: boolean;
@@ -409,7 +409,7 @@ describe("provider appointments calendar", () => {
     });
     vi.stubGlobal("fetch", fetchMock);
 
-    render(<ProviderAppointments copy={copy} />);
+    render(<WorkspaceCalendar copy={copy} />);
 
     expect(
       screen.getByRole("heading", { name: "Ada’s sessions" }),
@@ -515,7 +515,7 @@ describe("provider appointments calendar", () => {
       return Response.json({ appointments: [], activities: [] });
     });
     vi.stubGlobal("fetch", fetchMock);
-    render(<ProviderAppointments copy={copy} />);
+    render(<WorkspaceCalendar copy={copy} />);
 
     let events: Array<Record<string, unknown>> = [];
     await waitFor(() => expect(calendar.props?.events).toBeTypeOf("function"));
@@ -595,7 +595,7 @@ describe("provider appointments calendar", () => {
       },
     );
     vi.stubGlobal("fetch", fetchMock);
-    render(<ProviderAppointments copy={copy} />);
+    render(<WorkspaceCalendar copy={copy} />);
 
     await user.click(screen.getByRole("button", { name: "addToTimetable" }));
     const [typeSelect] = screen.getAllByRole("combobox");
@@ -648,7 +648,7 @@ describe("provider appointments calendar", () => {
       },
     );
     vi.stubGlobal("fetch", fetchMock);
-    render(<ProviderAppointments copy={copy} />);
+    render(<WorkspaceCalendar copy={copy} />);
 
     let events: Array<Record<string, unknown>> = [];
     await waitFor(() => expect(calendar.props?.events).toBeTypeOf("function"));
@@ -718,7 +718,7 @@ describe("provider appointments calendar", () => {
     );
     vi.stubGlobal("fetch", fetchMock);
     vi.stubGlobal("confirm", confirm);
-    render(<ProviderAppointments copy={copy} />);
+    render(<WorkspaceCalendar copy={copy} />);
 
     let events: Array<Record<string, unknown>> = [];
     await waitFor(() => expect(calendar.props?.events).toBeTypeOf("function"));
@@ -775,15 +775,15 @@ describe("provider appointments calendar", () => {
     vi.stubGlobal("confirm", confirm);
     render(
       <ProviderDirectory
-        kind="students"
-        copy={en.ProviderWorkspace.students}
+        kind="clients"
+        copy={en.ProviderWorkspace.clients}
       />,
     );
 
     expect(await screen.findByText("Ada Student")).toBeTruthy();
     await user.click(
       screen.getByRole("button", {
-        name: `${en.ProviderWorkspace.students.remove}: Ada Student`,
+        name: `${en.ProviderWorkspace.clients.remove}: Ada Student`,
       }),
     );
 
@@ -831,7 +831,7 @@ describe("provider appointments calendar", () => {
       "confirm",
       vi.fn(() => true),
     );
-    render(<ProviderAppointments copy={copy} />);
+    render(<WorkspaceCalendar copy={copy} />);
 
     await act(async () => {
       const clickEvent = calendar.props?.eventClick as (input: unknown) => void;
@@ -856,7 +856,7 @@ describe("provider appointments calendar", () => {
   it("moves a weekly occurrence in the provider time zone", async () => {
     const fetchMock = calendarFetchMock();
     vi.stubGlobal("fetch", fetchMock);
-    render(<ProviderAppointments copy={copy} />);
+    render(<WorkspaceCalendar copy={copy} />);
     await waitFor(() =>
       expect(calendar.props?.eventDrop).toBeTypeOf("function"),
     );
@@ -899,7 +899,7 @@ describe("provider appointments calendar", () => {
       ),
     });
     vi.stubGlobal("fetch", fetchMock);
-    render(<ProviderAppointments copy={copy} />);
+    render(<WorkspaceCalendar copy={copy} />);
     await waitFor(() =>
       expect(calendar.props?.eventResize).toBeTypeOf("function"),
     );
@@ -939,7 +939,7 @@ describe("provider appointments calendar", () => {
       appointments: [{ ...scheduledAppointment, status: "cancelled" }],
     });
     vi.stubGlobal("fetch", fetchMock);
-    render(<ProviderAppointments copy={copy} />);
+    render(<WorkspaceCalendar copy={copy} />);
 
     let events: Array<Record<string, unknown>> = [];
     await waitFor(() => expect(calendar.props?.events).toBeTypeOf("function"));
@@ -975,7 +975,7 @@ const copy = new Proxy(
         ? target[property as keyof typeof target]
         : String(property),
   },
-) as unknown as ProviderAppointmentsCopy;
+) as unknown as WorkspaceCalendarCopy;
 
 const availabilityWindow = {
   id: "window-id",

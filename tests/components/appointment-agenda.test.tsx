@@ -174,7 +174,7 @@ describe("appointment agenda", () => {
     expect(screen.getByText("Sam Client")).toBeTruthy();
     expect(screen.getByText(copy.roles.hosting).tagName).toBe("P");
     expect(screen.getByText(copy.statuses.scheduled).tagName).toBe("SPAN");
-    expect(screen.getByRole("link", { name: copy.manageHosted }).getAttribute("href")).toBe("/provider/appointments");
+    expect(screen.getByRole("link", { name: copy.manageHosted }).getAttribute("href")).toBe("/provider/calendar");
     expect(screen.queryByRole("button", { name: copy.cancel })).toBeNull();
     expect(screen.queryByRole("button", { name: copy.reschedule })).toBeNull();
     expect(screen.queryByText(copy.locked)).toBeNull();
