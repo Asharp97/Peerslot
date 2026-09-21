@@ -505,7 +505,7 @@ export default async function Home({ params }: HomeProps) {
 
         <section
           className="mx-auto w-full max-w-[1240px] px-5 pt-8 pb-32 max-sm:px-3.5 max-sm:py-24"
-          id="for-teachers"
+          id="for-professionals"
         >
           <div>
             <p className="mb-5 text-[13px] font-bold tracking-[0.12em] text-[#67675f] uppercase">

@@ -1,8 +1,8 @@
 {
   "Metadata": {
-    "title": "PeerSlot — Karmaşa olmadan değişen görüşmeler",
+    "title": "PeerSlot | Karmaşa olmadan değişen randevular",
     "titleTemplate": "%s | PeerSlot",
-    "description": "Öğrencilerin, öğretmenin belirlediği uygunluk saatleri ve adil otomatik sınırlar içinde görüşmelerini daha sakin bir şekilde yeniden planlamasını sağlar."
+    "description": "Randevulu çalışan profesyoneller için uygunluk, rezervasyon ve yeniden planlamayı daha sakin yönetin."
   },
   "Home": {
     "skipToContent": "İçeriğe geç",
@@ -12,7 +12,7 @@
       { "label": "Ürün", "href": "/#product" },
       { "label": "Nasıl çalışır?", "href": "/#how-it-works" },
       { "label": "Kurallar", "href": "/#guardrails" },
-      { "label": "Öğretmenler için", "href": "/#for-teachers" },
+      { "label": "Profesyoneller için", "href": "/#for-professionals" },
       { "label": "Panelim", "href": "/account" }
     ],
     "languageSwitcher": {
@@ -22,31 +22,31 @@
     },
     "headerCta": "Rezervasyon sayfanı oluştur",
     "hero": {
-      "eyebrow": "Sınırları belli planlama",
+      "eyebrow": "Gerçek işler için planlama",
       "titleMuted": "Planlar değişir.",
       "titleLead": "Takviminiz",
       "titleEmphasis": "sakin kalır.",
-      "body": "Öğrencilere bir görüşmeyi, 24 saatlik süre dolmadan önce onayladığınız başka bir saate taşımaları için tek ve adil bir yol sunun.",
+      "body": "Danışanlara net bir rezervasyon ve yeniden planlama yolu sunun. Uygun saatleri, bildirim süresini ve haftalık sınırı siz belirleyin.",
       "primaryCta": "Rezervasyon sayfanı oluştur",
       "secondaryCta": "Nasıl çalışır?",
       "rulesLabel": "PeerSlot planlama kuralları",
       "rules": [
-        "Öğrenci başına tek değişiklik",
-        "24 saat sınırı",
-        "Öğretmenin belirlediği saatler"
+        "Tek ve net rezervasyon bağlantısı",
+        "Sizin belirlediğiniz bildirim süresi",
+        "Haftalık sınır sizin kontrolünüzde"
       ]
     },
     "product": {
       "badge": "Haftanız güvende",
       "title": "“Evet, kurallar dahilinde” demenin insancıl yolu.",
-      "body": "PeerSlot, uygunluk saatlerinizi net seçeneklere dönüştürür. Öğrenciler özgürce seçim yapar. Öğretmenler aynı takvimi tekrar tekrar görüşmek zorunda kalmaz.",
+      "body": "Uygunluk saatlerinizi net seçeneklere dönüştürün. Danışanlar mesajlaşmadan rezervasyon yapar veya yeniden planlar. Takvim kontrolü sizde kalır.",
       "cta": "Kuralları incele",
       "board": {
         "dateRange": "21–25 Eylül",
-        "title": "Görüşme saatleri",
+        "title": "Randevu saatleri",
         "teacherInitials": "AÖ",
-        "teacherName": "Aylin Öğretmen",
-        "teacherRole": "Öğretmen",
+        "teacherName": "Aylin Demir",
+        "teacherRole": "Koç",
         "timeZone": "GMT+3",
         "weekDays": [
           { "day": "Pzt", "date": "21", "active": false },
@@ -58,7 +58,7 @@
         "previewLabel": "Haftalık uygunluk önizlemesi",
         "open": "Boş",
         "eligible": "Değiştirilebilir",
-        "movePrompt": "Çarşamba görüşmesi taşınsın mı?",
+        "movePrompt": "Çarşamba randevusu taşınsın mı?",
         "moveHelp": "Salı 10.00'dan önce 3 boş saatten birini seçin.",
         "chooseTime": "Saat seç"
       }
@@ -66,27 +66,27 @@
     "howItWorks": {
       "eyebrow": "Üç adımlı süreç",
       "title": "Yazışmadan yeniden planlayın.",
-      "body": "Herkes aynı uygunluk saatlerini ve aynı sınırları görür; böylece bir görüşmeyi taşımak konuşma değil, tek bir karar gerektirir.",
+      "body": "Danışanlar sizin belirlediğiniz uygunluk ve kuralları görür. Her değişiklik net bir kararla tamamlanır.",
       "principles": [
         {
           "number": "01",
           "icon": "calendarCheck",
-          "title": "Öğretmen haftayı açar",
-          "body": "Yalnızca gerçekten uygun olan saatleri yayınlayın. Öğrencilerin gördüğü her seçenek rezervasyona hazırdır.",
+          "title": "Takviminizi açın",
+          "body": "Size uyan saatleri yayınlayın. Danışanlar net bir takvim görür ve güvenle rezervasyon yapar.",
           "tone": "cream"
         },
         {
           "number": "02",
           "icon": "refresh",
-          "title": "Öğrenci tek değişiklik yapar",
-          "body": "Öğrenci mesaj göndermeden veya onay beklemeden, daha uygun bir boş saati bir kez seçebilir.",
+          "title": "Danışan seçsin",
+          "body": "Danışanlar mesaj göndermeden açtığınız saatlerden rezervasyon yapabilir veya yeniden planlayabilir.",
           "tone": "lavender"
         },
         {
           "number": "03",
           "icon": "shield",
-          "title": "PeerSlot sınırları korur",
-          "body": "24 saat sınırı ve tek değişiklik kuralı otomatik, açık ve tutarlı biçimde uygulanır.",
+          "title": "Sınırlarınızı belirleyin",
+          "body": "Bildirim sürenizi ve haftalık yeniden planlama sınırınızı seçin. PeerSlot bunları otomatik uygular.",
           "tone": "forest"
         }
       ]
@@ -94,24 +94,24 @@
     "guardrails": {
       "eyebrow": "Baştan adil",
       "title": "Doğru sınırlar esnekliği mümkün kılar.",
-      "body": "“Bir kez daha değiştirebilir miyim?” konuşmasının yerini, ürünün sizin adınıza açıkladığı net bir kural alır.",
-      "lockedTitle": "Bu görüşme artık kilitli",
-      "lockedBody": "Başlamasına 24 saatten az kaldı.",
+      "body": "Kurallarınızı bir kez belirleyin. PeerSlot doğru anda açıklar.",
+      "lockedTitle": "Bu randevu artık kilitli",
+      "lockedBody": "İlk randevu, bildirim süresinin içine girdi.",
       "items": [
         {
           "icon": "refresh",
-          "title": "Tek değişiklik",
-          "body": "Takvimi sürekli değişen bir hedefe dönüştürmeden, gerçek bir aksaklık için yeterli esneklik."
+          "title": "Haftalık sınırınızı belirleyin",
+                                                        "body": "Her danışanın sizinle haftada kaç kez yeniden planlama yapabileceğini seçin."
         },
         {
           "icon": "clock",
-          "title": "24 saat koruması",
-          "body": "Görüşme yaklaştığında yerinde kalır. Öğretmenler ve öğrenciler buna güvenerek plan yapabilir."
+          "title": "İlk randevu saatini koruyun",
+          "body": "Bildirim süreniz ilk randevuya uygulanır. İlk randevu süre dışındaysa daha erken bir yeni saat seçilebilir."
         },
         {
           "icon": "users",
           "title": "Uygunluk her zaman belirleyici",
-          "body": "Öğrenciler yalnızca öğretmenin açıkça uygun olarak belirlediği saatlere geçebilir."
+          "body": "Danışanlar yalnızca açtığınız saatlere rezervasyon yapabilir veya geçebilir."
         }
       ]
     },
@@ -120,7 +120,7 @@
       "title": "Tek seçim dokuz mesaja bedel.",
       "beforeLabel": "Grup mesajıyla",
       "beforeBadge": "Önce",
-      "beforeResult": "tek görüşmeyi taşımak için mesaj",
+      "beforeResult": "tek randevuyu taşımak için mesaj",
       "messages": [
         { "text": "Daha geç olabilir mi?", "variant": "lavender" },
         { "text": "Hangi saatler uygun?", "variant": "stone" },
@@ -130,17 +130,17 @@
       "afterBadge": "Yeniden planlandı",
       "afterResult": "onaylı saatler arasından net seçim",
       "day": "PER",
-      "confirmation": "Görüşme 11.30'a taşındı",
+      "confirmation": "Randevu 11.30'a taşındı",
       "confirmationHelp": "Her iki takvim de güncel."
     },
     "finalCta": {
       "eyebrow": "Hayata yer açın",
-      "title": "Görüşme kalsın. Saati değişsin.",
-      "body": "Öğretmenler için daha sakin bir takvim, öğrenciler için adil bir ikinci şans.",
+      "title": "Randevu kalsın. Saati değişsin.",
+      "body": "Profesyoneller için daha sakin bir takvim. Danışanlar için daha net bir rezervasyon deneyimi.",
       "button": "Rezervasyon sayfanı oluştur"
     },
     "footer": {
-      "tagline": "Karmaşa olmadan değişen görüşmeler.",
+      "tagline": "Karmaşa olmadan değişen randevular.",
       "links": [
         { "label": "Ürün", "href": "/#product" },
         { "label": "Nasıl çalışır?", "href": "/#how-it-works" },
