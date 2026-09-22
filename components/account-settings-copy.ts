@@ -1,0 +1,38 @@
+import type { AccountDataCopy } from "@/components/account-data-controls";
+import type { GoogleMeetSettingsCopy } from "@/components/provider-workspace/google-meet-settings";
+
+export type AccountMenuCopy = {
+  label: string;
+  signOut: string;
+  title: string;
+  profilePicture: string;
+  profilePictureHelp: string;
+  chooseImage: string;
+  uploading: string;
+  imageUpdated: string;
+  imageError: string;
+  changePassword: string;
+  changePasswordHelp: string;
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+  changePasswordAction: string;
+  changingPassword: string;
+  passwordChanged: string;
+  passwordMismatch: string;
+  passwordError: string;
+  language: string;
+  dateFormat: string;
+  timeFormat: string;
+  savePreferences: string;
+  preferencesSaved: string;
+  english: string;
+  turkish: string;
+  dateDmy: string;
+  dateMdy: string;
+  dateYmd: string;
+  time12: string;
+  time24: string;
+  googleMeet: GoogleMeetSettingsCopy;
+  accountData: AccountDataCopy;
+};

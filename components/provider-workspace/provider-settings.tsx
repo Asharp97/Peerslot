@@ -1,9 +1,5 @@
 "use client";
 
-import {
-  GoogleMeetSettings,
-  type GoogleMeetSettingsCopy,
-} from "./google-meet-settings";
 import { Separator, Tooltip } from "radix-ui";
 import {
   Check,
@@ -17,10 +13,6 @@ import {
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import {
-  AccountDataControls,
-  type AccountDataCopy,
-} from "@/components/account-data-controls";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -39,8 +31,7 @@ import {
 import { TimeZoneCombobox } from "./time-zone-combobox";
 import { useProviderWorkspace } from "./provider-shell";
 
-export type ProviderSettingsCopy = AccountDataCopy & {
-  googleMeet: GoogleMeetSettingsCopy;
+export type ProviderSettingsCopy = {
   eyebrow: string;
   title: string;
   intro: string;
@@ -272,18 +263,6 @@ export function ProviderSettings({
         </article>
       </section>
 
-      <GoogleMeetSettings
-        accessToken={accessToken}
-        locale={locale}
-        copy={copy.googleMeet}
-      />
-
-      <AccountDataControls
-        accessToken={accessToken}
-        className="mt-5"
-        copy={copy}
-        redirectAfterDelete="/auth/provider"
-      />
     </div>
   );
 }

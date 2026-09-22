@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
     // Report a safe, translated message on Settings instead of exposing OAuth details.
   }
   const response = NextResponse.redirect(
-    new URL(`/${locale}/provider/settings?meet=${outcome}`, config.baseUrl),
+    new URL(`/${locale}/account-settings?meet=${outcome}`, config.baseUrl),
   );
   response.cookies.set(MEET_OAUTH_COOKIE, "", {
     path: MEET_OAUTH_PATH,

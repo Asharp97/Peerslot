@@ -26,6 +26,8 @@ import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import { fetchAccessToken } from "@/lib/auth-browser";
 import type { ProviderSetupData } from "@/lib/provider-workspace-types";
 
+import { AccountMenu, type AccountMenuCopy } from "./account-menu";
+
 export type ProviderShellCopy = {
   loading: string;
   overview: string;
@@ -38,6 +40,7 @@ export type ProviderShellCopy = {
   workspace: string;
   signOut: string;
   loadError: string;
+  accountMenu: AccountMenuCopy;
 };
 
 type ProviderWorkspaceState = {
@@ -182,7 +185,11 @@ export function ProviderShell({
   const navigation = workspaceData
     ? [
         { href: "/provider", label: copy.overview, icon: LayoutDashboard },
-        { href: "/my-appointments", label: copy.myAppointments, icon: ListTodo },
+        {
+          href: "/my-appointments",
+          label: copy.myAppointments,
+          icon: ListTodo,
+        },
         {
           href: "/provider/calendar",
           label: copy.calendar,
@@ -197,7 +204,13 @@ export function ProviderShell({
         },
         { href: "/provider/settings", label: copy.settings, icon: Settings },
       ]
-    : [{ href: "/my-appointments", label: copy.myAppointments, icon: ListTodo }];
+    : [
+        {
+          href: "/my-appointments",
+          label: copy.myAppointments,
+          icon: ListTodo,
+        },
+      ];
 
   return (
     <ProviderWorkspaceContext.Provider value={workspaceState}>
@@ -267,12 +280,16 @@ export function ProviderShell({
             </div>
           ) : null}
           {accessToken ? (
-            <button
-              className="mt-3 flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-semibold text-black/55 hover:bg-black/5 hover:text-vast-ink"
-              onClick={signOut}
-              type="button">
-              <LogOut size={17} /> {copy.signOut}
-            </button>
+            <div className="mt-3 flex items-center justify-between gap-1">
+              <AccountMenu copy={copy.accountMenu} />
+              <button
+                aria-label={copy.signOut}
+                className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-semibold text-black/55 hover:bg-black/5 hover:text-vast-ink"
+                onClick={signOut}
+                type="button">
+                <LogOut size={17} />
+              </button>
+            </div>
           ) : null}
         </aside>
 
@@ -287,13 +304,16 @@ export function ProviderShell({
               PeerSlot
             </Link>
             {accessToken ? (
-              <button
-                aria-label={copy.signOut}
-                className="grid size-9 place-items-center rounded-full border border-black/10 bg-white"
-                onClick={signOut}
-                type="button">
-                <LogOut size={16} />
-              </button>
+              <div className="flex items-center gap-1">
+                <AccountMenu copy={copy.accountMenu} />
+                <button
+                  aria-label={copy.signOut}
+                  className="grid size-9 place-items-center rounded-full border border-black/10 bg-white"
+                  onClick={signOut}
+                  type="button">
+                  <LogOut size={16} />
+                </button>
+              </div>
             ) : null}
           </div>
           <nav className="mt-1 flex gap-1 overflow-x-auto pt-2 pb-1">

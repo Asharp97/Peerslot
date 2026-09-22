@@ -6,6 +6,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 
 import { db } from "@/db";
+import { user } from "@/db/auth-schema";
 import {
   BookingRequestPicker,
   type BookingRequestCopy,
@@ -48,6 +49,7 @@ export default async function BookingPage({ params }: BookingPageProps) {
       bookingPageId: bookingPages.id,
       userId: providerProfiles.userId,
       displayName: providerProfiles.displayName,
+      profilePicture: user.image,
       professionalTitle: providerProfiles.professionalTitle,
       title: bookingPages.title,
       timeZone: bookingPages.timeZone,
@@ -58,6 +60,7 @@ export default async function BookingPage({ params }: BookingPageProps) {
       providerProfiles,
       eq(providerProfiles.userId, bookingPages.providerId),
     )
+    .innerJoin(user, eq(user.id, providerProfiles.userId))
     .where(and(eq(bookingPages.slug, slug), eq(bookingPages.isPublished, true)))
     .limit(1);
 
@@ -81,8 +84,7 @@ export default async function BookingPage({ params }: BookingPageProps) {
       <div className="mx-auto max-w-6xl">
         <Link
           className="inline-flex items-center gap-2 text-lg font-bold"
-          href="/"
-        >
+          href="/">
           <span className="grid size-7 place-items-center rounded-lg bg-ember-glow text-sm">
             P
           </span>
@@ -91,9 +93,26 @@ export default async function BookingPage({ params }: BookingPageProps) {
 
         <div className="mt-10 grid overflow-hidden rounded-[32px] border-2 border-vast-ink bg-white shadow-[7px_7px_0_var(--color-vast-ink)] md:grid-cols-[0.7fr_1.3fr]">
           <section className="bg-forest-ink p-7 text-lumen-cream sm:p-10 md:min-h-180">
-            <span className="grid size-16 place-items-center rounded-2xl bg-lavender-whisper font-display text-3xl text-vast-ink">
-              {getInitials(provider.displayName)}
-            </span>
+            <div className="grid">
+              {provider.profilePicture ? (
+                <span className="size-64 overflow-hidden rounded-2xl">
+                  {/* The signed avatar URL has a dynamic query string, so use the browser loader directly. */}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={provider.profilePicture}
+                    alt={provider.displayName}
+                    className="size-full object-cover"
+                    width={128}
+                    height={128}
+                    referrerPolicy="no-referrer"
+                  />
+                </span>
+              ) : (
+                <span className=" bg-lavender-whisper font-display text-3xl text-vast-ink size-16 flex items-center justify-center">
+                  {getInitials(provider.displayName)}
+                </span>
+              )}
+            </div>
             <p className="mt-8 text-xs font-bold tracking-[0.12em] text-ember-glow uppercase">
               {t("eyebrow")}
             </p>

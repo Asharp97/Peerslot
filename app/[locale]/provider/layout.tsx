@@ -20,9 +20,21 @@ export default async function ProviderLayout({
 
   setRequestLocale(locale);
   const t = await getTranslations("ProviderWorkspace");
+  const account = await getTranslations("Account");
+  const shell = t.raw("shell") as ProviderShellCopy;
+  const settings = t.raw("settings") as { googleMeet: ProviderShellCopy["accountMenu"]["googleMeet"] };
+  const accountControls = account.raw("controls") as ProviderShellCopy["accountMenu"]["accountData"];
 
   return (
-    <ProviderShell copy={t.raw("shell") as ProviderShellCopy}>
+    <ProviderShell
+      copy={{
+        ...shell,
+        accountMenu: {
+          ...shell.accountMenu,
+          googleMeet: settings.googleMeet,
+          accountData: accountControls,
+        },
+      }}>
       {children}
     </ProviderShell>
   );

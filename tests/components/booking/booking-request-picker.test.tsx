@@ -133,7 +133,7 @@ describe("booking authentication", () => {
     ).toBe(false);
   });
 
-  it.each(["email", "google"])(
+  it.each(["email", "google", "google-from-sign-in"])(
     "starts %s registration without a checkbox and preserves the slot",
     async (method) => {
       const fetchMock = vi.fn(
@@ -209,7 +209,12 @@ describe("booking authentication", () => {
           .getByRole("link", { name: copy.privacyLink })
           .getAttribute("href"),
       ).toBe("/en/policy/privacy");
-      if (method === "google") {
+      if (method === "google-from-sign-in") {
+        fireEvent.click(screen.getByRole("button", { name: copy.signInTab }));
+        expect(screen.getByRole("link", { name: copy.termsLink })).toBeTruthy();
+        expect(screen.getByRole("link", { name: copy.privacyLink })).toBeTruthy();
+      }
+      if (method.startsWith("google")) {
         fireEvent.click(
           screen.getByRole("button", { name: copy.googleAction }),
         );

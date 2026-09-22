@@ -88,17 +88,19 @@ export function ProviderAuthFlow({
   copy,
   locale,
   initialMode = "register",
+  initialAuthError = false,
 }: {
   copy: ProviderAuthCopy;
   locale: string;
   initialMode?: AuthMode;
+  initialAuthError?: boolean;
 }) {
   const router = useRouter();
   const [phase, setPhase] = useState<Phase>("checking");
   const [mode, setMode] = useState<AuthMode>(initialMode);
   const [accessToken, setAccessToken] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState(initialAuthError ? copy.errors.social : "");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -204,9 +206,7 @@ export function ProviderAuthFlow({
     const callbackURL = `${window.location.origin}/${locale}/auth/provider`;
     const url = await createGoogleSignInUrl({
       callbackURL,
-      requestSignUp: mode === "register",
-      additionalData:
-        mode === "register" ? legalConsentAdditionalFields : undefined,
+      errorCallbackURL: `${callbackURL}?mode=${mode}`,
     });
 
     if (!url) {
@@ -345,7 +345,6 @@ export function ProviderAuthFlow({
         />
 
         {error ? <ErrorMessage message={error} /> : null}
-        {mode === "register" ? (
           <p className="text-sm leading-6 text-[#62625a]">
             {copy.consentPrefix}{" "}
             <Link
@@ -364,7 +363,6 @@ export function ProviderAuthFlow({
               {copy.privacyLink}
             </Link>
           </p>
-        ) : null}
         <button
           className="inline-flex min-h-13 w-full items-center justify-center gap-2 rounded-xl border-2 border-vast-ink bg-vast-ink px-5 text-sm font-semibold text-lumen-cream disabled:cursor-wait disabled:opacity-60"
           disabled={submitting}

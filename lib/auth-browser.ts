@@ -1,3 +1,5 @@
+import { legalConsentAdditionalFields } from "@/lib/legal-consent";
+
 export async function fetchAccessToken() {
   const response = await fetch("/api/auth/token", {
     credentials: "include",
@@ -25,8 +27,6 @@ export function requestEmailSignIn(
 export async function createGoogleSignInUrl(input: {
   callbackURL: string;
   errorCallbackURL?: string;
-  requestSignUp?: boolean;
-  additionalData?: Record<string, unknown>;
 }) {
   const response = await fetch("/api/auth/sign-in/social", {
     method: "POST",
@@ -35,14 +35,19 @@ export async function createGoogleSignInUrl(input: {
     body: JSON.stringify({
       provider: "google",
       disableRedirect: true,
-      ...input,
+      callbackURL: input.callbackURL,
+      errorCallbackURL: input.errorCallbackURL ?? input.callbackURL,
+      // Every Google button sits beside the Terms/Privacy notice and supports
+      // both existing accounts and first-time visitors, regardless of email tab.
+      requestSignUp: true,
+      additionalData: legalConsentAdditionalFields,
     }),
-  });
-  const body = (await response.json().catch(() => null)) as {
+  }).catch(() => null);
+  const body = (await response?.json().catch(() => null)) as {
     url?: string;
   } | null;
 
-  return response.ok ? (body?.url ?? null) : null;
+  return response?.ok ? (body?.url ?? null) : null;
 }
 
 export async function readAuthError(response: Response, fallback: string) {

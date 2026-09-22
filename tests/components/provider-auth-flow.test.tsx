@@ -19,6 +19,36 @@ afterEach(() => {
 });
 
 describe("provider registration without a checkbox", () => {
+  it.each(["en", "tr"])("allows new Google accounts from the %s Login tab", async (locale) => {
+    const copy = locale === "tr" ? (await import("@/messages/tr.json")).default.ProviderAuth.flow : messages.ProviderAuth.flow;
+    const fetchMock = vi.fn(async (_input: RequestInfo | URL, _init?: RequestInit) => {
+      void _input; void _init;
+      return Response.json({}, { status: 401 });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    render(<ProviderAuthFlow copy={copy} locale={locale} initialMode="sign-in" />);
+    await screen.findByRole("heading", { name: copy.signInTitle });
+    expect(screen.getByRole("link", { name: copy.termsLink })).toBeTruthy();
+    expect(screen.getByRole("link", { name: copy.privacyLink })).toBeTruthy();
+    expect(screen.queryByRole("checkbox")).toBeNull();
+    await userEvent.setup().click(screen.getByRole("button", { name: copy.googleAction }));
+    expect(await screen.findByRole("alert")).toBeTruthy();
+    const request = fetchMock.mock.calls.find(([url]) => url === "/api/auth/sign-in/social");
+    expect(JSON.parse(String(request?.[1]?.body))).toMatchObject({
+      requestSignUp: true,
+      additionalData: { termsAccepted: true },
+      errorCallbackURL: expect.stringContaining(`/${locale}/auth/provider?mode=sign-in`),
+    });
+  });
+
+  it("shows a localized error after a Google callback fails", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => Response.json({}, { status: 401 })));
+    const copy = messages.ProviderAuth.flow;
+    render(<ProviderAuthFlow copy={copy} locale="en" initialMode="sign-in" initialAuthError />);
+    expect((await screen.findByRole("alert")).textContent).toBe(copy.errors.social);
+    expect(screen.getByRole("button", { name: copy.googleAction })).toBeTruthy();
+  });
+
   it("opens sign-in when entered from the homepage Login button", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => Response.json({}, { status: 401 })));
     const copy = messages.ProviderAuth.flow;

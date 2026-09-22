@@ -45,6 +45,9 @@ export const auth = betterAuth({
         type: "boolean",
         required: true,
         returned: false,
+        // The service-use notice applies to every registration. Google does
+        // not supply this field; the create hook records the date and versions.
+        defaultValue: () => true,
         validator: { input: z.literal(true) },
       },
       termsAcceptedAt: {

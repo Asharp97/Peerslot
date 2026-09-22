@@ -143,7 +143,7 @@ describe("Google Meet route authorization", () => {
     );
     expect(mocks.saveAuth).not.toHaveBeenCalled();
     expect(response.headers.get("location")).toBe(
-      "https://www.peerslot.com/en/provider/settings?meet=error",
+      "https://www.peerslot.com/en/account-settings?meet=error",
     );
     expect(response.headers.get("set-cookie")).toContain("Max-Age=0");
   });
@@ -161,7 +161,7 @@ describe("Google Meet route authorization", () => {
     );
     expect(mocks.saveAuth).toHaveBeenCalledWith("provider", "code", "verifier");
     expect(response.headers.get("location")).toBe(
-      "https://www.peerslot.com/tr/provider/settings?meet=connected",
+      "https://www.peerslot.com/tr/account-settings?meet=connected",
     );
     expect(mocks.after).toHaveBeenCalledOnce();
   });
@@ -178,7 +178,7 @@ describe("Google Meet route authorization", () => {
     );
     expect(mocks.saveAuth).not.toHaveBeenCalled();
     expect(response.headers.get("location")).toContain(
-      "/tr/provider/settings?meet=error",
+      "/tr/account-settings?meet=error",
     );
   });
 });

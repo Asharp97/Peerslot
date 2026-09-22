@@ -316,9 +316,6 @@ export function BookingRequestPicker({
     const url = await createGoogleSignInUrl({
       callbackURL,
       errorCallbackURL: callbackURL,
-      requestSignUp: authMode === "register",
-      additionalData:
-        authMode === "register" ? legalConsentAdditionalFields : undefined,
     });
 
     if (!url) {
@@ -594,7 +591,6 @@ export function BookingRequestPicker({
                         value={password}
                       />
                     </div>
-                    {authMode === "register" ? (
                       <p className="text-sm leading-6 text-black/55">
                         {copy.consentPrefix}{" "}
                         <a
@@ -613,7 +609,6 @@ export function BookingRequestPicker({
                           {copy.privacyLink}
                         </a>
                       </p>
-                    ) : null}
                     <ErrorMessage message={error} />
                   </div>
                   <DialogFooter className="mt-5">

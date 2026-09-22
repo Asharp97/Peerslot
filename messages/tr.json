@@ -9,10 +9,22 @@
     "mainNavigationLabel": "Ana menü",
     "brandHomeLabel": "PeerSlot ana sayfası",
     "navigation": [
-      { "label": "Ürün", "href": "/#product" },
-      { "label": "Nasıl çalışır?", "href": "/#how-it-works" },
-      { "label": "Kurallar", "href": "/#guardrails" },
-      { "label": "Profesyoneller için", "href": "/#for-professionals" }
+      {
+        "label": "Ürün",
+        "href": "/#product"
+      },
+      {
+        "label": "Nasıl çalışır?",
+        "href": "/#how-it-works"
+      },
+      {
+        "label": "Kurallar",
+        "href": "/#guardrails"
+      },
+      {
+        "label": "Profesyoneller için",
+        "href": "/#for-professionals"
+      }
     ],
     "languageSwitcher": {
       "label": "Dil seçin",
@@ -48,11 +60,31 @@
         "teacherRole": "Koç",
         "timeZone": "GMT+3",
         "weekDays": [
-          { "day": "Pzt", "date": "21", "active": false },
-          { "day": "Sal", "date": "22", "active": false },
-          { "day": "Çar", "date": "23", "active": true },
-          { "day": "Per", "date": "24", "active": false },
-          { "day": "Cum", "date": "25", "active": false }
+          {
+            "day": "Pzt",
+            "date": "21",
+            "active": false
+          },
+          {
+            "day": "Sal",
+            "date": "22",
+            "active": false
+          },
+          {
+            "day": "Çar",
+            "date": "23",
+            "active": true
+          },
+          {
+            "day": "Per",
+            "date": "24",
+            "active": false
+          },
+          {
+            "day": "Cum",
+            "date": "25",
+            "active": false
+          }
         ],
         "previewLabel": "Haftalık uygunluk önizlemesi",
         "open": "Boş",
@@ -100,7 +132,7 @@
         {
           "icon": "refresh",
           "title": "Haftalık sınırınızı belirleyin",
-                                                        "body": "Her danışanın sizinle haftada kaç kez yeniden planlama yapabileceğini seçin."
+          "body": "Her danışanın sizinle haftada kaç kez yeniden planlama yapabileceğini seçin."
         },
         {
           "icon": "clock",
@@ -121,9 +153,18 @@
       "beforeBadge": "Önce",
       "beforeResult": "tek randevuyu taşımak için mesaj",
       "messages": [
-        { "text": "Daha geç olabilir mi?", "variant": "lavender" },
-        { "text": "Hangi saatler uygun?", "variant": "stone" },
-        { "text": "Perşembe olur mu?", "variant": "ember" }
+        {
+          "text": "Daha geç olabilir mi?",
+          "variant": "lavender"
+        },
+        {
+          "text": "Hangi saatler uygun?",
+          "variant": "stone"
+        },
+        {
+          "text": "Perşembe olur mu?",
+          "variant": "ember"
+        }
       ],
       "afterLabel": "PeerSlot ile",
       "afterBadge": "Yeniden planlandı",
@@ -141,13 +182,34 @@
     "footer": {
       "tagline": "Karmaşa olmadan değişen randevular.",
       "links": [
-        { "label": "Ürün", "href": "/#product" },
-        { "label": "Nasıl çalışır?", "href": "/#how-it-works" },
-        { "label": "Kurallar", "href": "/#guardrails" },
-        { "label": "Gizlilik", "href": "/policy/privacy" },
-        { "label": "Koşullar", "href": "/policy/terms-agreements" },
-        { "label": "Çerezler", "href": "/policy/cookies" },
-        { "label": "Randevularım", "href": "/my-appointments" }
+        {
+          "label": "Ürün",
+          "href": "/#product"
+        },
+        {
+          "label": "Nasıl çalışır?",
+          "href": "/#how-it-works"
+        },
+        {
+          "label": "Kurallar",
+          "href": "/#guardrails"
+        },
+        {
+          "label": "Gizlilik",
+          "href": "/policy/privacy"
+        },
+        {
+          "label": "Koşullar",
+          "href": "/policy/terms-agreements"
+        },
+        {
+          "label": "Çerezler",
+          "href": "/policy/cookies"
+        },
+        {
+          "label": "Randevularım",
+          "href": "/my-appointments"
+        }
       ],
       "copyright": "© {year} PeerSlot"
     }
@@ -548,7 +610,40 @@
       "loadError": "Çalışma alanınız yüklenemedi. Lütfen sayfayı yenileyip tekrar deneyin.",
       "clients": "Danışanlar",
       "personalActivities": "Kişisel aktiviteler",
-      "myAppointments": "Randevularım"
+      "myAppointments": "Randevularım",
+      "accountMenu": {
+        "label": "Hesap",
+        "signOut": "Çıkış yap",
+        "title": "Hesap ayarları",
+        "profilePicture": "Profil fotoğrafı",
+        "profilePictureHelp": "Başkaların sizi tanıyabilmesi için net bir fotoğraf kullanın.",
+        "chooseImage": "Görsel seç",
+        "uploading": "Görsel kaydediliyor...",
+        "imageUpdated": "Profil fotoğrafı güncellendi.",
+        "imageError": "Görsel güncellenemedi. 2 MB'a kadar PNG, JPEG veya WebP kullanın.",
+        "changePassword": "Şifreyi değiştir",
+        "changePasswordHelp": "Hesabınızı korumak için benzersiz bir şifre kullanın.",
+        "currentPassword": "Mevcut şifre",
+        "newPassword": "Yeni şifre",
+        "confirmPassword": "Yeni şifreyi onayla",
+        "changePasswordAction": "Şifreyi güncelle",
+        "changingPassword": "Güncelleniyor...",
+        "passwordChanged": "Şifre güncellendi.",
+        "passwordMismatch": "Yeni şifreler eşleşmiyor.",
+        "passwordError": "Şifre güncellenemedi. Mevcut şifrenizi kontrol edip tekrar deneyin.",
+        "language": "Dil",
+        "dateFormat": "Tarih biçimi",
+        "timeFormat": "Saat biçimi",
+        "savePreferences": "Tercihleri kaydet",
+        "preferencesSaved": "Tercihler kaydedildi",
+        "english": "İngilizce",
+        "turkish": "Türkçe",
+        "dateDmy": "Gün / ay / yıl",
+        "dateMdy": "Ay / gün / yıl",
+        "dateYmd": "Yıl / ay / gün",
+        "time12": "12 saatlik saat",
+        "time24": "24 saatlik saat"
+      }
     },
     "overview": {
       "eyebrow": "Haftanıza genel bakış",

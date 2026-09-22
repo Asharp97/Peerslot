@@ -42,16 +42,25 @@ export function MyAppointmentsPage({
   copy,
   locale,
   appointmentsCopy,
+  consentCopy,
+  initialAuthError = false,
 }: {
   copy: MyAppointmentsPageCopy;
   locale: string;
   appointmentsCopy: AppointmentsCopy;
+  consentCopy: {
+    consentPrefix: string;
+    termsLink: string;
+    consentJoin: string;
+    privacyLink: string;
+  };
+  initialAuthError?: boolean;
 }) {
   const [accessToken, setAccessToken] = useState<string | null | undefined>();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [authError, setAuthError] = useState("");
+  const [authError, setAuthError] = useState(initialAuthError ? copy.authError : "");
 
   useEffect(() => {
     let cancelled = false;
@@ -92,7 +101,6 @@ export function MyAppointmentsPage({
     const url = await createGoogleSignInUrl({
       callbackURL,
       errorCallbackURL: callbackURL,
-      requestSignUp: false,
     });
     if (!url) {
       setAuthError(copy.authError);
@@ -145,6 +153,16 @@ export function MyAppointmentsPage({
             <h2 className="font-display text-3xl">{copy.signedOutTitle}</h2>
             <p className="mt-3 max-w-xl text-sm leading-6 text-black/55">
               {copy.signedOutBody}
+            </p>
+            <p className="mt-3 text-sm leading-6 text-black/55">
+              {consentCopy.consentPrefix}{" "}
+              <a className="font-semibold underline underline-offset-3" href={`/${locale}/policy/terms-agreements`} target="_blank">
+                {consentCopy.termsLink}
+              </a>{" "}
+              {consentCopy.consentJoin}{" "}
+              <a className="font-semibold underline underline-offset-3" href={`/${locale}/policy/privacy`} target="_blank">
+                {consentCopy.privacyLink}
+              </a>
             </p>
             <Button
               className="mt-6 w-full rounded-full"
