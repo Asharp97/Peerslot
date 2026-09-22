@@ -257,6 +257,13 @@
       "deleteError": "Hesabınız silinemedi. Hiçbir değişiklik yapılmadı; lütfen tekrar deneyin."
     }
   },
+  "NotFound": {
+    "eyebrow": "Rezervasyon bağlantısı kullanılamıyor",
+    "title": "Bu rezervasyon sayfası artık kullanılamıyor",
+    "body": "Bağlantının süresi dolmuş olabilir veya sağlayıcı rezervasyon sayfasını yayından kaldırmış olabilir. PeerSlot'a dönüp başka bir bağlantı deneyin.",
+    "home": "PeerSlot'a git",
+    "back": "Geri dön"
+  },
   "Legal": {
     "privacy": {
       "eyebrow": "Yasal",

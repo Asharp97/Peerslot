@@ -257,6 +257,13 @@
       "deleteError": "Your account could not be deleted. Nothing was changed; please try again."
     }
   },
+  "NotFound": {
+    "eyebrow": "Booking link unavailable",
+    "title": "This booking page is no longer available",
+    "body": "The link may have expired, or the provider may have unpublished their booking page. Return to PeerSlot and try another link.",
+    "home": "Go to PeerSlot",
+    "back": "Go back"
+  },
   "Legal": {
     "privacy": {
       "eyebrow": "Legal",
