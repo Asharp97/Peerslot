@@ -60,17 +60,21 @@ const ProviderWorkspaceContext = createContext<ProviderWorkspaceState | null>(
 export function ProviderShell({
   children,
   copy,
+  allowSignedOut = false,
+  requireProviderSetup = true,
 }: {
   children: React.ReactNode;
   copy: ProviderShellCopy;
+  allowSignedOut?: boolean;
+  requireProviderSetup?: boolean;
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const [accessToken, setAccessToken] = useState("");
+  const [accessToken, setAccessToken] = useState<string | null | undefined>();
   const [data, setData] = useState<ProviderSetupData | null>(null);
   const [error, setError] = useState("");
   const { pendingRequestCount, refreshPendingRequestCount } =
-    usePendingRequestCount(accessToken, Boolean(data));
+    usePendingRequestCount(accessToken ?? "", Boolean(data));
 
   const loadProviderSetup = useCallback(
     async (token: string) => {
@@ -88,14 +92,19 @@ export function ProviderShell({
 
       const setup = (await response.json()) as ProviderSetupResponse;
       if (setup.status !== "active" || !setup.profile || !setup.bookingPage) {
-        router.replace("/auth/provider");
+        if (requireProviderSetup) {
+          router.replace("/auth/provider");
+        } else {
+          setData(null);
+          setError("");
+        }
         return;
       }
 
       setData({ profile: setup.profile, bookingPage: setup.bookingPage });
       setError("");
     },
-    [router],
+    [requireProviderSetup, router],
   );
 
   useEffect(() => {
@@ -106,7 +115,11 @@ export function ProviderShell({
       if (cancelled) return;
 
       if (!token) {
-        router.replace("/");
+        if (allowSignedOut) {
+          setAccessToken(null);
+        } else {
+          router.replace("/");
+        }
         return;
       }
 
@@ -122,7 +135,7 @@ export function ProviderShell({
     return () => {
       cancelled = true;
     };
-  }, [copy.loadError, loadProviderSetup, router]);
+  }, [allowSignedOut, copy.loadError, loadProviderSetup, router]);
 
   const workspaceState = useMemo(
     () =>
@@ -147,7 +160,10 @@ export function ProviderShell({
     router.replace("/");
   }
 
-  if (!workspaceState) {
+  if (
+    accessToken === undefined ||
+    (requireProviderSetup && accessToken && !workspaceState)
+  ) {
     return (
       <main className="grid min-h-screen place-items-center bg-[#f4f3eb] px-6 text-vast-ink">
         <div className="max-w-sm text-center">
@@ -160,26 +176,28 @@ export function ProviderShell({
     );
   }
 
-  const workspaceData = workspaceState.data;
+  const workspaceData = workspaceState?.data ?? null;
   const isCalendarPage = pathname.startsWith("/provider/calendar");
 
-  const navigation = [
-    { href: "/provider", label: copy.overview, icon: LayoutDashboard },
-    { href: "/my-appointments", label: copy.myAppointments, icon: ListTodo },
-    {
-      href: "/provider/calendar",
-      label: copy.calendar,
-      icon: CalendarDays,
-    },
-    { href: "/provider/requests", label: copy.requests, icon: Inbox },
-    { href: "/provider/clients", label: copy.clients, icon: Users },
-    {
-      href: "/provider/personal-activities",
-      label: copy.personalActivities,
-      icon: Coffee,
-    },
-    { href: "/provider/settings", label: copy.settings, icon: Settings },
-  ] as const;
+  const navigation = workspaceData
+    ? [
+        { href: "/provider", label: copy.overview, icon: LayoutDashboard },
+        { href: "/my-appointments", label: copy.myAppointments, icon: ListTodo },
+        {
+          href: "/provider/calendar",
+          label: copy.calendar,
+          icon: CalendarDays,
+        },
+        { href: "/provider/requests", label: copy.requests, icon: Inbox },
+        { href: "/provider/clients", label: copy.clients, icon: Users },
+        {
+          href: "/provider/personal-activities",
+          label: copy.personalActivities,
+          icon: Coffee,
+        },
+        { href: "/provider/settings", label: copy.settings, icon: Settings },
+      ]
+    : [{ href: "/my-appointments", label: copy.myAppointments, icon: ListTodo }];
 
   return (
     <ProviderWorkspaceContext.Provider value={workspaceState}>
@@ -198,9 +216,11 @@ export function ProviderShell({
             <p className="text-[10px] font-bold tracking-[0.16em] text-black/45 uppercase">
               {copy.workspace}
             </p>
-            <p className="mt-2 truncate text-sm font-semibold">
-              {workspaceData.profile.displayName}
-            </p>
+            {workspaceData ? (
+              <p className="mt-2 truncate text-sm font-semibold">
+                {workspaceData.profile.displayName}
+              </p>
+            ) : null}
           </div>
 
           <nav className="mt-7 space-y-1.5">
@@ -236,39 +256,45 @@ export function ProviderShell({
             })}
           </nav>
 
-          <div className="mt-auto rounded-2xl bg-lavender-whisper p-4">
-            <Sparkles size={18} />
-            <p className="mt-3 text-xs leading-5 font-semibold">
-              {workspaceData.bookingPage.isPublished
-                ? workspaceData.bookingPage.title
-                : copy.settings}
-            </p>
-          </div>
-          <button
-            className="mt-3 flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-semibold text-black/55 hover:bg-black/5 hover:text-vast-ink"
-            onClick={signOut}
-            type="button">
-            <LogOut size={17} /> {copy.signOut}
-          </button>
+          {workspaceData ? (
+            <div className="mt-auto rounded-2xl bg-lavender-whisper p-4">
+              <Sparkles size={18} />
+              <p className="mt-3 text-xs leading-5 font-semibold">
+                {workspaceData.bookingPage.isPublished
+                  ? workspaceData.bookingPage.title
+                  : copy.settings}
+              </p>
+            </div>
+          ) : null}
+          {accessToken ? (
+            <button
+              className="mt-3 flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-semibold text-black/55 hover:bg-black/5 hover:text-vast-ink"
+              onClick={signOut}
+              type="button">
+              <LogOut size={17} /> {copy.signOut}
+            </button>
+          ) : null}
         </aside>
 
         <header className="sticky top-0 z-20 border-b border-black/10 bg-[#f4f3eb]/95 px-4 py-3 backdrop-blur lg:hidden">
           <div className="flex items-center justify-between">
             <Link
               className="flex items-center gap-2 font-bold"
-              href="/provider">
+              href={workspaceData ? "/provider" : "/my-appointments"}>
               <span className="grid size-8 place-items-center rounded-full bg-vast-ink text-xs text-lavender-whisper">
                 P
               </span>
               PeerSlot
             </Link>
-            <button
-              aria-label={copy.signOut}
-              className="grid size-9 place-items-center rounded-full border border-black/10 bg-white"
-              onClick={signOut}
-              type="button">
-              <LogOut size={16} />
-            </button>
+            {accessToken ? (
+              <button
+                aria-label={copy.signOut}
+                className="grid size-9 place-items-center rounded-full border border-black/10 bg-white"
+                onClick={signOut}
+                type="button">
+                <LogOut size={16} />
+              </button>
+            ) : null}
           </div>
           <nav className="mt-1 flex gap-1 overflow-x-auto pt-2 pb-1">
             {navigation.map(({ href, label }) => {

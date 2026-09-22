@@ -103,7 +103,7 @@ export function MyAppointmentsPage({
   }
 
   return (
-    <main id="main-content" className="flex-1 px-5 py-16 sm:py-24">
+    <div id="main-content">
       <div
         dir={appointmentDirection(locale)}
         className="mx-auto w-full max-w-3xl text-vast-ink"
@@ -203,6 +203,6 @@ export function MyAppointmentsPage({
           </section>
         )}
       </div>
-    </main>
+    </div>
   );
 }

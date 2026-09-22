@@ -50,7 +50,11 @@ const appointment = {
   comment: null,
 };
 
-function setupFetch(initialCount: number, reviewStatus = 200) {
+function setupFetch(
+  initialCount: number,
+  reviewStatus = 200,
+  providerStatus: "active" | "setup_required" = "active",
+) {
   let appointments = Array.from({ length: initialCount }, (_, index) => ({
     ...appointment,
     id: `appointment-${index}`,
@@ -59,13 +63,13 @@ function setupFetch(initialCount: number, reviewStatus = 200) {
   const fetchMock = vi.fn(async (url: string, options?: RequestInit) => {
     if (url === "/api/provider") {
       return Response.json({
-        status: "active",
-        profile: { displayName: "Ceyda" },
-        bookingPage: {
+        status: providerStatus,
+        profile: providerStatus === "active" ? { displayName: "Ceyda" } : null,
+        bookingPage: providerStatus === "active" ? {
           timeZone: "Europe/Istanbul",
           title: "Book with Ceyda",
           isPublished: true,
-        },
+        } : null,
       });
     }
     if (url === "/api/provider/appointment-requests") return requests();
@@ -136,6 +140,24 @@ describe("provider request navigation badge", () => {
       expect(links[1].getAttribute("href")).toBe("/my-appointments");
       expect(links[4].getAttribute("href")).toBe("/provider/clients");
     }
+  });
+
+  it("keeps the shared shell available when the account has no provider setup", async () => {
+    setupFetch(0, 200, "setup_required");
+    render(
+      <ProviderShell
+        allowSignedOut
+        requireProviderSetup={false}
+        copy={shellCopy}>
+        Dashboard
+      </ProviderShell>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getAllByRole("link", { name: "myAppointments" })).toHaveLength(2);
+    });
+    expect(screen.queryByRole("link", { name: "calendar" })).toBeNull();
+    expect(screen.getByText("Dashboard")).toBeTruthy();
   });
 
   it("hides the badge when there are no pending requests", async () => {
