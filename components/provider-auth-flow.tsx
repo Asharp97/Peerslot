@@ -79,7 +79,7 @@ type ProviderAuthCopy = {
     session: string;
     onboarding: string;
     consent: string;
-    recovery?: string;
+    recovery: string;
   };
 };
 
@@ -229,7 +229,7 @@ export function ProviderAuthFlow({
       }),
     }).catch(() => null);
     if (!response?.ok) {
-      setError(copy.errors.recovery ?? copy.errors.auth);
+      setError(copy.errors.recovery);
       setSubmitting(false);
       return;
     }
@@ -249,7 +249,7 @@ export function ProviderAuthFlow({
         callbackURL: `${window.location.origin}/${locale}/auth/provider`,
       }),
     }).catch(() => null);
-    if (!response?.ok) setError(copy.errors.recovery ?? copy.errors.auth);
+    if (!response?.ok) setError(copy.errors.recovery);
     else setVerificationResent(true);
     setSubmitting(false);
   }

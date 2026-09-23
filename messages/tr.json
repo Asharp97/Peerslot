@@ -598,8 +598,7 @@
         "social": "Bu sosyal sağlayıcı kullanılamıyor veya yapılandırılmamış.",
         "session": "Erişim belirteci oluşturulamadı. Lütfen tekrar giriş yapın.",
         "onboarding": "Sağlayıcı profiliniz oluşturulamadı. Alanları kontrol edip tekrar deneyin.",
-        "consent": "Hesap oluşturmak için Kullanım Koşulları'nı ve Gizlilik Politikası'nı kabul edin.",
-        "recovery": "Bu e-posta gönderilemedi. Lütfen tekrar deneyin."
+        "consent": "Hesap oluşturmak için Kullanım Koşulları'nı ve Gizlilik Politikası'nı kabul edin."
       },
       "resendVerification": "Dogrulama e-postasini yeniden gönder",
       "verificationResent": "Dogrulama e-postasi gönderildi",
