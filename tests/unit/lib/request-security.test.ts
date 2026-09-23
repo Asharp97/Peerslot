@@ -9,15 +9,15 @@ import {
 afterEach(clearRateLimitsForTests);
 
 describe("request security", () => {
-  it("returns 429 with a retry window after the configured limit", () => {
+  it("returns 429 with a retry window after the configured limit", async () => {
     const request = new Request("http://localhost/api/test", {
       headers: { "x-forwarded-for": "203.0.113.4" },
     });
 
     expect(
-      enforceRateLimit(request, "test", { limit: 1, windowSeconds: 60 }),
+      await enforceRateLimit(request, "test", { limit: 1, windowSeconds: 60 }),
     ).toBeNull();
-    const blocked = enforceRateLimit(request, "test", {
+    const blocked = await enforceRateLimit(request, "test", {
       limit: 1,
       windowSeconds: 60,
     });

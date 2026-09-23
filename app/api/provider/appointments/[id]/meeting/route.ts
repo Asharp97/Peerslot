@@ -22,7 +22,7 @@ export async function POST(
   if (!id.success)
     return NextResponse.json({ error: "invalid_request" }, { status: 400 });
   const providerId = authorization.currentUser.user.id;
-  const limited = enforceRateLimit(request, "google-meet-create", {
+  const limited = await enforceRateLimit(request, "google-meet-create", {
     limit: 20,
     windowSeconds: 60,
     subject: providerId,

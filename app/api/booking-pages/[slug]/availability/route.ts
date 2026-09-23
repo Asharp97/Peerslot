@@ -33,7 +33,7 @@ export async function GET(request: Request, context: RouteContext) {
     );
   }
 
-  const limited = enforceRateLimit(request, "booking-availability", {
+  const limited = await enforceRateLimit(request, "booking-availability", {
     limit: 60,
     windowSeconds: 60,
     subject: slug.data,

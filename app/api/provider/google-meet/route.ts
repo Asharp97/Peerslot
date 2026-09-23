@@ -38,7 +38,7 @@ export async function POST(request: Request) {
   if (!googleMeetConfig())
     return NextResponse.json({ error: "not_configured" }, { status: 503 });
   const providerId = authorization.currentUser.user.id;
-  const limited = enforceRateLimit(request, "google-meet-connect", {
+  const limited = await enforceRateLimit(request, "google-meet-connect", {
     limit: 10,
     windowSeconds: 60,
     subject: providerId,

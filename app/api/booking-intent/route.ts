@@ -44,7 +44,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   const requestGuard = requireSameOriginJson(request);
   if (requestGuard) return requestGuard;
-  const limited = enforceRateLimit(request, "booking-intent", {
+  const limited = await enforceRateLimit(request, "booking-intent", {
     limit: 20,
     windowSeconds: 10 * 60,
   });

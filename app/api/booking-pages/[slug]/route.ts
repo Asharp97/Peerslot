@@ -18,7 +18,7 @@ export async function GET(request: Request, context: RouteContext) {
     );
   }
 
-  const limited = enforceRateLimit(request, "booking-page", {
+  const limited = await enforceRateLimit(request, "booking-page", {
     limit: 40,
     windowSeconds: 60,
     subject: input.data,

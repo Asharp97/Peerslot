@@ -26,7 +26,7 @@ export async function POST(request: Request) {
   const authorization = await authorizeApiUser(request);
   if (!authorization.authorized) return authorization.response;
   const { currentUser } = authorization;
-  const rateLimit = enforceRateLimit(request, "account-avatar-upload", {
+  const rateLimit = await enforceRateLimit(request, "account-avatar-upload", {
     limit: 10,
     subject: currentUser.user.id,
     windowSeconds: 60 * 60,

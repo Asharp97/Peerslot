@@ -53,7 +53,7 @@ export async function POST(
     );
   }
 
-  const limited = enforceRateLimit(request, "booking-confirmation", {
+  const limited = await enforceRateLimit(request, "booking-confirmation", {
     limit: 8,
     windowSeconds: 10 * 60,
     subject: `${session.user.id}:${slug}`,

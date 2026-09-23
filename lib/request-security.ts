@@ -1,24 +1,54 @@
+import { createHash } from "node:crypto";
+import { sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 type RateLimitEntry = { count: number; resetsAt: number };
 
 const rateLimits = new Map<string, RateLimitEntry>();
 
-export function enforceRateLimit(
+export async function enforceRateLimit(
   request: Request,
   scope: string,
   options: { limit: number; windowSeconds: number; subject?: string },
 ) {
   const now = Date.now();
-  const key = `${scope}:${requestIp(request)}:${options.subject ?? ""}`;
-  const current = rateLimits.get(key);
-  const entry =
-    !current || current.resetsAt <= now
-      ? { count: 1, resetsAt: now + options.windowSeconds * 1000 }
-      : { ...current, count: current.count + 1 };
+  const rawKey = `${scope}:${requestIp(request)}:${options.subject ?? ""}`;
+  const key = createHash("sha256").update(rawKey).digest("hex");
+  const resetsAt = new Date(now + options.windowSeconds * 1000);
+  let entry: RateLimitEntry;
 
-  rateLimits.set(key, entry);
-  pruneRateLimits(now);
+  try {
+    if (!process.env.DATABASE_URL && !process.env.db_url) throw new Error("database_unconfigured");
+    const [{ db }, { apiRateLimits }] = await Promise.all([
+      import("@/db"),
+      import("@/db/schema"),
+    ]);
+    const [row] = await db
+      .insert(apiRateLimits)
+      .values({ key, count: 1, resetsAt })
+      .onConflictDoUpdate({
+        target: apiRateLimits.key,
+        set: {
+          count: sql`case when ${apiRateLimits.resetsAt} <= now() then 1 else ${apiRateLimits.count} + 1 end`,
+          resetsAt: sql`case when ${apiRateLimits.resetsAt} <= now() then ${resetsAt} else ${apiRateLimits.resetsAt} end`,
+          updatedAt: sql`now()`,
+        },
+      })
+      .returning({ count: apiRateLimits.count, resetsAt: apiRateLimits.resetsAt });
+    entry = row
+      ? { count: row.count, resetsAt: row.resetsAt.getTime() }
+      : { count: 1, resetsAt: resetsAt.getTime() };
+  } catch {
+    // Keep local development and an un-migrated preview usable, while deployed
+    // environments use the shared Neon table above.
+    const current = rateLimits.get(key);
+    entry =
+      !current || current.resetsAt <= now
+        ? { count: 1, resetsAt: resetsAt.getTime() }
+        : { ...current, count: current.count + 1 };
+    rateLimits.set(key, entry);
+    pruneRateLimits(now);
+  }
 
   if (entry.count <= options.limit) return null;
 

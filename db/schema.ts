@@ -36,7 +36,30 @@ export const profiles = pgTable("profiles", {
   userId: text("user_id")
     .primaryKey()
     .references(() => user.id, { onDelete: "cascade" }),
+  preferences: jsonb("preferences")
+    .$type<{
+      language: "en" | "tr";
+      dateFormat: "dmy" | "mdy" | "ymd";
+      timeFormat: "12" | "24";
+    }>()
+    .default({ language: "en", dateFormat: "dmy", timeFormat: "24" })
+    .notNull(),
   createdAt: timestamp("created_at", {
+    withTimezone: true,
+    mode: "date",
+  })
+    .defaultNow()
+    .notNull(),
+});
+
+export const apiRateLimits = pgTable("api_rate_limits", {
+  key: text("key").primaryKey(),
+  count: integer("count").notNull(),
+  resetsAt: timestamp("resets_at", {
+    withTimezone: true,
+    mode: "date",
+  }).notNull(),
+  updatedAt: timestamp("updated_at", {
     withTimezone: true,
     mode: "date",
   })
