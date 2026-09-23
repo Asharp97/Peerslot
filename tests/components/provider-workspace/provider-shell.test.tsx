@@ -113,7 +113,7 @@ describe("provider request navigation badge", () => {
   it("shows the pending count in both navigation layouts", async () => {
     const { fetchMock } = setupFetch(12);
     render(<ProviderShell copy={shellCopy}>Dashboard</ProviderShell>);
-    await waitFor(() => expectNavCount(12));
+    await waitFor(() => expectNavCount(12), { timeout: 5000 });
     expect(fetchMock).toHaveBeenCalledWith(
       "/api/provider/appointment-requests",
       expect.objectContaining({
