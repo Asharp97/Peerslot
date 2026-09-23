@@ -1,7 +1,7 @@
 "use client";
 
 import { MoonStar, SunMedium, Sunrise } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   groupBookingSlots,
   type BookingSlot,
@@ -34,21 +34,25 @@ export function BookingSlotPicker({
     () => groupBookingSlots(slots, locale, timeZone),
     [slots, locale, timeZone],
   );
-  const selectedDayIndex = useMemo(
-    () =>
-      selectedStartsAt
-        ? days.findIndex((day) =>
-            day.periods.some((period) =>
-              period.slots.some((slot) => slot.startsAt === selectedStartsAt),
-            ),
-          )
-        : -1,
-    [days, selectedStartsAt],
-  );
   const [visibleDayCount, setVisibleDayCount] = useState(7);
-  const effectiveVisibleDayCount = Math.max(visibleDayCount, selectedDayIndex + 1);
 
-  const visibleDays = days.slice(0, effectiveVisibleDayCount);
+  // Keep a resumed booking intent visible even when it falls beyond the first
+  // page of dates.
+  useEffect(() => {
+    if (!selectedStartsAt) return;
+    const selectedDayIndex = days.findIndex((day) =>
+      day.periods.some((period) =>
+        period.slots.some((slot) => slot.startsAt === selectedStartsAt),
+      ),
+    );
+    if (selectedDayIndex >= 0) {
+      setVisibleDayCount((current) =>
+        Math.max(current, selectedDayIndex + 1),
+      );
+    }
+  }, [days, selectedStartsAt]);
+
+  const visibleDays = days.slice(0, visibleDayCount);
   return (
     <div className="mt-8 space-y-5">
       {visibleDays.map((day) => (
@@ -100,7 +104,7 @@ export function BookingSlotPicker({
           </div>
         </section>
       ))}
-      {effectiveVisibleDayCount < days.length ? (
+      {visibleDayCount < days.length ? (
         <button
           className="mx-auto block rounded-full border border-vast-ink/20 bg-white px-5 py-2.5 text-sm font-bold text-vast-ink transition hover:border-vast-ink hover:bg-vast-ink hover:text-white"
           onClick={() => setVisibleDayCount((current) => current + 7)}
