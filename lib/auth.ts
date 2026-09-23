@@ -2,7 +2,6 @@ import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { betterAuth } from "better-auth";
 import { getOAuthState } from "better-auth/api";
 import { bearer, jwt } from "better-auth/plugins";
-import { after } from "next/server";
 import { z } from "zod";
 
 import { db } from "@/db";
@@ -18,6 +17,7 @@ import {
   PRIVACY_VERSION,
   TERMS_VERSION,
 } from "@/lib/legal-consent";
+import { runAfterResponse } from "@/lib/background-task";
 
 const baseURL = process.env.BETTER_AUTH_URL ?? "http://localhost:3000";
 
@@ -99,7 +99,7 @@ export const auth = betterAuth({
     sendOnSignUp: true,
     sendVerificationEmail: async ({ user, url, token }, request) => {
       const locale = emailLocaleFromRequest(request);
-      after(() =>
+      runAfterResponse(() =>
         sendVerificationEmail({
           email: user.email,
           locale,
@@ -107,6 +107,7 @@ export const auth = betterAuth({
           token,
           verificationUrl: url,
         }),
+        "send_verification_email",
       );
     },
   },
@@ -118,7 +119,7 @@ export const auth = betterAuth({
     resetPasswordTokenExpiresIn: 60 * 60,
     sendResetPassword: async ({ user, url, token }, request) => {
       const locale = emailLocaleFromRequest(request);
-      after(() =>
+      runAfterResponse(() =>
         sendPasswordResetEmail({
           email: user.email,
           locale,
@@ -126,6 +127,7 @@ export const auth = betterAuth({
           resetUrl: url,
           token,
         }),
+        "send_password_reset_email",
       );
     },
   },

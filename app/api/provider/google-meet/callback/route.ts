@@ -1,9 +1,10 @@
-import { after, NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { providerProfiles } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { createUpcomingMeetings } from "@/lib/google-meet";
+import { runAfterResponse } from "@/lib/background-task";
 import {
   googleMeetConfig,
   MEET_OAUTH_COOKIE,
@@ -39,9 +40,9 @@ export async function GET(request: NextRequest) {
         if (provider && code && !request.nextUrl.searchParams.has("error")) {
           await saveMeetAuthorization(provider.id, code, state.verifier);
           outcome = "connected";
-          after(async () => {
+          runAfterResponse(async () => {
             await createUpcomingMeetings(provider.id).catch(() => undefined);
-          });
+          }, "create_upcoming_meetings");
         }
       }
     }
