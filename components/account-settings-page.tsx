@@ -23,6 +23,7 @@ import { cn } from "@/lib/utils";
 
 import { fetchAccessToken } from "@/lib/auth-browser";
 import type { AccountMenuCopy } from "@/components/account-settings-copy";
+import { useRouter } from "@/i18n/navigation";
 import {
   defaultAccountPreferences,
   parseAccountPreferences,
@@ -92,10 +93,6 @@ export function AccountSettingsPage({
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [preferences, setPreferences] = useState<AccountPreferences>(() =>
-    readPreferences(locale),
-  );
-  const [preferenceState, setPreferenceState] = useState<"idle" | "saving" | "saved">("idle");
 
   useEffect(() => {
     let cancelled = false;
@@ -144,7 +141,7 @@ export function AccountSettingsPage({
     setPreferenceState("saved");
     if (saved.language !== locale) {
       const path = window.location.pathname.replace(/^\/(en|tr)(?=\/|$)/, "");
-      window.location.assign(`/${saved.language}${path || "/"}${window.location.search}`);
+      router.push(`${path || "/"}${window.location.search}`, { locale: saved.language });
       return;
     }
     window.setTimeout(() => setPreferenceState("idle"), 1800);

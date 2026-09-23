@@ -598,10 +598,9 @@
         "social": "Bu sosyal sağlayıcı kullanılamıyor veya yapılandırılmamış.",
         "session": "Erişim belirteci oluşturulamadı. Lütfen tekrar giriş yapın.",
         "onboarding": "Sağlayıcı profiliniz oluşturulamadı. Alanları kontrol edip tekrar deneyin.",
-        "consent": "Hesap oluşturmak için Kullanım Koşulları'nı ve Gizlilik Politikası'nı kabul edin."
+        "consent": "Hesap oluşturmak için Kullanım Koşulları'nı ve Gizlilik Politikası'nı kabul edin.",
+        "recovery": "Bu e-posta gönderilemedi. Lütfen tekrar deneyin."
       },
-      "resendVerification": "Dogrulama e-postasini yeniden gönder",
-      "verificationResent": "Dogrulama e-postasi gönderildi",
       "forgotPassword": "Sifrenizi mi unuttunuz?",
       "forgotPasswordTitle": "Sifrenizi sifirlayin.",
       "forgotPasswordBody": "E-posta adresinizi girin, güvenli bir sifirlama baglantisi gönderelim.",
@@ -994,8 +993,8 @@
     "verifyTitle": "Gelen kutunuzu kontrol edin",
     "verifyBody": "{email} adresinizin doğrulanması gerekiyorsa seçtiğiniz randevuya dönmek için gelen kutunuzdaki bağlantıyı açın. Zaten doğrulanmış bir hesabınız varsa geri dönüp mevcut şifrenizle veya Google ile giriş yapın.",
     "verifyAction": "Girişe dön",
-      "resendVerification": "Doğrulama e-postasını tekrar gönder",
-      "verificationResent": "Doğrulama e-postası gönderildi",
+    "resendVerification": "Doğrulama e-postasını tekrar gönder",
+    "verificationResent": "Doğrulama e-postası gönderildi",
     "confirmTitle": "Talebinizi onaylayın",
     "confirmBody": "Randevu talebini göndermeden önce ayrıntıları gözden geçirin.",
     "bookingAs": "Rezervasyonu yapan",
@@ -1016,9 +1015,7 @@
     "socialError": "Bu giriş seçeneği kullanılamıyor veya başlatılamadı.",
     "intentError": "Bu saat giriş için saklanamadı. Lütfen tekrar deneyin.",
     "consentError": "Hesap oluşturmak için Kullanım Koşulları'nı ve Gizlilik Politikası'nı kabul edin.",
-    "showMoreDates": "Daha fazla tarih göster",
-    "resendVerification": "Dogrulama e-postasini yeniden gönder",
-    "verificationResent": "Dogrulama e-postasi gönderildi"
+    "showMoreDates": "Daha fazla tarih göster"
   },
   "AuthRecovery": {
     "forgot": {
