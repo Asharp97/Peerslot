@@ -300,6 +300,8 @@
       "googleAction": "Google ile devam et",
       "orContinue": "veya e-posta kullan",
       "authError": "Giriş yapılamadı. Bilgilerinizi kontrol edip tekrar deneyin.",
+      "forgotPassword": "Parolanızı mı unuttunuz? Sıfırlama bağlantısı gönder",
+      "forgotPasswordSent": "Hesap varsa sıfırlama bağlantısı gönderildi.",
       "dataPrivacy": "Verileriniz ve hesabınız",
       "dataPrivacyDescription": "PeerSlot verilerinizin taşınabilir bir kopyasını indirin veya hesabınızı kalıcı olarak kapatın.",
       "exportTitle": "Hesap verilerini dışa aktar",
@@ -557,6 +559,8 @@
       "verifyTitle": "Gelen kutunuzu kontrol edin.",
       "verifyBody": "{email} adresine bir doğrulama bağlantısı gönderdik. Adresinizi doğrulamak ve sağlayıcı hesabınızın kurulumuna devam etmek için bağlantıyı açın.",
       "verifyAction": "Girişe dön",
+      "resendVerification": "Doğrulama e-postasını tekrar gönder",
+      "verificationResent": "Doğrulama e-postası gönderildi",
       "nameLabel": "Adınız",
       "emailLabel": "E-posta",
       "passwordLabel": "Parola",
@@ -594,8 +598,17 @@
         "social": "Bu sosyal sağlayıcı kullanılamıyor veya yapılandırılmamış.",
         "session": "Erişim belirteci oluşturulamadı. Lütfen tekrar giriş yapın.",
         "onboarding": "Sağlayıcı profiliniz oluşturulamadı. Alanları kontrol edip tekrar deneyin.",
-        "consent": "Hesap oluşturmak için Kullanım Koşulları'nı ve Gizlilik Politikası'nı kabul edin."
-      }
+        "consent": "Hesap oluşturmak için Kullanım Koşulları'nı ve Gizlilik Politikası'nı kabul edin.",
+        "recovery": "Bu e-posta gönderilemedi. Lütfen tekrar deneyin."
+      },
+      "resendVerification": "Dogrulama e-postasini yeniden gönder",
+      "verificationResent": "Dogrulama e-postasi gönderildi",
+      "forgotPassword": "Sifrenizi mi unuttunuz?",
+      "forgotPasswordTitle": "Sifrenizi sifirlayin.",
+      "forgotPasswordBody": "E-posta adresinizi girin, güvenli bir sifirlama baglantisi gönderelim.",
+      "forgotPasswordAction": "Sifirlama baglantisi gönder",
+      "forgotPasswordSent": "Bu e-posta için bir hesap varsa sifirlama baglantisi gönderildi.",
+      "forgotPasswordBack": "Giris yap"
     }
   },
   "ProviderWorkspace": {
@@ -982,6 +995,8 @@
     "verifyTitle": "Gelen kutunuzu kontrol edin",
     "verifyBody": "{email} adresinizin doğrulanması gerekiyorsa seçtiğiniz randevuya dönmek için gelen kutunuzdaki bağlantıyı açın. Zaten doğrulanmış bir hesabınız varsa geri dönüp mevcut şifrenizle veya Google ile giriş yapın.",
     "verifyAction": "Girişe dön",
+      "resendVerification": "Doğrulama e-postasını tekrar gönder",
+      "verificationResent": "Doğrulama e-postası gönderildi",
     "confirmTitle": "Talebinizi onaylayın",
     "confirmBody": "Randevu talebini göndermeden önce ayrıntıları gözden geçirin.",
     "bookingAs": "Rezervasyonu yapan",
@@ -1001,6 +1016,34 @@
     "authError": "Giriş yapılamadı. Bilgilerinizi kontrol edip tekrar deneyin.",
     "socialError": "Bu giriş seçeneği kullanılamıyor veya başlatılamadı.",
     "intentError": "Bu saat giriş için saklanamadı. Lütfen tekrar deneyin.",
-    "consentError": "Hesap oluşturmak için Kullanım Koşulları'nı ve Gizlilik Politikası'nı kabul edin."
+    "consentError": "Hesap oluşturmak için Kullanım Koşulları'nı ve Gizlilik Politikası'nı kabul edin.",
+    "showMoreDates": "Daha fazla tarih göster",
+    "resendVerification": "Dogrulama e-postasini yeniden gönder",
+    "verificationResent": "Dogrulama e-postasi gönderildi"
+  },
+  "AuthRecovery": {
+    "forgot": {
+      "title": "Sifrenizi mi unuttunuz?",
+      "body": "Hesabiniza bagli e-posta adresini girin. Sifrenizi yenilemeniz için bir baglanti gönderecegiz.",
+      "email": "E-posta",
+      "action": "Sifirlama baglantisi gönder",
+      "sending": "Gönderiliyor...",
+      "sent": "E-posta adresiniz kayitliyse sifirlama baglantisini gönderdik.",
+      "back": "Giris yap",
+      "error": "Sifirlama istegi gönderilemedi."
+    },
+    "reset": {
+      "title": "Yeni sifre olusturun.",
+      "body": "Yeni sifrenizi belirleyin.",
+      "password": "Yeni sifre",
+      "confirmPassword": "Yeni sifreyi onaylayin",
+      "action": "Sifreyi güncelle",
+      "saving": "Güncelleniyor...",
+      "success": "Sifreniz güncellendi.",
+      "back": "Giris yap",
+      "invalid": "Bu sifirlama baglantisi geçersiz veya süresi dolmus.",
+      "mismatch": "Sifreler eslesmiyor.",
+      "error": "Sifreniz güncellenemedi."
+    }
   }
 }

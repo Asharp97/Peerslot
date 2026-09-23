@@ -36,6 +36,8 @@ export type MyAppointmentsPageCopy = AccountDataCopy & {
   googleAction: string;
   orContinue: string;
   authError: string;
+  forgotPassword: string;
+  forgotPasswordSent: string;
 };
 
 export function MyAppointmentsPage({
@@ -61,6 +63,7 @@ export function MyAppointmentsPage({
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [authError, setAuthError] = useState(initialAuthError ? copy.authError : "");
+  const [recoverySent, setRecoverySent] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -108,6 +111,21 @@ export function MyAppointmentsPage({
       return;
     }
     window.location.assign(url);
+  }
+
+  async function sendPasswordReset() {
+    setAuthError("");
+    const response = await fetch("/api/auth/request-password-reset", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email,
+        redirectTo: `${window.location.origin}/${locale}/auth/reset-password`,
+      }),
+    }).catch(() => null);
+    if (response?.ok) setRecoverySent(true);
+    else setAuthError(copy.authError);
   }
 
   return (
@@ -191,6 +209,13 @@ export function MyAppointmentsPage({
                   value={email}
                 />
               </div>
+              <button
+                className="text-left text-sm font-semibold underline underline-offset-3"
+                onClick={() => void sendPasswordReset()}
+                type="button"
+              >
+                {recoverySent ? copy.forgotPasswordSent : copy.forgotPassword}
+              </button>
               <div>
                 <Label htmlFor="account-password">{copy.passwordLabel}</Label>
                 <Input

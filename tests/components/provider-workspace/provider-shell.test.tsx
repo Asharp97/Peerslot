@@ -31,6 +31,11 @@ vi.mock("@/i18n/navigation", () => ({
 vi.mock("next-intl", () => ({ useLocale: () => "en" }));
 vi.mock("@/lib/auth-browser", () => ({
   fetchAccessToken: async () => "access-token",
+  fetchWithAccessToken: (input: RequestInfo | URL, token: string, init: RequestInit = {}) => {
+    const headers = new Headers(init.headers);
+    headers.set("Authorization", `Bearer ${token}`);
+    return fetch(input, { ...init, headers });
+  },
 }));
 
 const shellCopy = new Proxy(

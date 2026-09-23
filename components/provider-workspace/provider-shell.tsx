@@ -23,7 +23,7 @@ import {
 } from "react";
 
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
-import { fetchAccessToken } from "@/lib/auth-browser";
+import { fetchAccessToken, fetchWithAccessToken } from "@/lib/auth-browser";
 import type { ProviderSetupData } from "@/lib/provider-workspace-types";
 
 import { AccountMenu, type AccountMenuCopy } from "./account-menu";
@@ -81,8 +81,7 @@ export function ProviderShell({
 
   const loadProviderSetup = useCallback(
     async (token: string) => {
-      const response = await fetch("/api/provider", {
-        headers: { Authorization: `Bearer ${token}` },
+      const response = await fetchWithAccessToken("/api/provider", token, {
         cache: "no-store",
       });
 

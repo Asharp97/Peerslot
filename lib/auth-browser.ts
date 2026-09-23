@@ -11,6 +11,30 @@ export async function fetchAccessToken() {
   return ((await response.json()) as { token?: string }).token ?? null;
 }
 
+/**
+ * Sends an authenticated request and retries once with a newly issued JWT if
+ * the short-lived access token has expired while the page was open.
+ */
+export async function fetchWithAccessToken(
+  input: RequestInfo | URL,
+  token: string,
+  init: RequestInit = {},
+) {
+  const request = (accessToken: string) => {
+    const headers = new Headers(init.headers);
+    headers.set("Authorization", `Bearer ${accessToken}`);
+    return fetch(input, { ...init, headers, credentials: "include" });
+  };
+
+  let response = await request(token);
+  if (response.status !== 401) return response;
+
+  const refreshed = await fetchAccessToken();
+  if (!refreshed || refreshed === token) return response;
+  response = await request(refreshed);
+  return response;
+}
+
 export function requestEmailSignIn(
   email: string,
   password: string,
@@ -21,6 +45,24 @@ export function requestEmailSignIn(
     credentials: "include",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password, rememberMe: true, callbackURL }),
+  });
+}
+
+export function requestPasswordReset(email: string, redirectTo: string) {
+  return fetch("/api/auth/request-password-reset", {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, redirectTo }),
+  });
+}
+
+export function resendVerificationEmail(email: string, callbackURL: string) {
+  return fetch("/api/auth/send-verification-email", {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, callbackURL }),
   });
 }
 

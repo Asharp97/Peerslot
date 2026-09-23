@@ -3,6 +3,7 @@ import type {
   AppointmentView,
 } from "@/lib/appointment-agenda";
 import { formatInTimeZone } from "@/lib/availability-window";
+import type { AccountPreferences } from "@/lib/account-preferences";
 
 export function groupAppointmentsByDate(
   appointments: AgendaAppointment[],
@@ -54,6 +55,7 @@ export function formatAppointmentTime(
   appointment: Pick<AgendaAppointment, "startsAt" | "endsAt">,
   locale: string,
   timeZone: string,
+  preferences?: Pick<AccountPreferences, "timeFormat">,
 ) {
   const start = new Date(appointment.startsAt);
   const end = new Date(appointment.endsAt);
@@ -64,9 +66,37 @@ export function formatAppointmentTime(
     timeZone,
     hour: "2-digit",
     minute: "2-digit",
+    ...(preferences ? { hour12: preferences.timeFormat === "12" } : {}),
     ...(!sameDay ? { month: "short" as const, day: "numeric" as const } : {}),
   });
   return `${format.format(start)} – ${format.format(end)}`;
+}
+
+export function formatAppointmentDate(
+  value: Date,
+  locale: string,
+  timeZone: string,
+  preferences?: Pick<AccountPreferences, "dateFormat">,
+) {
+  if (!preferences) {
+    return new Intl.DateTimeFormat(locale, {
+      timeZone,
+      dateStyle: "long",
+    }).format(value);
+  }
+
+  const parts = new Intl.DateTimeFormat(locale, {
+    timeZone,
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).formatToParts(value);
+  const values = Object.fromEntries(
+    parts.filter(({ type }) => type !== "literal").map(({ type, value: part }) => [type, part]),
+  );
+  if (preferences.dateFormat === "ymd") return `${values.year}-${values.month}-${values.day}`;
+  if (preferences.dateFormat === "mdy") return `${values.month}/${values.day}/${values.year}`;
+  return `${values.day}/${values.month}/${values.year}`;
 }
 
 export function appointmentDirection(locale: string): "rtl" | "ltr" {

@@ -23,12 +23,12 @@ import { cn } from "@/lib/utils";
 
 import { fetchAccessToken } from "@/lib/auth-browser";
 import type { AccountMenuCopy } from "@/components/account-settings-copy";
-
-type AccountPreferences = {
-  language: "en" | "tr";
-  dateFormat: "dmy" | "mdy" | "ymd";
-  timeFormat: "12" | "24";
-};
+import { useRouter } from "@/i18n/navigation";
+import {
+  defaultAccountPreferences,
+  parseAccountPreferences,
+  type AccountPreferences,
+} from "@/lib/account-preferences";
 
 type SessionUser = {
   name?: string | null;
@@ -45,8 +45,13 @@ export function AccountSettingsPage({
   locale: string;
   copy: AccountMenuCopy;
 }) {
+  const router = useRouter();
   const [accessToken, setAccessToken] = useState("");
   const [canHost, setCanHost] = useState(false);
+  const [preferences, setPreferences] = useState<AccountPreferences>(() =>
+    readPreferences(locale),
+  );
+  const [preferenceState, setPreferenceState] = useState<"idle" | "saving" | "saved">("idle");
 
   useEffect(() => {
     let cancelled = false;
@@ -54,6 +59,20 @@ export function AccountSettingsPage({
       const token = await fetchAccessToken();
       if (cancelled || !token) return;
       setAccessToken(token);
+      const preferencesResponse = await fetch("/api/account/preferences", {
+        headers: { Authorization: `Bearer ${token}` },
+        cache: "no-store",
+      }).catch(() => null);
+      if (preferencesResponse?.ok) {
+        const body = (await preferencesResponse.json().catch(() => null)) as {
+          preferences?: unknown;
+        } | null;
+        if (!cancelled && body?.preferences) {
+          const next = parseAccountPreferences(body.preferences);
+          setPreferences(next);
+          localStorage.setItem(preferencesKey, JSON.stringify(next));
+        }
+      }
       const response = await fetch("/api/provider", {
         headers: { Authorization: `Bearer ${token}` },
         cache: "no-store",
@@ -74,11 +93,6 @@ export function AccountSettingsPage({
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [preferences, setPreferences] = useState<AccountPreferences>(() =>
-    readPreferences(locale),
-  );
-  const [preferenceState, setPreferenceState] = useState<"idle" | "saved">("idle");
-
   useEffect(() => {
     let cancelled = false;
     async function loadUser() {
@@ -101,13 +115,32 @@ export function AccountSettingsPage({
     setPreferenceState("idle");
   }
 
-  function savePreferences() {
-    localStorage.setItem(preferencesKey, JSON.stringify(preferences));
-    window.dispatchEvent(new CustomEvent("peerslot:preferences-change", { detail: preferences }));
+  async function savePreferences() {
+    setPreferenceState("saving");
+    const response = await fetch("/api/account/preferences", {
+      method: "PATCH",
+      credentials: "include",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(preferences),
+    }).catch(() => null);
+    if (!response?.ok) {
+      setPreferenceState("idle");
+      return;
+    }
+    const body = (await response.json().catch(() => null)) as {
+      preferences?: unknown;
+    } | null;
+    const saved = parseAccountPreferences(body?.preferences ?? preferences);
+    setPreferences(saved);
+    localStorage.setItem(preferencesKey, JSON.stringify(saved));
+    window.dispatchEvent(new CustomEvent("peerslot:preferences-change", { detail: saved }));
     setPreferenceState("saved");
-    if (preferences.language !== locale) {
+    if (saved.language !== locale) {
       const path = window.location.pathname.replace(/^\/(en|tr)(?=\/|$)/, "");
-      window.location.assign(`/${preferences.language}${path || "/"}${window.location.search}`);
+      router.push(`${path || "/"}${window.location.search}`, { locale: saved.language });
       return;
     }
     window.setTimeout(() => setPreferenceState("idle"), 1800);
@@ -245,9 +278,9 @@ export function AccountSettingsPage({
       <option value="12">{copy.time12}</option>
     </PreferenceSelect>
   </div>
-  <Button className="mt-3 min-h-9 rounded-full text-xs" onClick={savePreferences} type="button" variant="outline">
-    {preferenceState === "saved" ? <Check size={14} /> : null}
-    {preferenceState === "saved" ? copy.preferencesSaved : copy.savePreferences}
+  <Button className="mt-3 min-h-9 rounded-full text-xs" disabled={preferenceState === "saving"} onClick={() => { void savePreferences(); }} type="button" variant="outline">
+    {preferenceState === "saved" ? <Check size={14} /> : preferenceState === "saving" ? <LoaderCircle className="animate-spin" size={14} /> : null}
+    {preferenceState === "saved" ? copy.preferencesSaved : preferenceState === "saving" ? copy.savePreferences : copy.savePreferences}
   </Button>
 </section>
 
@@ -284,18 +317,17 @@ function PreferenceSelect({ ariaLabel, children, onChange, value }: { ariaLabel:
 
 function readPreferences(locale: string): AccountPreferences {
   const defaults: AccountPreferences = {
+    ...defaultAccountPreferences,
     language: locale === "tr" ? "tr" : "en",
-    dateFormat: "dmy",
-    timeFormat: "24",
   };
   if (typeof window === "undefined") return defaults;
   try {
     const stored = JSON.parse(localStorage.getItem(preferencesKey) ?? "null") as Partial<AccountPreferences> | null;
-    return {
+    return parseAccountPreferences({
       language: stored?.language === "tr" ? "tr" : defaults.language,
-      dateFormat: stored?.dateFormat === "mdy" || stored?.dateFormat === "ymd" ? stored.dateFormat : defaults.dateFormat,
-      timeFormat: stored?.timeFormat === "12" ? "12" : defaults.timeFormat,
-    };
+      dateFormat: stored?.dateFormat ?? defaults.dateFormat,
+      timeFormat: stored?.timeFormat ?? defaults.timeFormat,
+    });
   } catch {
     return defaults;
   }

@@ -22,6 +22,7 @@ import {
   AppointmentsSkeleton,
 } from "./appointments-states";
 import type { AppointmentsCopy } from "./copy";
+import { fetchWithAccessToken } from "@/lib/auth-browser";
 export type { AppointmentsCopy } from "./copy";
 
 type Props = { accessToken: string; locale: string; copy: AppointmentsCopy };
@@ -91,11 +92,11 @@ function AgendaList({
           view,
           ...(request.cursor ? { cursor: request.cursor } : {}),
         });
-        const response = await fetch(`/api/account/appointments?${query}`, {
-          headers: { Authorization: `Bearer ${accessToken}` },
-          cache: "no-store",
-          signal: controller.signal,
-        });
+        const response = await fetchWithAccessToken(
+          `/api/account/appointments?${query}`,
+          accessToken,
+          { cache: "no-store", signal: controller.signal },
+        );
         if (!response.ok) throw new Error("appointments");
         const body = (await response.json()) as AppointmentAgendaPage;
         if (controller.signal.aborted) return;

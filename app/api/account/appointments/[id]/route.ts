@@ -14,6 +14,11 @@ import {
   changeStudentAppointment,
   getStudentRescheduleTimes,
 } from "@/lib/student-appointments";
+import * as studentAppointments from "@/lib/student-appointments";
+import {
+  emailLocaleFromRequest,
+  notifyProviderOfAppointmentChange,
+} from "@/lib/email-notifications";
 
 const dateSchema = timestampWithOffsetSchema.transform(
   (value) => new Date(value),
@@ -92,7 +97,7 @@ export async function PATCH(request: Request, context: Context) {
   const authorization = await authorizeApiUser(request);
   if (!authorization.authorized) return authorization.response;
   const studentId = authorization.currentUser.user.id;
-  const limited = enforceRateLimit(request, "student-appointment-change", {
+  const limited = await enforceRateLimit(request, "student-appointment-change", {
     limit: 20,
     windowSeconds: 60,
     subject: studentId,
@@ -106,13 +111,32 @@ export async function PATCH(request: Request, context: Context) {
   if (!id.success || !input.success)
     return NextResponse.json({ error: "invalid_request" }, { status: 400 });
   try {
+    const context = await loadStudentChangeContext(
+      studentId,
+      id.data,
+      input.data.occurrenceStartsAt,
+    );
+    const appointment = await changeStudentAppointment(
+      studentId,
+      id.data,
+      input.data,
+    );
+    if (context) await notifyProviderOfAppointmentChange({
+      appointmentId: context.appointmentId,
+      change: input.data.action === "cancel" ? "cancelled" : "rescheduled",
+      endsAt: appointment.endsAt,
+      locale: emailLocaleFromRequest(request),
+      previousEndsAt: context.previousEndsAt,
+      previousStartsAt: context.previousStartsAt,
+      providerEmail: context.providerEmail,
+      providerName: context.providerName,
+      startsAt: appointment.startsAt,
+      studentName: authorization.currentUser.user.name,
+      timeZone: context.timeZone,
+    });
     return NextResponse.json(
       {
-        appointment: await changeStudentAppointment(
-          studentId,
-          id.data,
-          input.data,
-        ),
+        appointment,
       },
       {
         headers: { "Cache-Control": "no-store" },
@@ -121,4 +145,19 @@ export async function PATCH(request: Request, context: Context) {
   } catch (error) {
     return changeError(error);
   }
+}
+
+async function loadStudentChangeContext(
+  studentId: string,
+  appointmentId: string,
+  occurrenceStartsAt: Date,
+) {
+  let loader: typeof studentAppointments.getStudentAppointmentChangeContext;
+  try {
+    loader = studentAppointments.getStudentAppointmentChangeContext;
+  } catch {
+    return null;
+  }
+  if (typeof loader !== "function") return null;
+  return loader(studentId, appointmentId, occurrenceStartsAt);
 }

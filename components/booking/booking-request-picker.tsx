@@ -25,6 +25,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   createGoogleSignInUrl,
   readAuthError,
+  resendVerificationEmail,
   requestEmailSignIn,
 } from "@/lib/auth-browser";
 import { legalConsentAdditionalFields } from "@/lib/legal-consent";
@@ -41,6 +42,7 @@ export type BookingRequestCopy = {
   morning: string;
   afternoon: string;
   evening: string;
+  showMoreDates?: string;
   requestTitle: string;
   requestBody: string;
   name: string;
@@ -64,6 +66,8 @@ export type BookingRequestCopy = {
   verifyTitle: string;
   verifyBody: string;
   verifyAction: string;
+  resendVerification: string;
+  verificationResent: string;
   confirmTitle: string;
   confirmBody: string;
   bookingAs: string;
@@ -126,6 +130,7 @@ export function BookingRequestPicker({
   const [saving, setSaving] = useState(false);
   const [requested, setRequested] = useState(false);
   const [error, setError] = useState("");
+  const [verificationResent, setVerificationResent] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -263,6 +268,7 @@ export function BookingRequestPicker({
         message?: string;
       } | null;
       if (signIn.status === 403 && failure?.code === "EMAIL_NOT_VERIFIED") {
+        setVerificationResent(false);
         setPhase("verify-email");
         return;
       }
@@ -293,11 +299,24 @@ export function BookingRequestPicker({
       }
 
       setPhase("verify-email");
+      setVerificationResent(false);
     } catch {
       setError(copy.authError);
     } finally {
       setSaving(false);
     }
+  }
+
+  async function resendVerification() {
+    setSaving(true);
+    setError("");
+    const response = await resendVerificationEmail(
+      studentEmail,
+      `${window.location.origin}/${locale}/book/${slug}`,
+    ).catch(() => null);
+    if (!response?.ok) setError(copy.authError);
+    else setVerificationResent(true);
+    setSaving(false);
   }
 
   async function handleSocialAuth() {
@@ -419,6 +438,7 @@ export function BookingRequestPicker({
         timeZone={timeZone}
         copy={copy}
         disabled={!sessionChecked}
+        selectedStartsAt={selected?.startsAt}
         onSelect={chooseSlot}
       />
 
@@ -650,6 +670,17 @@ export function BookingRequestPicker({
                   >
                     {copy.verifyAction}
                   </Button>
+                  <button
+                    className="mt-4 text-sm font-semibold underline underline-offset-3 disabled:opacity-50"
+                    disabled={saving}
+                    onClick={() => void resendVerification()}
+                    type="button"
+                  >
+                    {verificationResent
+                      ? copy.verificationResent
+                      : copy.resendVerification}
+                  </button>
+                  <ErrorMessage message={error} />
                 </div>
               ) : null}
 

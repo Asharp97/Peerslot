@@ -77,7 +77,9 @@ export default async function BookingPage({ params }: BookingPageProps) {
     startsAt: rangeStartsAt,
     endsAt: new Date(rangeStartsAt.getTime() + 30 * 24 * 60 * 60 * 1000),
   });
-  const slots = availability?.availableTimes.slice(0, 12) ?? [];
+  // Keep the complete 30-day availability range. The client picker paginates
+  // by date so later slots remain discoverable on busy booking pages.
+  const slots = availability?.availableTimes ?? [];
 
   return (
     <main className="min-h-screen bg-lumen-cream px-4 py-8 text-vast-ink sm:py-14">
@@ -156,6 +158,7 @@ export default async function BookingPage({ params }: BookingPageProps) {
                     morning: t("morning"),
                     afternoon: t("afternoon"),
                     evening: t("evening"),
+                    showMoreDates: t("showMoreDates"),
                     requestTitle: t("requestTitle"),
                     requestBody: t("requestBody"),
                     name: t("name"),
@@ -179,6 +182,8 @@ export default async function BookingPage({ params }: BookingPageProps) {
                     verifyTitle: t("verifyTitle"),
                     verifyBody: t.raw("verifyBody"),
                     verifyAction: t("verifyAction"),
+                    resendVerification: t("resendVerification"),
+                    verificationResent: t("verificationResent"),
                     confirmTitle: t("confirmTitle"),
                     confirmBody: t("confirmBody"),
                     bookingAs: t("bookingAs"),

@@ -238,6 +238,8 @@
       "googleAction": "Continue with Google",
       "orContinue": "or use email",
       "authError": "We could not sign you in. Check your details and try again.",
+      "forgotPassword": "Forgot your password? Send a reset link",
+      "forgotPasswordSent": "If the account exists, a reset link is on its way.",
       "dataPrivacy": "Your data and account",
       "dataPrivacyDescription": "Download a portable copy of your PeerSlot data or permanently close your account.",
       "exportTitle": "Export account data",
@@ -495,6 +497,14 @@
       "verifyTitle": "Check your inbox.",
       "verifyBody": "We sent a verification link to {email}. Open it to verify your address and continue setting up your provider account.",
       "verifyAction": "Back to sign in",
+      "resendVerification": "Send the verification email again",
+      "verificationResent": "Verification email sent",
+      "forgotPassword": "Forgot your password?",
+      "forgotPasswordTitle": "Reset your password.",
+      "forgotPasswordBody": "Enter your email and we will send a secure reset link.",
+      "forgotPasswordAction": "Send reset link",
+      "forgotPasswordSent": "If an account exists for this email, a reset link is on its way.",
+      "forgotPasswordBack": "Back to sign in",
       "nameLabel": "Your name",
       "emailLabel": "Email",
       "passwordLabel": "Password",
@@ -532,7 +542,8 @@
         "social": "This social provider is unavailable or not configured.",
         "session": "We could not create an access token. Please sign in again.",
         "onboarding": "Your provider profile could not be created. Review the fields and try again.",
-        "consent": "Accept the Terms and Privacy Policy to create an account."
+        "consent": "Accept the Terms and Privacy Policy to create an account.",
+        "recovery": "We could not send that email. Please try again."
       }
     }
   },
@@ -896,6 +907,7 @@
     "morning": "Morning",
     "afternoon": "Afternoon",
     "evening": "Evening",
+    "showMoreDates": "Show more dates",
     "noTimes": "No bookable times are available yet. Please check again later.",
     "requestTitle": "Request this appointment",
     "requestBody": "The provider will confirm or decline your request.",
@@ -920,6 +932,8 @@
     "verifyTitle": "Check your inbox",
     "verifyBody": "If {email} needs verification, open the link in your inbox to return to your selected appointment. If you already have a verified account, go back and sign in with your existing password or Google.",
     "verifyAction": "Back to sign in",
+    "resendVerification": "Send the verification email again",
+    "verificationResent": "Verification email sent",
     "confirmTitle": "Confirm your request",
     "confirmBody": "Review the details before sending this appointment request.",
     "bookingAs": "Booking as",
@@ -940,5 +954,20 @@
     "socialError": "This sign-in option is unavailable or could not be started.",
     "intentError": "We could not save this time for sign-in. Please try again.",
     "consentError": "Accept the Terms and Privacy Policy to create an account."
+  },
+  "AuthRecovery": {
+    "reset": {
+      "title": "Choose a new password.",
+      "body": "Use a strong password you do not reuse elsewhere.",
+      "password": "New password",
+      "confirmPassword": "Confirm new password",
+      "action": "Update password",
+      "saving": "Updating...",
+      "success": "Your password was updated. You can now sign in.",
+      "back": "Back to sign in",
+      "invalid": "This reset link is invalid or has expired. Request a new one.",
+      "mismatch": "The passwords do not match.",
+      "error": "We could not update your password. Request a new link and try again."
+    }
   }
 }

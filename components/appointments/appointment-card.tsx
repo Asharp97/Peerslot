@@ -9,7 +9,11 @@ import type {
   AgendaAppointment,
   AppointmentStatus,
 } from "@/lib/appointment-agenda";
-import { formatAppointmentTime } from "@/lib/appointment-presentation";
+import {
+  formatAppointmentDate,
+  formatAppointmentTime,
+} from "@/lib/appointment-presentation";
+import { useAccountPreferences } from "@/lib/account-preferences-client";
 import type { AppointmentsCopy } from "./copy";
 
 const statusColors: Record<AppointmentStatus, string> = {
@@ -34,6 +38,7 @@ export function AppointmentCard({
   copy: AppointmentsCopy;
   onAction: (action: "cancel" | "reschedule") => void;
 }) {
+  const preferences = useAccountPreferences();
   const active =
     appointment.status === "scheduled" || appointment.status === "pending";
   const hosting = appointment.role === "hosting";
@@ -46,10 +51,12 @@ export function AppointmentCard({
         <div className="min-w-0 space-y-2">
           <p className="text-xs font-semibold text-black/55">
             <time dateTime={appointment.startsAt}>
-              {new Intl.DateTimeFormat(locale, {
+              {formatAppointmentDate(
+                new Date(appointment.startsAt),
+                locale,
                 timeZone,
-                dateStyle: "long",
-              }).format(new Date(appointment.startsAt))}
+                preferences,
+              )}
             </time>
           </p>
           <p className="flex items-center gap-2 text-sm font-bold tabular-nums">
@@ -58,7 +65,7 @@ export function AppointmentCard({
               aria-hidden="true"
               className="shrink-0 text-black/45"
             />
-            <bdi>{formatAppointmentTime(appointment, locale, timeZone)}</bdi>
+            <bdi>{formatAppointmentTime(appointment, locale, timeZone, preferences)}</bdi>
           </p>
         </div>
         <span

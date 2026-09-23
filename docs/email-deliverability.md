@@ -85,7 +85,7 @@ Reference: [Google's email sender guidelines](https://support.google.com/mail/an
 
 - Clear English and Turkish verification content identifying the account, the one-hour expiry, how to request another link, and what to do if the recipient did not request it.
 - Simpler branded HTML with UTF-8 metadata, the correct language, a direct action button, and a visible fallback URL; matching plain-text bodies remain included.
-- Fixed, descriptive appointment subjects. Free-form student notes are read in the authenticated dashboard instead of copying arbitrary links or promotional text into notifications.
-- Confirmed appointments link to the student's account; declined-request copy no longer promises that a homepage link opens a specific provider's available slots.
+- Fixed, descriptive appointment subjects. Free-form client notes are read in the authenticated dashboard instead of copying arbitrary links or promotional text into notifications.
+- Confirmed appointments link to the client's account; declined-request copy no longer promises that a homepage link opens a specific provider's available slots.
 - `EMAIL_FROM` and `EMAIL_REPLY_TO` are respected by all notifications. Automatically generated mail is identified with `Auto-Submitted`; this header is not an inbox-placement guarantee.
 - Regression tests cover local/production URLs, escaping, both locales and body formats, sender configuration, and verification content.

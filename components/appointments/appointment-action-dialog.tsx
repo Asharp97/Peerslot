@@ -18,6 +18,7 @@ import {
   formatAppointmentTime,
 } from "@/lib/appointment-presentation";
 import type { AppointmentsCopy } from "./copy";
+import { fetchWithAccessToken } from "@/lib/auth-browser";
 
 export type AppointmentAction = "cancel" | "reschedule";
 
@@ -72,13 +73,10 @@ export function AppointmentActionDialog({
           startsAt,
           endsAt,
         });
-        const response = await fetch(
+        const response = await fetchWithAccessToken(
           `/api/account/appointments/${appointment.id}?${query}`,
-          {
-            headers: { Authorization: `Bearer ${accessToken}` },
-            cache: "no-store",
-            signal: controller.signal,
-          },
+          accessToken,
+          { cache: "no-store", signal: controller.signal },
         );
         const body = await response.json();
         if (controller.signal.aborted) return;
@@ -110,14 +108,12 @@ export function AppointmentActionDialog({
     setSaving(true);
     setError("");
     try {
-      const response = await fetch(
+      const response = await fetchWithAccessToken(
         `/api/account/appointments/${appointment.id}`,
+        accessToken,
         {
           method: "PATCH",
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             action,
             occurrenceStartsAt: appointment.occurrenceStartsAt,

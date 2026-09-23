@@ -40,6 +40,14 @@ type ProviderAuthCopy = {
   verifyTitle: string;
   verifyBody: string;
   verifyAction: string;
+  resendVerification: string;
+  verificationResent: string;
+  forgotPassword: string;
+  forgotPasswordTitle: string;
+  forgotPasswordBody: string;
+  forgotPasswordAction: string;
+  forgotPasswordSent: string;
+  forgotPasswordBack: string;
   nameLabel: string;
   emailLabel: string;
   passwordLabel: string;
@@ -71,11 +79,17 @@ type ProviderAuthCopy = {
     session: string;
     onboarding: string;
     consent: string;
+    recovery?: string;
   };
 };
 
 type AuthMode = "sign-in" | "register";
-type Phase = "checking" | "auth" | "verify-email" | "onboarding";
+type Phase =
+  | "checking"
+  | "auth"
+  | "verify-email"
+  | "forgot-password"
+  | "onboarding";
 
 type ProviderSetupResponse = {
   status: "active" | "setup_required";
@@ -104,6 +118,8 @@ export function ProviderAuthFlow({
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [recoverySent, setRecoverySent] = useState(false);
+  const [verificationResent, setVerificationResent] = useState(false);
   const [settings, setSettings] = useState({
     displayName: "",
     professionalTitle: "",
@@ -197,6 +213,45 @@ export function ProviderAuthFlow({
     }
 
     await continueAfterAuthentication();
+  }
+
+  async function handlePasswordReset(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setSubmitting(true);
+    setError("");
+    const response = await fetch("/api/auth/request-password-reset", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email,
+        redirectTo: `${window.location.origin}/${locale}/auth/reset-password`,
+      }),
+    }).catch(() => null);
+    if (!response?.ok) {
+      setError(copy.errors.recovery ?? copy.errors.auth);
+      setSubmitting(false);
+      return;
+    }
+    setRecoverySent(true);
+    setSubmitting(false);
+  }
+
+  async function resendVerification() {
+    setSubmitting(true);
+    setError("");
+    const response = await fetch("/api/auth/send-verification-email", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email,
+        callbackURL: `${window.location.origin}/${locale}/auth/provider`,
+      }),
+    }).catch(() => null);
+    if (!response?.ok) setError(copy.errors.recovery ?? copy.errors.auth);
+    else setVerificationResent(true);
+    setSubmitting(false);
   }
 
   async function handleSocialAuth() {
@@ -332,6 +387,20 @@ export function ProviderAuthFlow({
           autoComplete="email"
         />
 
+        {mode === "sign-in" ? (
+          <button
+            className="text-left text-sm font-semibold underline underline-offset-3"
+            onClick={() => {
+              setPhase("forgot-password");
+              setError("");
+              setRecoverySent(false);
+            }}
+            type="button"
+          >
+            {copy.forgotPassword}
+          </button>
+        ) : null}
+
         <Field
           label={copy.passwordLabel}
           name="password"
@@ -418,7 +487,63 @@ export function ProviderAuthFlow({
         >
           {copy.verifyAction}
         </button>
+        <button
+          className="text-sm font-semibold underline underline-offset-3 disabled:opacity-50"
+          disabled={submitting}
+          onClick={() => void resendVerification()}
+          type="button"
+        >
+          {verificationResent ? copy.verificationResent : copy.resendVerification}
+        </button>
+        {error ? <ErrorMessage message={error} /> : null}
       </div>
+    );
+  }
+
+  if (phase === "forgot-password") {
+    return (
+      <form className="space-y-5" onSubmit={handlePasswordReset}>
+        <div>
+          <h2 className="font-display text-4xl tracking-[-0.03em]">
+            {copy.forgotPasswordTitle}
+          </h2>
+          <p className="mt-2 text-sm leading-6 text-[#62625a]">
+            {recoverySent ? copy.forgotPasswordSent : copy.forgotPasswordBody}
+          </p>
+        </div>
+        {!recoverySent ? (
+          <>
+            <Field
+              label={copy.emailLabel}
+              name="recovery-email"
+              type="email"
+              value={email}
+              onChange={setEmail}
+              autoComplete="email"
+            />
+            {error ? <ErrorMessage message={error} /> : null}
+            <button
+              className="inline-flex min-h-13 w-full items-center justify-center gap-2 rounded-xl border-2 border-vast-ink bg-vast-ink px-5 text-sm font-semibold text-lumen-cream disabled:opacity-60"
+              disabled={submitting}
+              type="submit"
+            >
+              {submitting ? <LoaderCircle className="animate-spin" size={18} /> : null}
+              {copy.forgotPasswordAction}
+            </button>
+          </>
+        ) : null}
+        <button
+          className="text-sm font-semibold underline underline-offset-3"
+          onClick={() => {
+            setPhase("auth");
+            setMode("sign-in");
+            setError("");
+          }}
+          type="button"
+        >
+          {copy.forgotPasswordBack}
+        </button>
+      </form>
     );
   }
 

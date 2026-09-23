@@ -2,7 +2,9 @@
 import { describe, expect, it } from "vitest";
 
 import { bookingDecisionTemplate } from "@/lib/email-templates/booking-decision";
+import { appointmentChangeTemplate } from "@/lib/email-templates/appointment-change";
 import { newBookingRequestTemplate } from "@/lib/email-templates/new-booking-request";
+import { passwordResetTemplate } from "@/lib/email-templates/password-reset";
 import { verifyEmailTemplate } from "@/lib/email-templates/verify-email";
 
 const appointment = {
@@ -60,6 +62,34 @@ describe("PeerSlot email templates", () => {
     expect(template.subject).toBe("Verify your PeerSlot email address");
     expect(template.html).toContain("Verify email");
     expect(template.html).toContain("token=one&amp;callbackURL=/en");
+  });
+
+  it("renders password reset and appointment change actions", () => {
+    const reset = passwordResetTemplate({
+      email: "ada@example.com",
+      locale: "en",
+      name: "Ada",
+      resetUrl: "https://peerslot.com/en/auth/reset-password?token=one",
+    });
+    expect(reset.subject).toContain("Reset your password");
+    expect(reset.text).toContain("ada@example.com");
+
+    const changed = appointmentChangeTemplate({
+      change: "rescheduled",
+      endsAt: new Date("2030-01-16T09:30:00.000Z"),
+      locale: "en",
+      previousEndsAt: new Date("2030-01-15T09:30:00.000Z"),
+      previousStartsAt: new Date("2030-01-15T09:00:00.000Z"),
+      providerName: "Ceyda",
+      recipient: "student",
+      startsAt: new Date("2030-01-16T09:00:00.000Z"),
+      studentName: "Ada",
+      timeZone: "Europe/Istanbul",
+      viewUrl: "https://peerslot.com/en/my-appointments",
+    });
+    expect(changed.subject).toContain("rescheduled");
+    expect(changed.text).toContain("Previous time");
+    expect(changed.text).toContain("New time");
   });
 });
 

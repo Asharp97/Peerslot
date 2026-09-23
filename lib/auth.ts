@@ -10,6 +10,7 @@ import * as authSchema from "@/db/auth-schema";
 import { profiles } from "@/db/schema";
 import {
   emailLocaleFromRequest,
+  sendPasswordResetEmail,
   sendVerificationEmail,
 } from "@/lib/email-notifications";
 import {
@@ -114,6 +115,19 @@ export const auth = betterAuth({
     autoSignIn: false,
     minPasswordLength: 8,
     requireEmailVerification: true,
+    resetPasswordTokenExpiresIn: 60 * 60,
+    sendResetPassword: async ({ user, url, token }, request) => {
+      const locale = emailLocaleFromRequest(request);
+      after(() =>
+        sendPasswordResetEmail({
+          email: user.email,
+          locale,
+          name: user.name,
+          resetUrl: url,
+          token,
+        }),
+      );
+    },
   },
   plugins: [
     bearer({ requireSignature: true }),

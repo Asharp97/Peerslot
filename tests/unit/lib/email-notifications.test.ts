@@ -8,6 +8,7 @@ import {
   emailLocaleFromRequest,
   sendVerificationEmail,
   notifyProviderOfBookingRequest,
+  notifyProviderOfAppointmentChange,
   notifyStudentOfBookingDecision,
 } from "@/lib/email-notifications";
 
@@ -74,6 +75,23 @@ describe("email notifications", () => {
       "https://peerslot.com/en/my-appointments",
     );
     expect(sendEmailMock.mock.calls[0][0]).not.toHaveProperty("from");
+  });
+
+  it("notifies providers when a client changes an appointment", async () => {
+    sendEmailMock.mockResolvedValue({ id: "email-id" });
+    await notifyProviderOfAppointmentChange({
+      ...appointment,
+      change: "cancelled",
+      previousEndsAt: appointment.endsAt,
+      previousStartsAt: appointment.startsAt,
+      providerEmail: "provider@example.com",
+    });
+    expect(sendEmailMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: "provider@example.com",
+        idempotencyKey: expect.stringContaining("appointment-cancelled"),
+      }),
+    );
   });
 
   it("does not fail an accepted booking when delivery fails", async () => {

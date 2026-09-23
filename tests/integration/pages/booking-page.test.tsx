@@ -36,18 +36,20 @@ vi.mock("@/db", () => ({
     select: () => ({
       from: () => ({
         innerJoin: () => ({
-          where: () => ({
-            limit: async () => [
-              {
-                bookingPageId: "33ead7c8-d327-4e79-9624-f405a834f14f",
-                userId: "provider-id",
-                displayName: "Ada Provider",
-                professionalTitle: "Teacher",
-                title: "Book with Ada Provider",
-                timeZone: "Europe/Istanbul",
-                duration: 30,
-              },
-            ],
+          innerJoin: () => ({
+            where: () => ({
+              limit: async () => [
+                {
+                  bookingPageId: "33ead7c8-d327-4e79-9624-f405a834f14f",
+                  userId: "provider-id",
+                  displayName: "Ada Provider",
+                  professionalTitle: "Teacher",
+                  title: "Book with Ada Provider",
+                  timeZone: "Europe/Istanbul",
+                  duration: 30,
+                },
+              ],
+            }),
           }),
         }),
       }),

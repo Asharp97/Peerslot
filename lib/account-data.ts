@@ -1,4 +1,4 @@
-import { eq, inArray, or } from "drizzle-orm";
+import { and, eq, inArray, isNull, or, sql } from "drizzle-orm";
 
 import { db } from "@/db";
 import { user } from "@/db/auth-schema";
@@ -14,6 +14,11 @@ import {
   providerProfiles,
   providerStudents,
 } from "@/db/schema";
+import {
+  avatarBelongsToUser,
+  avatarKeyFromUrl,
+  deleteAvatar,
+} from "@/lib/avatar-storage";
 
 export async function buildAccountExport(userId: string) {
   const hostedAppointmentQuery = db
@@ -112,7 +117,21 @@ export async function buildAccountExport(userId: string) {
         availabilitySlots,
         eq(appointments.slotId, availabilitySlots.id),
       )
-      .where(eq(appointments.studentId, userId)),
+      .leftJoin(
+        providerStudents,
+        eq(providerStudents.id, appointments.providerStudentId),
+      )
+      .innerJoin(user, eq(user.id, userId))
+      .where(
+        or(
+          eq(appointments.studentId, userId),
+          and(
+            isNull(appointments.studentId),
+            eq(user.emailVerified, true),
+            sql`lower(btrim(${providerStudents.email})) = lower(btrim(${user.email}))`,
+          ),
+        ),
+      ),
     db
       .select()
       .from(personalActivities)
@@ -160,6 +179,11 @@ export async function buildAccountExport(userId: string) {
 }
 
 export async function permanentlyDeleteAccount(userId: string) {
+  const [identity] = await db
+    .select({ image: user.image })
+    .from(user)
+    .where(eq(user.id, userId))
+    .limit(1);
   const providerSlotIds = db
     .select({ id: availabilitySlots.id })
     .from(availabilitySlots)
@@ -172,6 +196,13 @@ export async function permanentlyDeleteAccount(userId: string) {
       .returning({ id: appointments.id }),
     db.delete(user).where(eq(user.id, userId)).returning({ id: user.id }),
   ]);
+
+  if (deletedUsers.length > 0) {
+    const key = avatarKeyFromUrl(identity?.image);
+    if (key && avatarBelongsToUser(key, userId)) {
+      await deleteAvatar(key).catch(() => undefined);
+    }
+  }
 
   return deletedUsers.length > 0;
 }

@@ -66,6 +66,7 @@ async function loadStudentRows(studentId: string, now = new Date()) {
       endsAt: availabilitySlots.endsAt,
       page: bookingPages,
       providerName: providerProfiles.displayName,
+      providerEmail: providerAccount.email,
       providerAvatar: providerAccount.image,
       reschedulesUsed: sql<number>`coalesce(${clientRescheduleUsage.rescheduleCount}, 0)`,
       rescheduleResetsAt: sql<string>`((date_trunc('week', ${now.toISOString()}::timestamptz at time zone ${bookingPages.timeZone}) + interval '7 days') at time zone ${bookingPages.timeZone})::text`,
@@ -366,6 +367,29 @@ export async function getStudentRescheduleTimes(
     occurrenceStartsAt,
   );
   return rescheduleTimes(current, range);
+}
+
+export async function getStudentAppointmentChangeContext(
+  studentId: string,
+  id: string,
+  occurrenceStartsAt: Date,
+) {
+  const current = await requireStudentOccurrence(
+    studentId,
+    id,
+    occurrenceStartsAt,
+  );
+  return {
+    appointmentId: current.id,
+    endsAt: current.endsAt,
+    previousEndsAt: current.endsAt,
+    previousStartsAt: current.startsAt,
+    providerEmail: current.providerEmail,
+    providerName: current.providerName,
+    startsAt: current.startsAt,
+    studentName: current.studentName,
+    timeZone: current.page.timeZone,
+  };
 }
 
 export async function changeStudentAppointment(
