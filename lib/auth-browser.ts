@@ -67,6 +67,7 @@ export function resendVerificationEmail(email: string, callbackURL: string) {
 }
 
 export async function createGoogleSignInUrl(input: {
+  offersAppointments?: boolean;
   callbackURL: string;
   errorCallbackURL?: string;
 }) {
@@ -82,7 +83,7 @@ export async function createGoogleSignInUrl(input: {
       // Every Google button sits beside the Terms/Privacy notice and supports
       // both existing accounts and first-time visitors, regardless of email tab.
       requestSignUp: true,
-      additionalData: legalConsentAdditionalFields,
+      additionalData: { ...legalConsentAdditionalFields, offersAppointments: input.offersAppointments === true },
     }),
   }).catch(() => null);
   const body = (await response?.json().catch(() => null)) as {

@@ -1,3 +1,7 @@
+import { eq } from "drizzle-orm";
+import { db } from "@/db";
+import { user } from "@/db/auth-schema";
+import { dashboardPath } from "@/lib/appointment-offering";
 import type { Metadata } from "next";
 import { clsx } from "clsx";
 import { hasLocale } from "next-intl";
@@ -254,7 +258,10 @@ export default async function Home({ params }: HomeProps) {
   }
 
   const session = await auth.api.getSession({ headers: await headers() });
-  if (session) redirect(`/${locale}/provider`);
+  if (session) {
+    const [account] = await db.select({ offersAppointments: user.offersAppointments }).from(user).where(eq(user.id, session.user.id)).limit(1);
+    if (account) redirect(`/${locale}${dashboardPath(account.offersAppointments)}`);
+  }
 
   setRequestLocale(locale);
 

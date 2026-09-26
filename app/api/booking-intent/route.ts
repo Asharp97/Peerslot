@@ -1,3 +1,4 @@
+import { bookingProviderOffersAppointments } from "@/lib/appointment-offering";
 import { and, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { z } from "zod";
@@ -64,7 +65,7 @@ export async function POST(request: Request) {
     .where(
       and(
         eq(bookingPages.id, input.data.bookingPageId),
-        eq(bookingPages.isPublished, true),
+        eq(bookingPages.isPublished, true), bookingProviderOffersAppointments,
       ),
     )
     .limit(1);

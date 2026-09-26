@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { authorizeApiProvider } from "@/lib/api-authorization";
+import { authorizeApiOffering } from "@/lib/api-authorization";
 import {
   calendarMoveSchema,
   calendarMoveDeleteSchema,
@@ -27,7 +27,7 @@ function errorResponse(error: unknown) {
   throw error;
 }
 export async function PATCH(request: Request, context: Context) {
-  const auth = await authorizeApiProvider(request);
+  const auth = await authorizeApiOffering(request);
   if (!auth.authorized) return auth.response;
   const id = z
     .string()
@@ -56,7 +56,7 @@ export async function PATCH(request: Request, context: Context) {
   }
 }
 export async function DELETE(request: Request, context: Context) {
-  const auth = await authorizeApiProvider(request);
+  const auth = await authorizeApiOffering(request);
   if (!auth.authorized) return auth.response;
   const id = z
     .string()

@@ -19,6 +19,15 @@ afterEach(() => {
 });
 
 describe("provider registration without a checkbox", () => {
+  it.each([true, false])("routes an existing account according to saved offering=%s", async (offersAppointments) => {
+    router.replace.mockClear();
+    const fetchMock = vi.fn(async (url: RequestInfo | URL) => String(url) === "/api/auth/token" ? Response.json({ token: "token" }) : Response.json({ status: "active", offersAppointments, user: { email: "ada@example.com", name: "Ada" } }));
+    vi.stubGlobal("fetch", fetchMock);
+    render(<ProviderAuthFlow copy={messages.ProviderAuth.flow} locale="en" initialMode="sign-in" />);
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith(offersAppointments ? "/provider" : "/my-appointments"));
+    expect(fetchMock.mock.calls.map(([url]) => String(url))).toEqual(["/api/auth/token", "/api/provider"]);
+  });
+
   it.each(["en", "tr"])("allows new Google accounts from the %s Login tab", async (locale) => {
     const copy = locale === "tr" ? (await import("@/messages/tr.json")).default.ProviderAuth.flow : messages.ProviderAuth.flow;
     const fetchMock = vi.fn(async (_input: RequestInfo | URL, _init?: RequestInit) => {
@@ -36,7 +45,7 @@ describe("provider registration without a checkbox", () => {
     const request = fetchMock.mock.calls.find(([url]) => url === "/api/auth/sign-in/social");
     expect(JSON.parse(String(request?.[1]?.body))).toMatchObject({
       requestSignUp: true,
-      additionalData: { termsAccepted: true },
+      additionalData: { termsAccepted: true, offersAppointments: true },
       errorCallbackURL: expect.stringContaining(`/${locale}/auth/provider?mode=sign-in`),
     });
   });
@@ -110,6 +119,7 @@ describe("provider registration without a checkbox", () => {
         expect(JSON.parse(String(request?.[1]?.body))).toMatchObject({
           email: "ada@example.com",
           termsAccepted: true,
+          offersAppointments: true,
         });
       } else {
         await user.click(
@@ -126,7 +136,7 @@ describe("provider registration without a checkbox", () => {
         );
         expect(JSON.parse(String(request?.[1]?.body))).toMatchObject({
           requestSignUp: true,
-          additionalData: { termsAccepted: true },
+          additionalData: { termsAccepted: true, offersAppointments: true },
         });
         expect(await screen.findByText(copy.errors.social)).toBeTruthy();
       }

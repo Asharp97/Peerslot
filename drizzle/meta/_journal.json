@@ -204,6 +204,13 @@
       "when": 1790154937612,
       "tag": "0028_shared_rate_limits_index",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1790427600000,
+      "tag": "0029_appointment_offering",
+      "breakpoints": true
     }
   ]
 }

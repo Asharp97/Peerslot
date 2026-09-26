@@ -7,7 +7,7 @@ import {
   removeAvailabilityWindow,
   updateAvailabilityWindow,
 } from "@/lib/availability-windows";
-import { authorizeApiProvider } from "@/lib/api-authorization";
+import { authorizeApiOffering } from "@/lib/api-authorization";
 import { availabilityWindowErrorResponse } from "@/app/api/availability-windows/error-response";
 
 const idSchema = z.string().uuid();
@@ -17,7 +17,7 @@ type RouteContext = {
 };
 
 export async function PATCH(request: Request, context: RouteContext) {
-  const authorization = await authorizeApiProvider(
+  const authorization = await authorizeApiOffering(
     request,
     "Only providers can update availability windows",
   );
@@ -69,7 +69,7 @@ export async function PATCH(request: Request, context: RouteContext) {
 }
 
 export async function DELETE(request: Request, context: RouteContext) {
-  const authorization = await authorizeApiProvider(
+  const authorization = await authorizeApiOffering(
     request,
     "Only providers can remove availability windows",
   );

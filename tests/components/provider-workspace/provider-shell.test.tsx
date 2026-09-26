@@ -22,10 +22,10 @@ import {
   type ProviderAppointmentRequestsCopy,
 } from "@/components/provider-workspace/provider-appointment-requests";
 
-const { router } = vi.hoisted(() => ({ router: { replace: vi.fn() } }));
+const { router, location } = vi.hoisted(() => ({ router: { replace: vi.fn() }, location: { pathname: "/provider/requests" } }));
 vi.mock("@/i18n/navigation", () => ({
   Link: (props: ComponentProps<"a">) => <a {...props} />,
-  usePathname: () => "/provider/requests",
+  usePathname: () => location.pathname,
   useRouter: () => router,
 }));
 vi.mock("next-intl", () => ({ useLocale: () => "en" }));
@@ -59,6 +59,7 @@ function setupFetch(
   initialCount: number,
   reviewStatus = 200,
   providerStatus: "active" | "setup_required" = "active",
+  offersAppointments = true,
 ) {
   let appointments = Array.from({ length: initialCount }, (_, index) => ({
     ...appointment,
@@ -69,6 +70,7 @@ function setupFetch(
     if (url === "/api/provider") {
       return Response.json({
         status: providerStatus,
+        offersAppointments,
         profile: providerStatus === "active" ? { displayName: "Ceyda" } : null,
         bookingPage: providerStatus === "active" ? {
           timeZone: "Europe/Istanbul",
@@ -86,7 +88,7 @@ function setupFetch(
     throw new Error(`Unexpected request: ${url}`);
   });
   vi.stubGlobal("fetch", fetchMock);
-  return { requests, fetchMock };
+  return { requests, fetchMock, setOffering: (next: boolean) => { offersAppointments = next; } };
 }
 
 function expectNavCount(count: number) {
@@ -100,6 +102,8 @@ function expectNavCount(count: number) {
 
 describe("provider request navigation badge", () => {
   beforeEach(() => {
+    location.pathname = "/provider/requests";
+    router.replace.mockClear();
     vi.spyOn(document, "visibilityState", "get").mockReturnValue("visible");
   });
 
@@ -108,6 +112,36 @@ describe("provider request navigation badge", () => {
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
     vi.useRealTimers();
+  });
+
+  it("hides hosting navigation but keeps personal planning and account settings", async () => {
+    location.pathname = "/my-appointments";
+    const { requests } = setupFetch(0, 200, "active", false);
+    render(<ProviderShell copy={shellCopy}>My appointments content</ProviderShell>);
+    await screen.findByText("My appointments content");
+    const nav = within(screen.getAllByRole("navigation")[0]);
+    expect(nav.getAllByRole("link").map((link) => link.getAttribute("href"))).toEqual(["/my-appointments", "/provider/calendar", "/provider/personal-activities"]);
+    expect(requests).not.toHaveBeenCalled();
+    expect(screen.getAllByRole("link").some((link) => link.getAttribute("href") === "/account-settings")).toBe(true);
+  });
+
+  it.each(["/provider", "/provider/requests", "/provider/clients", "/provider/settings", "/provider/availability"])("redirects a direct client visit to %s", async (pathname) => {
+    location.pathname = pathname;
+    setupFetch(0, 200, "active", false);
+    render(<ProviderShell copy={shellCopy}>Restricted content</ProviderShell>);
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith("/my-appointments"));
+    expect(screen.queryByText("Restricted content")).toBeNull();
+  });
+
+  it("refreshes navigation when the setting changes on the account page", async () => {
+    location.pathname = "/account-settings";
+    const { setOffering } = setupFetch(0);
+    render(<ProviderShell copy={shellCopy}>Account</ProviderShell>);
+    await waitFor(() => expect(screen.getAllByRole("link", { name: "overview" })).toHaveLength(2));
+    setOffering(false);
+    fireEvent(window, new Event("peerslot:offering-change"));
+    await waitFor(() => expect(screen.queryAllByRole("link", { name: "overview" })).toHaveLength(0));
+    expect(screen.getByText("Account")).toBeTruthy();
   });
 
   it("shows the pending count in both navigation layouts", async () => {

@@ -229,7 +229,7 @@ describe("booking authentication", () => {
         );
         expect(JSON.parse(String(request?.[1]?.body))).toMatchObject({
           requestSignUp: true,
-          additionalData: { termsAccepted: true },
+          additionalData: { termsAccepted: true, offersAppointments: false },
           callbackURL: expect.stringContaining("/en/book/ABCDEFGH?booking=1"),
         });
         expect(await screen.findByText(copy.socialError)).toBeTruthy();
@@ -249,6 +249,7 @@ describe("booking authentication", () => {
         callbackURL: "/en/book/ABCDEFGH?booking=1",
         email: "ada@example.com",
         termsAccepted: true,
+          offersAppointments: false,
       });
       expect(
         fetchMock.mock.calls.some(

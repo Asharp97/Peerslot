@@ -5,7 +5,7 @@ import {
   createAvailabilityWindow,
   listAvailabilityWindows,
 } from "@/lib/availability-windows";
-import { authorizeApiProvider } from "@/lib/api-authorization";
+import { authorizeApiProvider, authorizeApiOffering } from "@/lib/api-authorization";
 import { availabilityWindowErrorResponse } from "@/app/api/availability-windows/error-response";
 
 export async function GET(request: Request) {
@@ -29,7 +29,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const authorization = await authorizeApiProvider(
+  const authorization = await authorizeApiOffering(
     request,
     "Only providers can create availability windows",
   );

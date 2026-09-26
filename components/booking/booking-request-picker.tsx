@@ -291,6 +291,7 @@ export function BookingRequestPicker({
           password,
           callbackURL: returnPath,
           ...legalConsentAdditionalFields,
+          offersAppointments: false,
         }),
       });
       if (!registration.ok) {
@@ -333,6 +334,7 @@ export function BookingRequestPicker({
 
     const callbackURL = new URL(returnPath, window.location.origin).toString();
     const url = await createGoogleSignInUrl({
+      offersAppointments: false,
       callbackURL,
       errorCallbackURL: callbackURL,
     });

@@ -1,3 +1,4 @@
+import { bookingProviderOffersAppointments } from "@/lib/appointment-offering";
 import { and, eq } from "drizzle-orm";
 
 import { db } from "@/db";
@@ -134,7 +135,7 @@ export async function findPublishedBookingPage(slug: string) {
       providerProfiles,
       eq(providerProfiles.userId, bookingPages.providerId),
     )
-    .where(and(eq(bookingPages.slug, slug), eq(bookingPages.isPublished, true)))
+    .where(and(eq(bookingPages.slug, slug), eq(bookingPages.isPublished, true), bookingProviderOffersAppointments))
     .limit(1);
 
   return bookingPage ?? null;

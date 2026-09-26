@@ -81,6 +81,33 @@ function cookieHeader(response: Response) {
 }
 
 describe("Google authentication callback", () => {
+  it.each([true, false])("persists the signed Google registration preference: %s", async (offersAppointments) => {
+    await startGoogle({ requestSignUp: true, additionalData: { termsAccepted: true, offersAppointments } });
+    const [created] = await testDb.select().from(user);
+    expect(created.offersAppointments).toBe(offersAppointments);
+    // A different entry point on a later login must never reset the preference.
+    await startGoogle({ requestSignUp: true, additionalData: { offersAppointments: !offersAppointments } });
+    expect((await testDb.select().from(user))[0].offersAppointments).toBe(offersAppointments);
+  });
+
+  it.each([true, false, undefined])("persists the email signup preference: %s", async (offersAppointments) => {
+    const response = await auth.handler(new Request(`${baseURL}/api/auth/sign-up/email`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: "New User", email: "new@example.com", password: "test-password-long-enough", offersAppointments }),
+    }));
+    expect(response.status).toBe(200);
+    expect((await testDb.select().from(user))[0].offersAppointments).toBe(offersAppointments === true);
+  });
+
+  it("cannot bypass the guarded account endpoint through Better Auth update-user", async () => {
+    const signedIn = await startGoogle({ requestSignUp: true, additionalData: { offersAppointments: true } });
+    await auth.handler(new Request(`${baseURL}/api/auth/update-user`, {
+      method: "POST", headers: { "Content-Type": "application/json", cookie: cookieHeader(signedIn), origin: baseURL },
+      body: JSON.stringify({ offersAppointments: false }),
+    }));
+    expect((await testDb.select().from(user))[0].offersAppointments).toBe(true);
+  });
+
   it("creates a verified account and session through the shared Google button flow", async () => {
     const response = await startGoogle();
     expect(response.status).toBe(302);

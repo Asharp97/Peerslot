@@ -279,6 +279,7 @@ export function WorkspaceCalendar({
 }) {
   const locale = useLocale() as "en" | "tr";
   const { accessToken, data } = useProviderWorkspace();
+  const offersAppointments = data.offersAppointments;
   const [students, setStudents] = useState<ProviderStudent[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -426,7 +427,7 @@ export function WorkspaceCalendar({
             },
           })),
           ...availabilityToCalendarEvents(
-            windowsBody.windows,
+            offersAppointments ? windowsBody.windows : [],
             appointmentsBody.appointments,
             activitiesBody.activities,
             { startsAt, endsAt },
@@ -460,6 +461,7 @@ export function WorkspaceCalendar({
       }
     },
     [
+      offersAppointments,
       accessToken,
       copy.availableSlot,
       copy.everyWeek,
@@ -476,6 +478,7 @@ export function WorkspaceCalendar({
   );
 
   const loadStudents = useCallback(async () => {
+    if (!offersAppointments) return;
     const response = await fetch("/api/provider/students", {
       headers: { Authorization: `Bearer ${accessToken}` },
       cache: "no-store",
@@ -483,7 +486,7 @@ export function WorkspaceCalendar({
     if (!response.ok) return;
     const body = (await response.json()) as { students: ProviderStudent[] };
     setStudents(body.students);
-  }, [accessToken]);
+  }, [accessToken, offersAppointments]);
 
   useEffect(() => {
     async function initializeStudents() {
@@ -535,11 +538,11 @@ export function WorkspaceCalendar({
       setQuickCreate(null);
       const local = localDateTime(date);
       const end = new Date(
-        date.getTime() + data.bookingPage.appointmentDurationMinutes * 60_000,
+        date.getTime() + (offersAppointments ? data.bookingPage.appointmentDurationMinutes : 60) * 60_000,
       );
       const localEnd = localDateTime(end);
       setDraft({
-        entryType: "session",
+        entryType: offersAppointments ? "session" : "personal",
         appointmentId: null,
         availabilityWindowId: null,
         studentId: students[0]?.id ?? newStudentValue,
@@ -551,7 +554,7 @@ export function WorkspaceCalendar({
         endsAt: localEnd.time,
         comment: "",
         status: "scheduled",
-        recurrence: "weekly",
+        recurrence: offersAppointments ? "weekly" : "none",
         editScope: "exception",
         occurrenceStartsAt: null,
         color: "#f0d7ff",
@@ -559,7 +562,7 @@ export function WorkspaceCalendar({
       setError("");
       setDialogOpen(true);
     },
-    [data.bookingPage.appointmentDurationMinutes, students, timeZone],
+    [data.bookingPage.appointmentDurationMinutes, offersAppointments, students, timeZone],
   );
 
   const freeTimePreview = useMemo(() => {
@@ -1437,7 +1440,7 @@ export function WorkspaceCalendar({
             </div>
           </ContextMenuTrigger>
         </section>
-        <ContextMenuContent
+        {offersAppointments ? <ContextMenuContent
           onCloseAutoFocus={(event) => event.preventDefault()}>
           <ContextMenuItem
             disabled={!contextTarget?.appointment}
@@ -1458,12 +1461,13 @@ export function WorkspaceCalendar({
             onSelect={pasteSession}>
             <ClipboardPaste aria-hidden="true" /> {copy.pasteSession}
           </ContextMenuItem>
-        </ContextMenuContent>
+        </ContextMenuContent> : null}
       </ContextMenu>
 
       {quickCreate ? (
         <CalendarCreatePopover
-          key={quickCreate.id}
+          key={`${quickCreate.id}:${offersAppointments}`}
+          allowSessions={offersAppointments}
           anchor={quickCreate}
           accessToken={accessToken}
           timeZone={timeZone}
@@ -1571,15 +1575,15 @@ export function WorkspaceCalendar({
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="session">
+                        {offersAppointments ? <SelectItem value="session">
                           {copy.studentSession}
-                        </SelectItem>
+                        </SelectItem> : null}
                         <SelectItem value="personal">
                           {copy.personalActivity}
                         </SelectItem>
-                        <SelectItem value="availability">
+                        {offersAppointments ? <SelectItem value="availability">
                           {copy.freeTimeWindow}
-                        </SelectItem>
+                        </SelectItem> : null}
                       </SelectContent>
                     </Select>
                   </Field>

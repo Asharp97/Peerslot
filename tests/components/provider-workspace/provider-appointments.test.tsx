@@ -41,6 +41,7 @@ vi.mock("@/components/provider-workspace/provider-shell", () => ({
   useProviderWorkspace: () => ({
     accessToken: "access-token",
     data: {
+      offersAppointments: true,
       profile: { displayName: "Ada" },
       bookingPage: {
         timeZone: "Europe/Istanbul",

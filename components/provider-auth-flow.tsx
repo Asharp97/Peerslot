@@ -92,6 +92,7 @@ type Phase =
   | "onboarding";
 
 type ProviderSetupResponse = {
+  offersAppointments: boolean;
   status: "active" | "setup_required";
   user: { email: string; name: string };
 };
@@ -151,6 +152,11 @@ export function ProviderAuthFlow({
         return;
       }
 
+      if (!setup.offersAppointments) {
+        router.replace("/my-appointments");
+        return;
+      }
+
       if (setup.status === "active") {
         router.replace("/provider");
         return;
@@ -190,6 +196,7 @@ export function ProviderAuthFlow({
           password,
           callbackURL: `/${locale}/auth/provider`,
           ...legalConsentAdditionalFields,
+          offersAppointments: true,
         }),
       });
 
@@ -260,6 +267,7 @@ export function ProviderAuthFlow({
 
     const callbackURL = `${window.location.origin}/${locale}/auth/provider`;
     const url = await createGoogleSignInUrl({
+      offersAppointments: true,
       callbackURL,
       errorCallbackURL: `${callbackURL}?mode=${mode}`,
     });
@@ -290,7 +298,12 @@ export function ProviderAuthFlow({
       return;
     }
 
-    if (setup.status === "active") {
+    if (!setup.offersAppointments) {
+        router.replace("/my-appointments");
+        return;
+      }
+
+      if (setup.status === "active") {
       router.replace("/provider");
       return;
     }

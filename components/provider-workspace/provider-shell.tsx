@@ -51,6 +51,7 @@ type ProviderWorkspaceState = {
 };
 
 type ProviderSetupResponse = {
+  offersAppointments: boolean;
   status: "active" | "setup_required";
   profile: ProviderSetupData["profile"] | null;
   bookingPage: ProviderSetupData["bookingPage"] | null;
@@ -76,11 +77,13 @@ export function ProviderShell({
   const [accessToken, setAccessToken] = useState<string | null | undefined>();
   const [data, setData] = useState<ProviderSetupData | null>(null);
   const [error, setError] = useState("");
+  const setupVersion = useRef(0);
   const { pendingRequestCount, refreshPendingRequestCount } =
-    usePendingRequestCount(accessToken ?? "", Boolean(data));
+    usePendingRequestCount(accessToken ?? "", Boolean(data?.offersAppointments));
 
   const loadProviderSetup = useCallback(
     async (token: string) => {
+      const version = ++setupVersion.current;
       const response = await fetchWithAccessToken("/api/provider", token, {
         cache: "no-store",
       });
@@ -93,6 +96,7 @@ export function ProviderShell({
       if (!response.ok) throw new Error("Unable to load provider setup");
 
       const setup = (await response.json()) as ProviderSetupResponse;
+      if (version !== setupVersion.current) return;
       if (setup.status !== "active" || !setup.profile || !setup.bookingPage) {
         if (requireProviderSetup) {
           router.replace("/auth/provider");
@@ -103,7 +107,7 @@ export function ProviderShell({
         return;
       }
 
-      setData({ profile: setup.profile, bookingPage: setup.bookingPage });
+      setData({ offersAppointments: setup.offersAppointments, profile: setup.profile, bookingPage: setup.bookingPage });
       setError("");
     },
     [requireProviderSetup, router],
@@ -139,17 +143,38 @@ export function ProviderShell({
     };
   }, [allowSignedOut, copy.loadError, loadProviderSetup, router]);
 
+  useEffect(() => {
+    if (!accessToken) return;
+    const refresh = () => { void loadProviderSetup(accessToken).catch(() => setError(copy.loadError)); };
+    window.addEventListener("peerslot:offering-change", refresh);
+    window.addEventListener("focus", refresh);
+    return () => {
+      window.removeEventListener("peerslot:offering-change", refresh);
+      window.removeEventListener("focus", refresh);
+    };
+  }, [accessToken, loadProviderSetup, copy.loadError]);
+
+  const hostingPage = pathname === "/provider" || ["/provider/requests", "/provider/clients", "/provider/settings", "/provider/availability"].some((route) => pathname.startsWith(route));
+  const blockedPage = Boolean(data && !data.offersAppointments && hostingPage);
+  useEffect(() => {
+    if (blockedPage) router.replace("/my-appointments");
+  }, [blockedPage, router]);
+
+  const refreshWorkspace = useCallback(async () => {
+    if (accessToken) await loadProviderSetup(accessToken);
+  }, [accessToken, loadProviderSetup]);
+
   const workspaceState = useMemo(
     () =>
       accessToken && data
         ? {
             accessToken,
             data,
-            refresh: () => loadProviderSetup(accessToken),
+            refresh: refreshWorkspace,
             refreshPendingRequestCount,
           }
         : null,
-    [accessToken, data, loadProviderSetup, refreshPendingRequestCount],
+    [accessToken, data, refreshWorkspace, refreshPendingRequestCount],
   );
 
   async function signOut() {
@@ -163,8 +188,8 @@ export function ProviderShell({
   }
 
   if (
-    accessToken === undefined ||
-    (requireProviderSetup && accessToken && !workspaceState)
+    blockedPage || accessToken === undefined ||
+    (requireProviderSetup && accessToken && !data)
   ) {
     return (
       <main className="grid min-h-screen place-items-center bg-[#f4f3eb] px-6 text-vast-ink">
@@ -178,7 +203,7 @@ export function ProviderShell({
     );
   }
 
-  const workspaceData = workspaceState?.data ?? null;
+  const workspaceData = data;
   const isCalendarPage = pathname.startsWith("/provider/calendar");
 
   const navigation = workspaceData
@@ -211,6 +236,8 @@ export function ProviderShell({
         },
       ];
 
+  const visibleNavigation = navigation.filter(({ href }) => workspaceData?.offersAppointments || !["/provider", "/provider/requests", "/provider/clients", "/provider/settings"].includes(href));
+
   return (
     <ProviderWorkspaceContext.Provider value={workspaceState}>
       <div className="min-h-screen bg-[#f4f3eb] text-vast-ink">
@@ -236,7 +263,7 @@ export function ProviderShell({
           </div>
 
           <nav className="mt-7 space-y-1.5">
-            {navigation.map(({ href, label, icon: Icon }) => {
+            {visibleNavigation.map(({ href, label, icon: Icon }) => {
               const active =
                 href === "/provider"
                   ? pathname === "/provider"
@@ -268,7 +295,7 @@ export function ProviderShell({
             })}
           </nav>
 
-          {workspaceData ? (
+          {workspaceData?.offersAppointments ? (
             <div className="mt-auto rounded-2xl bg-lavender-whisper p-4">
               <Sparkles size={18} />
               <p className="mt-3 text-xs leading-5 font-semibold">
@@ -279,7 +306,7 @@ export function ProviderShell({
             </div>
           ) : null}
           {accessToken ? (
-            <div className="mt-3 flex items-center justify-between gap-1">
+            <div className={`${workspaceData?.offersAppointments ? "mt-3" : "mt-auto"} flex items-center justify-between gap-1`}>
               <AccountMenu copy={copy.accountMenu} />
               <button
                 aria-label={copy.signOut}
@@ -296,7 +323,7 @@ export function ProviderShell({
           <div className="flex items-center justify-between">
             <Link
               className="flex items-center gap-2 font-bold"
-              href={workspaceData ? "/provider" : "/my-appointments"}>
+              href={workspaceData?.offersAppointments ? "/provider" : "/my-appointments"}>
               <span className="grid size-8 place-items-center rounded-full bg-vast-ink text-xs text-lavender-whisper">
                 P
               </span>
@@ -316,7 +343,7 @@ export function ProviderShell({
             ) : null}
           </div>
           <nav className="mt-1 flex gap-1 overflow-x-auto pt-2 pb-1">
-            {navigation.map(({ href, label }) => {
+            {visibleNavigation.map(({ href, label }) => {
               const active =
                 href === "/provider"
                   ? pathname === "/provider"
@@ -356,7 +383,7 @@ function usePendingRequestCount(accessToken: string, enabled: boolean) {
   const requestCountVersion = useRef(0);
 
   const refreshPendingRequestCount = useCallback(async () => {
-    if (!accessToken) return;
+    if (!accessToken || !enabled) return;
     const version = ++requestCountVersion.current;
     try {
       const response = await fetch("/api/provider/appointment-requests", {
@@ -373,7 +400,7 @@ function usePendingRequestCount(accessToken: string, enabled: boolean) {
     } catch {
       // Keep the last known count if a background refresh fails.
     }
-  }, [accessToken]);
+  }, [accessToken, enabled]);
 
   useEffect(() => {
     if (!enabled || !accessToken) return;

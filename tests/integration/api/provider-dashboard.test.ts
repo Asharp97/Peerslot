@@ -46,7 +46,7 @@ describe("provider dashboard API integration", () => {
 
   it("returns the combined provider workspace without caching", async () => {
     mocks.getCurrentUser.mockResolvedValue({
-      user: { id: "provider-id" },
+      user: { id: "provider-id", offersAppointments: true },
       capabilities: { canProvide: true },
     });
     mocks.loadProviderWorkspace.mockResolvedValue({

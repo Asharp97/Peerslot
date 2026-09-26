@@ -60,6 +60,7 @@ export type CalendarCreateAnchor = { startsAt: Date; x: number; y: number };
 
 export function CalendarCreatePopover({
   anchor,
+  allowSessions = true,
   accessToken,
   timeZone,
   locale,
@@ -71,6 +72,7 @@ export function CalendarCreatePopover({
   onStudentCreated,
   readError,
 }: {
+  allowSessions?: boolean;
   anchor: CalendarCreateAnchor;
   accessToken: string;
   timeZone: string;
@@ -83,7 +85,7 @@ export function CalendarCreatePopover({
   onStudentCreated: (student: Student) => void;
   readError: (response: Response) => Promise<string>;
 }) {
-  const [mode, setMode] = useState<Mode>("session");
+  const [mode, setMode] = useState<Mode>(allowSessions ? "session" : "personal");
   const [students, setStudents] = useState<Student[]>([]);
   const [activities, setActivities] = useState<PersonalActivityName[]>([]);
   const [query, setQuery] = useState("");
@@ -117,9 +119,9 @@ export function CalendarCreatePopover({
       setLoadFailed(false);
       try {
         const responses = await Promise.all(
-          ["/api/provider/students", "/api/provider/personal-activities"].map(
+          [allowSessions ? "/api/provider/students" : null, "/api/provider/personal-activities"].map(
             (url) =>
-              fetch(url, {
+              url === null ? Promise.resolve(Response.json({ students: [] })) : fetch(url, {
                 headers: { Authorization: `Bearer ${accessToken}` },
                 cache: "no-store",
                 signal: controller.signal,
@@ -141,7 +143,7 @@ export function CalendarCreatePopover({
     }
     void loadNames();
     return () => controller.abort();
-  }, [accessToken, reload]);
+  }, [accessToken, reload, allowSessions]);
 
   const normalize = (value: string) => value.trim().toLocaleLowerCase(locale);
   const choices: Choice[] =
@@ -347,9 +349,9 @@ export function CalendarCreatePopover({
         <div
           role="group"
           aria-label={copy.addType}
-          className="grid grid-cols-2 gap-1 rounded-xl bg-black/5 p-1"
+          className={`grid ${allowSessions ? "grid-cols-2" : "grid-cols-1"} gap-1 rounded-xl bg-black/5 p-1`}
         >
-          {(["session", "personal"] as const).map((kind) => (
+          {(["session", "personal"] as const).filter((kind) => allowSessions || kind === "personal").map((kind) => (
             <button
               key={kind}
               type="button"

@@ -74,6 +74,7 @@ beforeEach(async () => {
   await testDb.insert(user).values([
     {
       id: "ceyda",
+      offersAppointments: true,
       name: "Ceyda",
       email: "ceyda@example.com",
       emailVerified: true,

@@ -17,10 +17,7 @@ export async function authorizeApiUser(
     ? { authorized: true, currentUser }
     : {
         authorized: false,
-        response: NextResponse.json(
-          { error: "Unauthorized" },
-          { status: 401 },
-        ),
+        response: NextResponse.json({ error: "Unauthorized" }, { status: 401 }),
       };
 }
 
@@ -35,12 +32,32 @@ export async function authorizeApiProvider(
   if (!authorization.currentUser.capabilities.canProvide) {
     return {
       authorized: false,
+      response: NextResponse.json({ error: forbiddenMessage }, { status: 403 }),
+    };
+  }
+
+  return authorization;
+}
+
+// Personal planning and managing existing appointments remain available while
+// offering is paused. Only creating/publishing hosting resources uses this guard.
+export async function authorizeApiOffering(
+  request: Request,
+  forbiddenMessage?: string,
+): Promise<ApiAuthorization> {
+  const authorization = await authorizeApiProvider(request, forbiddenMessage);
+  if (!authorization.authorized) return authorization;
+  if (!authorization.currentUser.user.offersAppointments) {
+    return {
+      authorized: false,
       response: NextResponse.json(
-        { error: forbiddenMessage },
+        {
+          error: "Turn on appointment offering in Account settings first.",
+          code: "offering_paused",
+        },
         { status: 403 },
       ),
     };
   }
-
   return authorization;
 }

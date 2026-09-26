@@ -86,7 +86,7 @@ const rangeRequest = (
   );
 function signIn(id = provider, canProvide = true) {
   vi.mocked(getCurrentUser).mockResolvedValue({
-    user: { id },
+    user: { id, offersAppointments: true },
     capabilities: { canProvide },
   } as Awaited<ReturnType<typeof getCurrentUser>>);
 }
@@ -115,8 +115,8 @@ afterAll(async () => {
 beforeEach(async () => {
   await testDb.execute(sql`truncate table "user" cascade`);
   await testDb.insert(user).values([
-    { id: provider, name: "Provider", email: "p@example.com" },
-    { id: other, name: "Other", email: "o@example.com" },
+    { id: provider, offersAppointments: true, name: "Provider", email: "p@example.com" },
+    { id: other, offersAppointments: true, name: "Other", email: "o@example.com" },
   ]);
   await testDb
     .insert(providerProfiles)

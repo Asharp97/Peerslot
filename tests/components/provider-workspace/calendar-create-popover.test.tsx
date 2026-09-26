@@ -92,7 +92,7 @@ function mockApi(
   });
 }
 function open(
-  options: { copy?: typeof copy; locale?: string; startsAt?: Date } = {},
+  options: { copy?: typeof copy; locale?: string; startsAt?: Date; allowSessions?: boolean } = {},
 ) {
   const onSaved = vi.fn(),
     onClose = vi.fn(),
@@ -100,6 +100,7 @@ function open(
     onSavingChange = vi.fn();
   render(
     <CalendarCreatePopover
+      allowSessions={options.allowSessions}
       anchor={{
         startsAt: options.startsAt ?? new Date("2030-01-15T09:00:00Z"),
         x: 120,
@@ -125,6 +126,18 @@ const mutations = (fetchMock: ReturnType<typeof mockApi>) =>
   fetchMock.mock.calls.filter(([, init]) => init?.method === "POST");
 
 describe("calendar creation popover", () => {
+  it("offers only personal activities and never fetches clients when hosting is off", async () => {
+    const api = mockApi();
+    vi.stubGlobal("fetch", api);
+    const { onSaved } = open({ allowSessions: false });
+    await screen.findByRole("option", { name: /Prayer/ });
+    expect(screen.queryByRole("button", { name: copy.studentSession })).toBeNull();
+    expect(api.mock.calls.some(([url]) => String(url).endsWith("/students"))).toBe(false);
+    await userEvent.setup().click(screen.getByRole("option", { name: /Prayer/ }));
+    await waitFor(() => expect(onSaved).toHaveBeenCalledOnce());
+    expect(mutations(api).map(([url]) => String(url))).toEqual(["/api/provider/personal-activities/schedules"]);
+  });
+
   it("focuses a searchable combobox in a non-modal popover and adds an existing student with one selection", async () => {
     const api = mockApi();
     vi.stubGlobal("fetch", api);

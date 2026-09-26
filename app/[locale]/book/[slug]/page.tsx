@@ -1,3 +1,4 @@
+import { bookingProviderOffersAppointments } from "@/lib/appointment-offering";
 import type { Metadata } from "next";
 import { and, eq } from "drizzle-orm";
 import { Clock3, Globe2 } from "lucide-react";
@@ -61,7 +62,7 @@ export default async function BookingPage({ params }: BookingPageProps) {
       eq(providerProfiles.userId, bookingPages.providerId),
     )
     .innerJoin(user, eq(user.id, providerProfiles.userId))
-    .where(and(eq(bookingPages.slug, slug), eq(bookingPages.isPublished, true)))
+    .where(and(eq(bookingPages.slug, slug), eq(bookingPages.isPublished, true), bookingProviderOffersAppointments))
     .limit(1);
 
   if (!provider) notFound();

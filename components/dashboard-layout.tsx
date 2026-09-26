@@ -7,7 +7,7 @@ import {
 
 /**
  * Shared authenticated chrome for appointment participants.
- * Provider navigation appears automatically when the account has a provider setup.
+ * Hosting navigation follows the account's persisted appointment-offering setting.
  */
 export function DashboardLayout({
   children,

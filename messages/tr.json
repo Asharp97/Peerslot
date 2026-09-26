@@ -1041,5 +1041,14 @@
       "mismatch": "Sifreler eslesmiyor.",
       "error": "Sifreniz güncellenemedi."
     }
+  },
+  "AppointmentOffering": {
+    "label": "Randevu veriyorum",
+    "hint": "İnsanlar sizden randevu alabiliyorsa bu seçeneği açın.",
+    "load": "Bu ayar yüklenemedi.",
+    "save": "Değişiklik kaydedilemedi. Lütfen tekrar deneyin.",
+    "pending_requests": "Kapatmadan önce bekleyen taleplerinizi değerlendirin.",
+    "review": "Talepleri incele",
+    "retry": "Tekrar dene"
   }
 }

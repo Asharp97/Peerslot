@@ -6,10 +6,10 @@ import {
   findBookingPage,
   updateBookingPage,
 } from "@/lib/booking-pages";
-import { authorizeApiProvider } from "@/lib/api-authorization";
+import { authorizeApiOffering } from "@/lib/api-authorization";
 
 export async function GET(request: Request) {
-  const authorization = await authorizeApiProvider(
+  const authorization = await authorizeApiOffering(
     request,
     "Only providers have booking pages",
   );
@@ -32,7 +32,7 @@ export async function GET(request: Request) {
 }
 
 export async function PATCH(request: Request) {
-  const authorization = await authorizeApiProvider(
+  const authorization = await authorizeApiOffering(
     request,
     "Only providers can update booking pages",
   );

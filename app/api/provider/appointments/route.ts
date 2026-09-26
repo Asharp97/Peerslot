@@ -11,7 +11,7 @@ import {
   createProviderAppointment,
   listProviderAppointments,
 } from "@/lib/provider-appointments";
-import { authorizeApiProvider } from "@/lib/api-authorization";
+import { authorizeApiProvider, authorizeApiOffering } from "@/lib/api-authorization";
 
 export async function GET(request: Request) {
   const authorization = await authorizeApiProvider(request);
@@ -43,7 +43,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const authorization = await authorizeApiProvider(request);
+  const authorization = await authorizeApiOffering(request);
   if (!authorization.authorized) return authorization.response;
   const { currentUser } = authorization;
 

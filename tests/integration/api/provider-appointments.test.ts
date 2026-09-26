@@ -36,7 +36,7 @@ describe("provider appointments API integration", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(getCurrentUser).mockResolvedValue({
-      user: { id: providerId },
+      user: { id: providerId, offersAppointments: true },
       capabilities: { canProvide: true },
     } as Awaited<ReturnType<typeof getCurrentUser>>);
   });
@@ -202,7 +202,7 @@ describe("provider appointments API integration", () => {
 
   it("rejects providers that have not completed setup", async () => {
     vi.mocked(getCurrentUser).mockResolvedValue({
-      user: { id: providerId },
+      user: { id: providerId, offersAppointments: true },
       capabilities: { canProvide: false },
     } as Awaited<ReturnType<typeof getCurrentUser>>);
 

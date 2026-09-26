@@ -24,6 +24,10 @@ async function findProviderProfile(
 export async function grantProviderCapability(
   userId: string,
 ): Promise<ProviderProfile> {
+  await db
+    .update(user)
+    .set({ offersAppointments: true })
+    .where(eq(user.id, userId));
   const [createdProfile] = await db
     .insert(providerProfiles)
     .values({ userId })
@@ -65,30 +69,40 @@ export async function completeProviderOnboarding(
   input: ProviderOnboardingInput,
 ) {
   const { locale, ...profileInput } = input;
+  const existing = await findProviderSetup(userId);
+  const pageInput = {
+    title: defaultBookingTitle(input.displayName, locale),
+    timeZone: input.timeZone,
+    appointmentDurationMinutes: input.defaultAppointmentDurationMinutes,
+    bookingIntervalMinutes:
+      input.defaultAppointmentDurationMinutes +
+      input.restBetweenSessionsMinutes,
+    minimumNoticeHours: input.minimumBookingNoticeMinutes / 60,
+    isPublished: true,
+  };
   return withBookingSlugRetries(async (slug) => {
     await db.batch([
       db
         .insert(providerProfiles)
-        .values({ userId, ...profileInput })
+        .values({ userId, ...profileInput, setupCompleted: true })
         .onConflictDoUpdate({
           target: providerProfiles.userId,
-          set: { ...profileInput, updatedAt: new Date() },
+          set: { ...profileInput, setupCompleted: true, updatedAt: new Date() },
         }),
       db
         .insert(bookingPages)
         .values({
           providerId: userId,
           slug,
-          title: defaultBookingTitle(input.displayName, locale),
-          timeZone: input.timeZone,
-          appointmentDurationMinutes: input.defaultAppointmentDurationMinutes,
-          bookingIntervalMinutes:
-            input.defaultAppointmentDurationMinutes +
-            input.restBetweenSessionsMinutes,
-          minimumNoticeHours: input.minimumBookingNoticeMinutes / 60,
-          isPublished: true,
+          ...pageInput,
         })
-        .onConflictDoNothing({ target: bookingPages.providerId }),
+        .onConflictDoUpdate({
+          target: bookingPages.providerId,
+          set:
+            existing?.profile.setupCompleted === false
+              ? pageInput
+              : { updatedAt: new Date() },
+        }),
       db
         .update(user)
         .set({ name: input.displayName })
@@ -102,5 +116,33 @@ export async function completeProviderOnboarding(
     }
 
     throw new Error("Unable to load the completed provider setup.");
+  });
+}
+
+// Personal planning uses the same storage, but does not publish a booking page.
+export async function ensurePersonalWorkspace(userId: string, name: string) {
+  const existing = await findProviderSetup(userId);
+  if (existing?.bookingPage) return existing;
+  return withBookingSlugRetries(async (slug) => {
+    await db.batch([
+      db
+        .insert(providerProfiles)
+        .values({
+          userId,
+          displayName: name,
+          setupCompleted: false,
+        })
+        .onConflictDoNothing(),
+      db
+        .insert(bookingPages)
+        .values({
+          providerId: userId,
+          slug,
+          title: name,
+          isPublished: false,
+        })
+        .onConflictDoNothing({ target: bookingPages.providerId }),
+    ]);
+    return findProviderSetup(userId);
   });
 }

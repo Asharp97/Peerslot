@@ -5,10 +5,10 @@ import {
   BookingSlugGenerationError,
   regenerateBookingPageSlug,
 } from "@/lib/booking-pages";
-import { authorizeApiProvider } from "@/lib/api-authorization";
+import { authorizeApiOffering } from "@/lib/api-authorization";
 
 export async function POST(request: Request) {
-  const authorization = await authorizeApiProvider(
+  const authorization = await authorizeApiOffering(
     request,
     "Only providers can regenerate booking links",
   );

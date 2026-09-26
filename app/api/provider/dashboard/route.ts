@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 
-import { authorizeApiProvider } from "@/lib/api-authorization";
+import { authorizeApiOffering } from "@/lib/api-authorization";
 import { loadProviderWorkspace } from "@/lib/provider-workspace";
 
 export async function GET(request: Request) {
-  const authorization = await authorizeApiProvider(request);
+  const authorization = await authorizeApiOffering(request);
   if (!authorization.authorized) return authorization.response;
   const { currentUser } = authorization;
 

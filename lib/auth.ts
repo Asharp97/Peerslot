@@ -42,6 +42,11 @@ export const auth = betterAuth({
   }),
   user: {
     additionalFields: {
+      offersAppointments: {
+        type: "boolean",
+        required: false,
+        defaultValue: false,
+      },
       termsAccepted: {
         type: "boolean",
         required: true,
@@ -78,16 +83,31 @@ export const auth = betterAuth({
     user: {
       create: {
         before: async (newUser) => {
-          const acceptance = createLegalAcceptance(newUser, getOAuthState());
+          const state = await getOAuthState();
+          const acceptance = createLegalAcceptance(newUser, state);
           if (!acceptance) return false;
 
-          return { data: { ...newUser, ...acceptance } };
+          return { data: {
+            ...newUser,
+            ...acceptance,
+            offersAppointments: state
+              ? state.offersAppointments === true
+              : newUser.offersAppointments === true,
+          } };
         },
         after: async (createdUser) => {
           await db
             .insert(profiles)
             .values({ userId: createdUser.id })
             .onConflictDoNothing();
+        },
+      },
+      update: {
+        before: async (changes) => {
+          // Only the account offering endpoint may change this preference.
+          // It checks pending requests and the database enforces the same rule.
+          if ("offersAppointments" in changes) return false;
+          return { data: changes };
         },
       },
     },

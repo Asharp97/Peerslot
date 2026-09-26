@@ -26,7 +26,7 @@ describe("provider students API integration", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(getCurrentUser).mockResolvedValue({
-      user: { id: providerId },
+      user: { id: providerId, offersAppointments: true },
       capabilities: { canProvide: true },
     } as Awaited<ReturnType<typeof getCurrentUser>>);
   });

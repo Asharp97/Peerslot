@@ -969,5 +969,14 @@
       "mismatch": "The passwords do not match.",
       "error": "We could not update your password. Request a new link and try again."
     }
+  },
+  "AppointmentOffering": {
+    "label": "I offer appointments",
+    "hint": "Turn this on if people can book appointments with you.",
+    "load": "We couldn’t load this setting.",
+    "save": "We couldn’t save this change. Please try again.",
+    "pending_requests": "Review your pending requests before turning this off.",
+    "review": "Review requests",
+    "retry": "Try again"
   }
 }

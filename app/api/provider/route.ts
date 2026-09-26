@@ -5,6 +5,7 @@ import { providerOnboardingSchema } from "@/lib/provider-onboarding";
 import {
   completeProviderOnboarding,
   findProviderSetup,
+  ensurePersonalWorkspace,
 } from "@/lib/provider-profiles";
 
 export async function GET(request: Request) {
@@ -12,10 +13,14 @@ export async function GET(request: Request) {
   if (!authorization.authorized) return authorization.response;
   const { currentUser } = authorization;
 
-  const setup = await findProviderSetup(currentUser.user.id);
+  const offersAppointments = currentUser.user.offersAppointments;
+  const setup = offersAppointments
+    ? await findProviderSetup(currentUser.user.id)
+    : await ensurePersonalWorkspace(currentUser.user.id, currentUser.user.name);
 
   return NextResponse.json({
-    status: setup?.profile && setup.bookingPage ? "active" : "setup_required",
+    offersAppointments,
+    status: setup?.bookingPage && (!offersAppointments || setup.profile.setupCompleted) ? "active" : "setup_required",
     user: {
       id: currentUser.user.id,
       email: currentUser.user.email,
@@ -23,13 +28,17 @@ export async function GET(request: Request) {
     },
     profile: setup?.profile ?? null,
     bookingPage: setup?.bookingPage ?? null,
-  });
+  }, { headers: { "Cache-Control": "no-store" } });
 }
 
 export async function POST(request: Request) {
   const authorization = await authorizeApiUser(request);
   if (!authorization.authorized) return authorization.response;
   const { currentUser } = authorization;
+
+  if (!currentUser.user.offersAppointments) {
+    return NextResponse.json({ error: "Turn on appointment offering in Account settings first." }, { status: 403 });
+  }
 
   const input = providerOnboardingSchema.safeParse(
     await request.json().catch(() => null),

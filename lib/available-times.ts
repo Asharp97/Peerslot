@@ -1,3 +1,4 @@
+import { bookingProviderOffersAppointments } from "@/lib/appointment-offering";
 import { loadPersonalActivityBusyTimes } from "@/lib/personal-activities";
 import { and, eq, gte, gt, isNotNull, isNull, lt, or, sql } from "drizzle-orm";
 
@@ -205,7 +206,7 @@ async function findPublishedAvailabilityBookingPage(slug: string) {
       providerProfiles,
       eq(providerProfiles.userId, bookingPages.providerId),
     )
-    .where(and(eq(bookingPages.slug, slug), eq(bookingPages.isPublished, true)))
+    .where(and(eq(bookingPages.slug, slug), eq(bookingPages.isPublished, true), bookingProviderOffersAppointments))
     .limit(1);
 
   return (bookingPage as AvailabilityBookingPage | undefined) ?? null;

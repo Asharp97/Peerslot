@@ -7,6 +7,7 @@ type ProviderWorkspaceAppointment = {
 };
 
 export type ProviderSetupData = {
+  offersAppointments: boolean;
   profile: {
     displayName: string;
     professionalTitle: string;

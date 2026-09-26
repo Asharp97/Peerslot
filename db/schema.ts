@@ -74,6 +74,7 @@ export const providerProfiles = pgTable(
       .primaryKey()
       .references(() => user.id, { onDelete: "cascade" }),
     displayName: text("display_name").default("Provider").notNull(),
+    setupCompleted: boolean("setup_completed").default(true).notNull(),
     professionalTitle: text("professional_title")
       .default("Professional")
       .notNull(),

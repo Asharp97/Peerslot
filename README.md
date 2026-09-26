@@ -22,8 +22,14 @@ PeerSlot works for tutoring, coaching, consulting, training, therapy practices, 
 - **Requests** lets providers accept or decline pending bookings.
 - **Clients** keeps provider-managed client records separate from appointment attendees.
 - **Personal activities** block time for work such as lunch, travel, or prayer without changing session rest rules.
-- **Settings** controls booking-page rules, minimum notice, the weekly client reschedule limit, and optional Google Meet connection.
-- Account settings include profile picture, language, date and time preferences, account export, and deletion.
+- **Settings** controls booking-page rules, minimum notice, and the weekly client reschedule limit.
+- **Account settings** includes **I offer appointments**, Google Meet connection, profile picture, language, date and time preferences, account export, and deletion.
+
+The appointment-offering switch is stored in the database. Homepage registrations start with it on; public booking-link registrations start with it off, for both email and Google signup. Signing in never resets an existing preference.
+
+With offering off, the workspace keeps My Appointments, Calendar, Personal Activities, and Account settings. Overview, Requests, Clients, and booking Settings are hidden. New requests pause, while existing appointments remain manageable. Pending requests must be reviewed before pausing. Turning offering back on restores the saved booking configuration and starts provider setup if needed; it does not automatically approve requests.
+
+Apply `pnpm db:migrate` before deploying this feature. Migration `0029_appointment_offering.sql` enables existing providers, leaves existing clients off, and adds database guards for pending requests. The schema snapshot also includes the earlier custom migrations so future generation uses the current schema.
 
 ### Scheduling rules
 

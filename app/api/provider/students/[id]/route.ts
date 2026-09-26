@@ -8,14 +8,14 @@ import {
   deleteProviderStudent,
   updateProviderStudent,
 } from "@/lib/provider-appointments";
-import { authorizeApiProvider } from "@/lib/api-authorization";
+import { authorizeApiOffering } from "@/lib/api-authorization";
 
 const idSchema = z.string().uuid();
 
 type RouteContext = { params: Promise<{ id: string }> };
 
 export async function PATCH(request: Request, context: RouteContext) {
-  const authorization = await authorizeApiProvider(request);
+  const authorization = await authorizeApiOffering(request);
   if (!authorization.authorized) return authorization.response;
   const { currentUser } = authorization;
 
@@ -44,7 +44,7 @@ export async function PATCH(request: Request, context: RouteContext) {
 }
 
 export async function DELETE(request: Request, context: RouteContext) {
-  const authorization = await authorizeApiProvider(request);
+  const authorization = await authorizeApiOffering(request);
   if (!authorization.authorized) return authorization.response;
   const { currentUser } = authorization;
 

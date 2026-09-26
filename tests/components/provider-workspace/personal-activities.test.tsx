@@ -24,6 +24,7 @@ import tr from "@/messages/tr.json";
 const calendar = vi.hoisted(() => ({
   props: {} as Record<string, unknown>,
   timeZone: "Europe/Istanbul",
+  offersAppointments: true,
 }));
 vi.mock("@fullcalendar/react", () => ({
   default: (props: Record<string, unknown>) => {
@@ -41,6 +42,7 @@ vi.mock("@/components/provider-workspace/provider-shell", () => ({
   useProviderWorkspace: () => ({
     accessToken: "provider-token",
     data: {
+      offersAppointments: calendar.offersAppointments,
       profile: { displayName: "Ada" },
       bookingPage: {
         timeZone: calendar.timeZone,
@@ -65,6 +67,7 @@ const activity: PersonalActivityOccurrence = {
 };
 
 beforeEach(() => {
+  calendar.offersAppointments = true;
   calendar.timeZone = "Europe/Istanbul";
   HTMLElement.prototype.hasPointerCapture = () => false;
   HTMLElement.prototype.setPointerCapture = () => undefined;
@@ -200,6 +203,21 @@ describe("personal activities in the calendar", () => {
     expect(JSON.parse(String(mutations[1][1]?.body)).activityId).toBe(
       "new-activity",
     );
+  });
+
+  it("keeps editable personal activities and hides availability when offering is off", async () => {
+    calendar.offersAppointments = false;
+    const api = mockCalendar();
+    render(<WorkspaceCalendar copy={copy} />);
+    const events = await loadEvents();
+    expect(events.find((event) => event.title === "Prayer")).toMatchObject({ editable: true });
+    expect(events.some((event) => event.title === copy.availableSlot)).toBe(false);
+    expect(api.mock.calls.some(([url]) => String(url).includes("/students"))).toBe(false);
+    await userEvent.setup().click(screen.getByRole("button", { name: copy.addToTimetable }));
+    await userEvent.setup().click(screen.getAllByRole("combobox")[0]);
+    expect(screen.getByRole("option", { name: copy.personalActivity })).toBeTruthy();
+    expect(screen.queryByRole("option", { name: copy.studentSession })).toBeNull();
+    expect(screen.queryByRole("option", { name: copy.freeTimeWindow })).toBeNull();
   });
 
   it("renders amber activities and retains available slots touching their boundaries", async () => {

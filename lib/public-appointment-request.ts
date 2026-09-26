@@ -1,3 +1,5 @@
+import { isPostgresError } from "@/lib/database-errors";
+import { bookingProviderOffersAppointments } from "@/lib/appointment-offering";
 import { and, eq } from "drizzle-orm";
 
 import { db } from "@/db";
@@ -57,7 +59,7 @@ export async function createPublicAppointmentRequest(
       eq(providerProfiles.userId, bookingPages.providerId),
     )
     .innerJoin(user, eq(user.id, bookingPages.providerId))
-    .where(and(eq(bookingPages.slug, slug), eq(bookingPages.isPublished, true)))
+    .where(and(eq(bookingPages.slug, slug), eq(bookingPages.isPublished, true), bookingProviderOffersAppointments))
     .limit(1);
 
   if (!page) throw new PublicAppointmentRequestPageNotFoundError();
@@ -129,7 +131,7 @@ export async function createPublicAppointmentRequest(
     ) {
       throw new PublicAppointmentPolicyError("past");
     }
-    if (error instanceof ProviderAppointmentConflictError) {
+    if (error instanceof ProviderAppointmentConflictError || isPostgresError(error, "P0001", "appointment_offering_paused")) {
       throw new PublicAppointmentRequestUnavailableError();
     }
     throw error;

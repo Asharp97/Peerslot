@@ -61,6 +61,7 @@ export async function buildAccountExport(userId: string) {
         email: user.email,
         emailVerified: user.emailVerified,
         image: user.image,
+        offersAppointments: user.offersAppointments,
         termsAccepted: user.termsAccepted,
         termsAcceptedAt: user.termsAcceptedAt,
         termsVersion: user.termsVersion,
