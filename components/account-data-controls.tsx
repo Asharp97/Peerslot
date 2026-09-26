@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 
 export type AccountDataCopy = {
   dataPrivacy: string;
@@ -107,11 +108,14 @@ export function AccountDataControls({
 
   return (
     <section
-      className={`rounded-[28px] border border-black/10 bg-white p-6 sm:p-8 ${className}`}
+      className={cn(
+        "rounded-[28px] border border-black/10 bg-white p-6 sm:p-8",
+        className,
+      )}
     >
-      <div className="flex items-start gap-4">
-        <span className="grid size-11 shrink-0 place-items-center rounded-full bg-lavender-whisper">
-          <ShieldCheck size={19} />
+      <div className="flex items-start gap-3">
+        <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-lavender-whisper/60">
+          <ShieldCheck size={19} aria-hidden="true" />
         </span>
         <div>
           <h2 className="text-lg font-bold">{copy.dataPrivacy}</h2>
@@ -121,14 +125,14 @@ export function AccountDataControls({
         </div>
       </div>
 
-      <div className="mt-6 grid gap-4 md:grid-cols-2">
-        <article className="rounded-2xl border border-black/10 bg-[#fbfaf4] p-5">
+      <div className="mt-5 grid gap-4 md:grid-cols-2">
+        <article className="flex min-w-0 flex-col items-start rounded-2xl border border-black/10 bg-white p-5">
           <h3 className="font-bold">{copy.exportTitle}</h3>
-          <p className="mt-2 text-sm leading-6 text-black/55">
+          <p className="mt-2 flex-1 text-sm leading-6 text-black/55">
             {copy.exportDescription}
           </p>
           <Button
-            className="mt-5 rounded-full"
+            className="mt-4 min-h-11 rounded-full px-4"
             disabled={exporting}
             onClick={exportData}
             type="button"
@@ -143,15 +147,15 @@ export function AccountDataControls({
           </Button>
         </article>
 
-        <article className="rounded-2xl border border-red-900/15 bg-red-50/50 p-5">
+        <article className="flex min-w-0 flex-col items-start rounded-2xl border border-red-900/15 bg-red-50/50 p-5">
           <h3 className="font-bold text-red-950">{copy.deleteTitle}</h3>
-          <p className="mt-2 text-sm leading-6 text-red-950/65">
+          <p className="mt-2 flex-1 text-sm leading-6 text-red-950/65">
             {copy.deleteDescription}
           </p>
           <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
             <DialogTrigger asChild>
               <Button
-                className="mt-5 rounded-full"
+                className="mt-4 min-h-11 rounded-full px-4"
                 type="button"
                 variant="destructive"
               >

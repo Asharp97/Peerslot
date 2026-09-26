@@ -5,11 +5,14 @@ import { useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { Switch } from "@/components/ui/switch";
 import { fetchWithAccessToken } from "@/lib/auth-browser";
+import { cn } from "@/lib/utils";
 
 export function AppointmentOfferingSetting({
   accessToken,
+  className,
 }: {
   accessToken: string;
+  className?: string;
 }) {
   const t = useTranslations("AppointmentOffering");
   const router = useRouter();
@@ -86,9 +89,12 @@ export function AppointmentOfferingSetting({
   }
 
   return (
-    <section className="border-b border-black/10 py-5" aria-busy={saving}>
+    <section
+      className={cn("border-b border-black/10 py-5", className)}
+      aria-busy={saving}
+    >
       <div className="flex items-center justify-between gap-6">
-        <div>
+        <div className="min-w-0">
           <label htmlFor="offers-appointments" className="text-sm font-bold">
             {t("label")}
           </label>
@@ -101,7 +107,7 @@ export function AppointmentOfferingSetting({
         </div>
         <Switch
           id="offers-appointments"
-          aria-describedby="offering-hint offering-effect"
+          aria-describedby="offering-hint"
           checked={offering === true}
           disabled={offering === null || saving}
           onCheckedChange={(next) => {

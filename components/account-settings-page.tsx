@@ -4,18 +4,18 @@ import {
   Check,
   ChevronDown,
   ImagePlus,
+  Globe2,
   LoaderCircle,
   LockKeyhole,
   UserRound,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 
 import { AccountDataControls } from "@/components/account-data-controls";
 import { GoogleMeetSettings } from "@/components/provider-workspace/google-meet-settings";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { cn } from "@/lib/utils";
 import { AppointmentOfferingSetting } from "@/components/appointment-offering-setting";
 
 import { fetchAccessToken } from "@/lib/auth-browser";
@@ -249,65 +249,79 @@ export function AccountSettingsPage({
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 sm:space-y-6">
       <header>
-        <p className="text-[11px] font-bold tracking-[0.16em] text-black/45 uppercase">
-          {copy.label}
-        </p>
-        <h1 className="mt-3 font-display text-5xl leading-none tracking-[-0.04em] sm:text-6xl">
+        <h1 className="font-display text-3xl leading-tight tracking-[-0.035em] sm:text-4xl">
           {copy.title}
         </h1>
+        <p className="mt-2 text-sm leading-6 text-black/55">
+          {copy.description}
+        </p>
       </header>
-      <div className="rounded-[28px] border border-black/10 bg-[#fbfaf4] p-5 sm:p-8">
-        <div className="flex items-center gap-3 border-b border-black/10 pb-4">
-          {image ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              alt=""
-              className="size-11 rounded-full object-cover"
-              src={image}
-            />
-          ) : (
-            <span className="grid size-11 place-items-center rounded-full bg-lavender-whisper">
-              <UserRound size={20} />
-            </span>
-          )}
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-bold">{displayName}</p>
-            {user?.email ? (
-              <p className="truncate text-xs text-black/50">{user.email}</p>
-            ) : null}
-          </div>
-        </div>
 
-        <section className="border-b border-black/10 py-4">
-          <h2 className="text-sm font-bold">{copy.profilePicture}</h2>
-          <p className="mt-1 text-xs leading-5 text-black/55">
+      <div className="grid items-center gap-5 rounded-[24px] border border-black/10 bg-[#fbfaf4] p-5 sm:p-6 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-[1.15fr_1fr]">
+        <section aria-labelledby="profile-picture-title" className="min-w-0">
+          <div className="flex items-start gap-4 sm:gap-5">
+            {image ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                alt=""
+                className="size-16 shrink-0 rounded-2xl object-cover ring-1 ring-black/5 sm:size-20"
+                src={image}
+              />
+            ) : (
+              <span className="grid size-16 shrink-0 place-items-center rounded-2xl bg-lavender-whisper sm:size-20">
+                <UserRound size={28} aria-hidden="true" />
+              </span>
+            )}
+            <div className="min-w-0 flex-1">
+              <h2
+                id="profile-picture-title"
+                className="text-xs font-semibold text-black/50"
+              >
+                {copy.profilePicture}
+              </h2>
+              <p className="mt-1 break-words text-lg font-bold tracking-tight sm:text-xl">
+                {displayName}
+              </p>
+              {user?.email ? (
+                <p className="mt-1 break-all text-sm text-black/55">
+                  {user.email}
+                </p>
+              ) : null}
+              <label className="mt-3 inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-full border border-black/10 bg-white px-4 text-xs font-semibold transition hover:bg-black/5 focus-within:ring-2 focus-within:ring-vast-ink/30">
+                {imageState === "saving" ? (
+                  <LoaderCircle
+                    className="animate-spin"
+                    size={15}
+                    aria-hidden="true"
+                  />
+                ) : (
+                  <ImagePlus size={15} aria-hidden="true" />
+                )}
+                {imageState === "saving" ? copy.uploading : copy.chooseImage}
+                <input
+                  aria-label={copy.chooseImage}
+                  accept="image/png,image/jpeg,image/webp"
+                  className="sr-only"
+                  disabled={imageState === "saving"}
+                  onChange={(event) => {
+                    void updateImage(event.target.files?.[0]);
+                    event.currentTarget.value = "";
+                  }}
+                  type="file"
+                />
+              </label>
+            </div>
+          </div>
+          <p className="mt-3 text-xs leading-5 text-black/55">
             {copy.profilePictureHelp}
           </p>
-          <label className="mt-3 inline-flex cursor-pointer items-center gap-2 rounded-full border border-black/10 bg-white px-3 py-2 text-xs font-bold hover:bg-black/5">
-            {imageState === "saving" ? (
-              <LoaderCircle className="animate-spin" size={14} />
-            ) : (
-              <ImagePlus size={14} />
-            )}
-            {imageState === "saving" ? copy.uploading : copy.chooseImage}
-            <input
-              aria-label={copy.chooseImage}
-              accept="image/png,image/jpeg,image/webp"
-              className="sr-only"
-              disabled={imageState === "saving"}
-              onChange={(event) => {
-                void updateImage(event.target.files?.[0]);
-                event.currentTarget.value = "";
-              }}
-              type="file"
-            />
-          </label>
           {imageState === "saved" ? (
             <p
               role="status"
-              className="mt-2 text-xs font-semibold text-emerald-700">
+              className="mt-2 text-xs font-semibold text-emerald-700"
+            >
               {copy.imageUpdated}
             </p>
           ) : null}
@@ -317,156 +331,210 @@ export function AccountSettingsPage({
             </p>
           ) : null}
         </section>
+        <AppointmentOfferingSetting
+          accessToken={accessToken}
+          className="rounded-2xl border-0 bg-lavender-whisper/40 p-5 sm:p-6"
+        />
+      </div>
 
-        <AppointmentOfferingSetting accessToken={accessToken} />
+      <div className="grid items-stretch gap-5 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+        <section
+          aria-labelledby="account-preferences-title"
+          className="@container flex min-w-0 flex-col rounded-[24px] border border-black/10 bg-[#fbfaf4] p-5 sm:p-6"
+        >
+          <div className="flex items-start gap-3">
+            <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-lavender-whisper/60">
+              <Globe2 size={19} aria-hidden="true" />
+            </span>
+            <div>
+              <h2
+                id="account-preferences-title"
+                className="text-base font-bold"
+              >
+                {copy.preferencesTitle}
+              </h2>
+              <p className="mt-1 text-xs leading-5 text-black/55">
+                {copy.preferencesHelp}
+              </p>
+            </div>
+          </div>
+          <div className="mt-5 flex flex-1 flex-col">
+            <div className="space-y-4">
+              <PreferenceSelect
+                ariaLabel={copy.language}
+                onChange={(value) =>
+                  updatePreference(
+                    "language",
+                    value as AccountPreferences["language"],
+                  )
+                }
+                value={preferences.language}
+              >
+                <option value="en">{copy.english}</option>
+                <option value="tr">{copy.turkish}</option>
+              </PreferenceSelect>
+              <div className="grid gap-4 @sm:grid-cols-2">
+                <PreferenceSelect
+                  ariaLabel={copy.dateFormat}
+                  onChange={(value) =>
+                    updatePreference(
+                      "dateFormat",
+                      value as AccountPreferences["dateFormat"],
+                    )
+                  }
+                  value={preferences.dateFormat}
+                >
+                  <option value="dmy">{copy.dateDmy}</option>
+                  <option value="mdy">{copy.dateMdy}</option>
+                  <option value="ymd">{copy.dateYmd}</option>
+                </PreferenceSelect>
+                <PreferenceSelect
+                  ariaLabel={copy.timeFormat}
+                  onChange={(value) =>
+                    updatePreference(
+                      "timeFormat",
+                      value as AccountPreferences["timeFormat"],
+                    )
+                  }
+                  value={preferences.timeFormat}
+                >
+                  <option value="24">{copy.time24}</option>
+                  <option value="12">{copy.time12}</option>
+                </PreferenceSelect>
+              </div>
+            </div>
+            <div className="mt-auto pt-5">
+              <Button
+                className="min-h-11 w-full rounded-full px-4 text-sm sm:w-auto"
+                disabled={preferenceState === "saving"}
+                onClick={() => {
+                  void savePreferences();
+                }}
+                type="button"
+                variant="outline"
+              >
+                {preferenceState === "saved" ? (
+                  <Check size={15} />
+                ) : preferenceState === "saving" ? (
+                  <LoaderCircle className="animate-spin" size={15} />
+                ) : null}
+                {preferenceState === "saved"
+                  ? copy.preferencesSaved
+                  : copy.savePreferences}
+              </Button>
+            </div>
+          </div>
+        </section>
 
-        <section className="border-b border-black/10 py-4">
-          <h2 className="flex items-center gap-2 text-sm font-bold">
-            <LockKeyhole size={15} /> {copy.changePassword}
-          </h2>
-          <p className="mt-1 text-xs leading-5 text-black/55">
-            {copy.changePasswordHelp}
-          </p>
-          <form className="mt-3 space-y-2" onSubmit={changePassword}>
-            <PasswordInput
-              label={copy.currentPassword}
-              onChange={setCurrentPassword}
-              value={currentPassword}
-            />
-            <PasswordInput
-              label={copy.newPassword}
-              onChange={setNewPassword}
-              value={newPassword}
-            />
-            <PasswordInput
-              label={copy.confirmPassword}
-              onChange={setConfirmPassword}
-              value={confirmPassword}
-            />
+        <section
+          aria-labelledby="account-password-title"
+          className="@container flex min-w-0 flex-col rounded-[24px] border border-black/10 bg-[#fbfaf4] p-5 sm:p-6"
+        >
+          <div className="flex items-start gap-3">
+            <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-black/5">
+              <LockKeyhole size={19} aria-hidden="true" />
+            </span>
+            <div>
+              <h2 id="account-password-title" className="text-base font-bold">
+                {copy.changePassword}
+              </h2>
+              <p className="mt-1 text-xs leading-5 text-black/55">
+                {copy.changePasswordHelp}
+              </p>
+            </div>
+          </div>
+          <form className="mt-5 flex flex-1 flex-col" onSubmit={changePassword}>
+            <div className="space-y-4">
+              <PasswordInput
+                autoComplete="current-password"
+                label={copy.currentPassword}
+                onChange={setCurrentPassword}
+                value={currentPassword}
+              />
+              <div className="grid gap-4 @sm:grid-cols-2">
+                <PasswordInput
+                  label={copy.newPassword}
+                  onChange={setNewPassword}
+                  value={newPassword}
+                />
+                <PasswordInput
+                  label={copy.confirmPassword}
+                  onChange={setConfirmPassword}
+                  value={confirmPassword}
+                />
+              </div>
+            </div>
             {passwordError ? (
-              <p className="text-xs font-semibold text-red-700" role="alert">
+              <p
+                className="mt-3 text-xs font-semibold text-red-700"
+                role="alert"
+              >
                 {passwordError}
               </p>
             ) : null}
-            <Button
-              className="mt-1 min-h-9 rounded-full text-xs"
-              disabled={passwordState === "saving"}
-              type="submit">
-              {passwordState === "saving" ? (
-                <LoaderCircle className="animate-spin" size={14} />
-              ) : passwordState === "saved" ? (
-                <Check size={14} />
-              ) : null}
-              {passwordState === "saving"
-                ? copy.changingPassword
-                : passwordState === "saved"
-                  ? copy.passwordChanged
-                  : copy.changePasswordAction}
-            </Button>
+            <div className="mt-auto pt-5">
+              <Button
+                className="min-h-11 w-full rounded-full px-4 text-sm sm:w-auto"
+                disabled={passwordState === "saving"}
+                type="submit"
+              >
+                {passwordState === "saving" ? (
+                  <LoaderCircle className="animate-spin" size={15} />
+                ) : passwordState === "saved" ? (
+                  <Check size={15} />
+                ) : null}
+                {passwordState === "saving"
+                  ? copy.changingPassword
+                  : passwordState === "saved"
+                    ? copy.passwordChanged
+                    : copy.changePasswordAction}
+              </Button>
+            </div>
           </form>
         </section>
-
-        <section className="border-b border-black/10 py-4">
-          <h2 className="text-sm font-bold">{copy.language}</h2>
-          <div className="mt-2 grid grid-cols-2 gap-2">
-            <PreferenceSelect
-              ariaLabel={copy.language}
-              onChange={(value) =>
-                updatePreference(
-                  "language",
-                  value as AccountPreferences["language"],
-                )
-              }
-              value={preferences.language}>
-              <option value="en">{copy.english}</option>
-              <option value="tr">{copy.turkish}</option>
-            </PreferenceSelect>
-          </div>
-          <div className="mt-3 grid grid-cols-2 gap-2">
-            <PreferenceSelect
-              ariaLabel={copy.dateFormat}
-              onChange={(value) =>
-                updatePreference(
-                  "dateFormat",
-                  value as AccountPreferences["dateFormat"],
-                )
-              }
-              value={preferences.dateFormat}>
-              <option value="dmy">{copy.dateDmy}</option>
-              <option value="mdy">{copy.dateMdy}</option>
-              <option value="ymd">{copy.dateYmd}</option>
-            </PreferenceSelect>
-            <PreferenceSelect
-              ariaLabel={copy.timeFormat}
-              onChange={(value) =>
-                updatePreference(
-                  "timeFormat",
-                  value as AccountPreferences["timeFormat"],
-                )
-              }
-              value={preferences.timeFormat}>
-              <option value="24">{copy.time24}</option>
-              <option value="12">{copy.time12}</option>
-            </PreferenceSelect>
-          </div>
-          <Button
-            className="mt-3 min-h-9 rounded-full text-xs"
-            disabled={preferenceState === "saving"}
-            onClick={() => {
-              void savePreferences();
-            }}
-            type="button"
-            variant="outline">
-            {preferenceState === "saved" ? (
-              <Check size={14} />
-            ) : preferenceState === "saving" ? (
-              <LoaderCircle className="animate-spin" size={14} />
-            ) : null}
-            {preferenceState === "saved"
-              ? copy.preferencesSaved
-              : preferenceState === "saving"
-                ? copy.savePreferences
-                : copy.savePreferences}
-          </Button>
-        </section>
-
-        {canHost ? (
-          <div className="border-b border-black/10 py-4">
-            <GoogleMeetSettings
-              accessToken={accessToken}
-              copy={copy.googleMeet}
-              locale={locale}
-            />
-          </div>
-        ) : null}
-        <AccountDataControls
-          accessToken={accessToken}
-          className="mt-4 border-0 bg-transparent p-0"
-          copy={copy.accountData}
-          redirectAfterDelete="/"
-        />
       </div>
+
+      {canHost ? (
+        <GoogleMeetSettings
+          accessToken={accessToken}
+          copy={copy.googleMeet}
+          locale={locale}
+          className="mt-0 rounded-[24px] p-5 sm:p-6"
+        />
+      ) : null}
+      <AccountDataControls
+        accessToken={accessToken}
+        className="rounded-[24px] bg-[#fbfaf4] p-5 sm:p-6"
+        copy={copy.accountData}
+        redirectAfterDelete="/"
+      />
     </div>
   );
 }
+
 function PasswordInput({
   label,
   onChange,
   value,
+  autoComplete = "new-password",
 }: {
   label: string;
   onChange: (value: string) => void;
   value: string;
+  autoComplete?: "current-password" | "new-password";
 }) {
+  const id = useId();
   return (
-    <div>
-      <Label className="sr-only">{label}</Label>
+    <div className="min-w-0 space-y-2">
+      <Label className="text-xs font-semibold text-black/65" htmlFor={id}>
+        {label}
+      </Label>
       <Input
+        id={id}
         aria-label={label}
-        autoComplete="current-password"
-        className="min-h-9 rounded-lg bg-white text-xs"
+        autoComplete={autoComplete}
+        className="min-h-11 rounded-xl bg-white text-base sm:text-sm"
         onChange={(event) => onChange(event.target.value)}
-        placeholder={label}
         required
         type="password"
         value={value}
@@ -487,22 +555,25 @@ function PreferenceSelect({
   value: string;
 }) {
   return (
-    <label className="relative block">
-      <span className="sr-only">{ariaLabel}</span>
-      <select
-        aria-label={ariaLabel}
-        className={cn(
-          "min-h-9 w-full appearance-none rounded-lg border border-black/10 bg-white px-3 pr-8 text-xs font-semibold outline-none focus:border-vast-ink",
-        )}
-        onChange={(event) => onChange(event.target.value)}
-        value={value}>
-        {children}
-      </select>
-      <ChevronDown
-        aria-hidden
-        className="pointer-events-none absolute top-1/2 right-2 -translate-y-1/2 text-black/45"
-        size={14}
-      />
+    <label className="block min-w-0 space-y-2">
+      <span className="block text-xs font-semibold text-black/65">
+        {ariaLabel}
+      </span>
+      <span className="relative block">
+        <select
+          aria-label={ariaLabel}
+          className="min-h-11 w-full appearance-none rounded-xl border border-black/10 bg-white ps-3 pe-9 text-base font-medium outline-none transition focus-visible:border-vast-ink focus-visible:ring-2 focus-visible:ring-vast-ink/15 sm:text-sm"
+          onChange={(event) => onChange(event.target.value)}
+          value={value}
+        >
+          {children}
+        </select>
+        <ChevronDown
+          aria-hidden="true"
+          className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-black/45"
+          size={15}
+        />
+      </span>
     </label>
   );
 }

@@ -5,6 +5,9 @@ export type AccountMenuCopy = {
   label: string;
   signOut: string;
   title: string;
+  description: string;
+  preferencesTitle: string;
+  preferencesHelp: string;
   profilePicture: string;
   profilePictureHelp: string;
   chooseImage: string;

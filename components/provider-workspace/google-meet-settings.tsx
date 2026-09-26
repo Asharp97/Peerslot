@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { LoaderCircle } from "lucide-react";
 import { GoogleMeetLogo } from "@/components/appointment-meeting";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export type GoogleMeetSettingsCopy = {
   title: string;
@@ -29,10 +30,12 @@ export function GoogleMeetSettings({
   accessToken,
   locale,
   copy,
+  className,
 }: {
   accessToken: string;
   locale: string;
   copy: GoogleMeetSettingsCopy;
+  className?: string;
 }) {
   const [connection, setConnection] = useState<Connection | null>(null);
   const [busy, setBusy] = useState(false);
@@ -99,33 +102,45 @@ export function GoogleMeetSettings({
   }
 
   return (
-    <section className="mt-5 rounded-[28px] border border-black/10 bg-[#fbfaf4] p-6 sm:p-8">
-      <h2 className="flex items-center gap-3 text-lg font-bold">
-        <GoogleMeetLogo decorative />
-        {copy.title}
-      </h2>
-      <p className="mt-3 max-w-2xl text-sm leading-6 text-black/60">
-        {copy.description}
-      </p>
-      {connection ? (
-        <p className="mt-3 text-sm font-semibold">
-          {!connection.configured
-            ? copy.notConfigured
-            : connection.connected
-              ? copy.connected.replace("{email}", connection.email ?? "")
-              : copy.disconnected}
+    <section
+      className={cn(
+        "mt-5 flex flex-col gap-5 rounded-[28px] border border-black/10 bg-[#fbfaf4] p-6 sm:p-8 xl:flex-row xl:items-center xl:justify-between",
+        className,
+      )}
+    >
+      <div className="min-w-0">
+        <h2 className="flex items-center gap-3 text-lg font-bold">
+          <GoogleMeetLogo decorative />
+          {copy.title}
+        </h2>
+        <p className="mt-2 max-w-2xl text-sm leading-6 text-black/60">
+          {copy.description}
         </p>
-      ) : !error ? (
-        <p className="mt-3 text-sm">{copy.loading}</p>
-      ) : null}
-      {error ? (
-        <p className="mt-3 text-sm text-red-700" role="alert">
-          {error}
-        </p>
-      ) : null}
-      <div className="mt-4 flex flex-wrap gap-2">
+        {connection ? (
+          <p className="mt-2 break-words text-sm font-semibold">
+            {!connection.configured
+              ? copy.notConfigured
+              : connection.connected
+                ? copy.connected.replace("{email}", connection.email ?? "")
+                : copy.disconnected}
+          </p>
+        ) : !error ? (
+          <p className="mt-3 text-sm">{copy.loading}</p>
+        ) : null}
+        {error ? (
+          <p className="mt-3 text-sm text-red-700" role="alert">
+            {error}
+          </p>
+        ) : null}
+      </div>
+      <div className="flex shrink-0 flex-wrap gap-2 empty:hidden">
         {connection?.configured ? (
-          <Button type="button" disabled={busy} onClick={() => change("POST")}>
+          <Button
+            className="min-h-11 rounded-full px-4"
+            type="button"
+            disabled={busy}
+            onClick={() => change("POST")}
+          >
             {busy ? (
               <LoaderCircle className="animate-spin" aria-hidden="true" />
             ) : null}
@@ -136,6 +151,7 @@ export function GoogleMeetSettings({
           <Button
             type="button"
             variant="outline"
+            className="min-h-11 rounded-full px-4"
             disabled={busy}
             onClick={() => change("DELETE")}
           >
@@ -146,6 +162,7 @@ export function GoogleMeetSettings({
           <Button
             type="button"
             variant="outline"
+            className="min-h-11 rounded-full px-4"
             onClick={() => setRefreshKey((current) => current + 1)}
           >
             {copy.reconnect}
